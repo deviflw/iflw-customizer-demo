@@ -1,265 +1,1335 @@
 <!DOCTYPE html>
+<!--
+  IFL Customizer · v3 (light) · iteration 1
+  Architecture:
+    · Left rail (110px) with mode buttons: Configure / Watches / Designs / Custom / Compare
+    · Stage with three sliding zones: [browse-panel] [preview-unit] [config-panel]
+    · Modes:
+        configure   → preview huge center, config visible right
+        browse-watches → browse left ~65%, preview shifted right (medium), config collapsed to arrow handle
+        browse-designs → same but designs
+        compare     → 3-column compare view, dock hidden
+    · Swatch hotbar lives DIRECTLY UNDER preview — travels with preview into any mode.
+    · Watch cards in browse show available dial colors as small dots = preview-before-click.
+    · Compare dock at bottom (3 slots), hidden in compare mode.
+-->
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IFL Watches — Customizer V2</title>
-    <link rel="stylesheet" href="shared/v2-light.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>IFL Customizer · v3 light · iteration 1</title>
+<style>
+  :root{
+    --ink:#081820;
+    --ink-2:#1a2a33;
+    --acc:#40bec1;
+    --acc-soft:#e6f7f7;
+    --line:#e5e7eb;
+    --line-d:#d4d4d4;
+    --muted:#6b7280;
+    --bg:#fafafa;
+    --paper:#fff;
+    --rail-w:clamp(96px,7vw,130px);
+    --config-w:clamp(420px,28vw,480px);
+    --preview-browse-w:clamp(380px,26vw,460px);
+    --dock-h:96px;
+    --header-h:60px;
+    --footer-h:60px;
+    --cap:1920px;
+    --ease:cubic-bezier(.4,0,.2,1);
+  }
+  *{box-sizing:border-box}
+  html,body{overflow-x:clip}
+  body{margin:0;font:13px/1.45 'Montserrat',-apple-system,sans-serif;color:var(--ink);background:#fff}
+
+  /* ═══════════ SITE STUBS ═══════════ */
+  .site-header,.site-footer{height:var(--header-h);display:flex;align-items:center;justify-content:center;background:#f3f4f6;color:#9ca3af;font-size:11px;letter-spacing:.2em}
+
+  /* ═══════════ CUSTOMIZER SHELL ═══════════
+     Normal page flow — grows with content. Rail and preview-unit are
+     sticky inside their own grid cells. Dock sits below (row 2),
+     appears when user scrolls past the catalog.                        */
+  .customizer{
+    display:grid;
+    grid-template-columns:
+      var(--rail-w)
+      var(--col-browse,0)
+      var(--col-preview,1fr)
+      var(--col-config,0);
+    grid-template-rows:1fr var(--dock-h);
+    grid-template-areas:
+      "rail browse preview config"
+      "rail dock   dock    dock";
+    min-height:calc(100vh - var(--header-h) - var(--footer-h));
+    max-width:var(--cap);
+    margin:0 auto;
+    background:var(--bg);
+    transition:grid-template-columns .45s var(--ease);
+  }
+  /* Mode → column widths (single source of truth for layout) */
+  [data-mode="configure"]{
+    --col-browse:0;
+    --col-preview:minmax(0,1fr);
+    --col-config:var(--config-w);
+  }
+  [data-mode^="browse-"]{
+    --col-browse:minmax(0,1fr);
+    --col-preview:var(--preview-browse-w);
+    --col-config:0;
+  }
+  [data-mode="compare"]{
+    --col-browse:0;
+    --col-preview:minmax(0,1fr);
+    --col-config:0;
+  }
+  .customizer[data-mode="compare"]{grid-template-rows:1fr 0}
+  [data-mode="compare"] .preview-unit{visibility:hidden}
+
+  /* ═══════════ LEFT RAIL ═══════════
+     Natural height, sticky top:0, no overflow/max-height. On normal
+     viewport fits; wheel over rail propagates to page scroll (nothing
+     to scroll internally). On ultra-short viewport cart may clip below
+     — acceptable edge case.                                            */
+  .rail-col{
+    grid-area:rail;
+    position:relative;
+    background:var(--ink);
+    z-index:5;
+  }
+  .rail{
+    background:var(--ink);color:#a8b5b9;
+    display:flex;flex-direction:column;
+    border-right:1px solid var(--ink);
+    position:sticky;top:0;
+  }
+  .rail-logo{
+    height:64px;display:flex;align-items:center;justify-content:center;
+    border-bottom:1px solid var(--ink-2);
+  }
+  .rail-logo svg{width:22px;height:22px;display:block}
+  .r-btn{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    padding:14px 8px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+    color:#a8b5b9;cursor:pointer;border:0;background:transparent;
+    border-left:3px solid transparent;
+    transition:.15s var(--ease);
+    text-align:center;line-height:1.2;
+  }
+  .r-btn .ic{
+    width:34px;height:34px;border-radius:8px;
+    background:rgba(255,255,255,.04);border:1px solid var(--ink-2);
+    display:flex;align-items:center;justify-content:center;
+    color:#7b8a8f;transition:.15s;
+  }
+  .r-btn:hover{color:#fff;background:rgba(255,255,255,.03)}
+  .r-btn:hover .ic{color:#fff}
+  .r-btn.on{color:#fff;border-left-color:var(--acc);background:rgba(64,190,193,.08)}
+  .r-btn.on .ic{background:rgba(64,190,193,.12);border-color:var(--acc);color:var(--acc)}
+  .rail-spacer{flex:1}
+
+  /* ─────── BROWSE PANEL ─────── */
+  .browse{
+    grid-area:browse;
+    background:var(--paper);
+    border-right:1px solid var(--line);
+    overflow:clip;
+    display:flex;flex-direction:column;
+    min-width:0;
+  }
+  .browse-inner{width:100%;min-width:560px;display:flex;flex-direction:column}
+  .browse-head{
+    padding:16px 24px;border-bottom:1px solid var(--line);
+    background:var(--paper);
+    position:sticky;top:0;z-index:10;
+  }
+  .browse-head .row-1{
+    display:flex;align-items:center;gap:14px;margin-bottom:12px;
+  }
+  .browse-head .row-2{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  }
+  .browse-head h2{margin:0;font-size:17px;letter-spacing:-.005em;font-weight:600}
+  .browse-head .count{font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .browse-head .sp{flex:1}
+  .browse-head input[type=search]{
+    padding:9px 12px;border:1px solid var(--line);font-size:12px;
+    min-width:200px;flex:1;background:var(--bg);font:inherit;outline:none;
+  }
+  .browse-head input[type=search]:focus{border-color:var(--ink);background:#fff}
+  .browse-head select{
+    padding:9px 28px 9px 12px;border:1px solid var(--line);font-size:11px;
+    background:#fff;font:inherit;cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='none' stroke='%236b7280' stroke-width='1.5' d='M1 1l4 4 4-4'/></svg>");
+    background-repeat:no-repeat;background-position:right 10px center;
+    -webkit-appearance:none;appearance:none;
+  }
+  .browse-head .close-btn{
+    padding:9px 14px;border:1px solid var(--ink);background:#fff;
+    color:var(--ink);font-size:10px;letter-spacing:.22em;cursor:pointer;
+    text-transform:uppercase;font-weight:600;
+  }
+  .browse-head .close-btn:hover{background:var(--ink);color:#fff}
+
+  .browse-grid{
+    padding:24px 30px;
+    display:grid;gap:20px;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+
+  .pcard{
+    background:#fff;border:1px solid var(--line);
+    cursor:pointer;display:block;
+    transition:.18s var(--ease);
+    position:relative;
+  }
+  .pcard:hover{border-color:var(--acc);transform:translateY(-3px);box-shadow:0 14px 30px -14px rgba(0,0,0,.18)}
+  .pcard.sel{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+  .pcard .thumb{
+    position:relative;width:100%;padding-top:100%;
+    background:linear-gradient(135deg,#e8eaec,#d2d5d8);
+    overflow:hidden;
+  }
+  .pcard.design .thumb{background:linear-gradient(135deg,#cdd0d3,#e1e3e5)}
+  .pcard .thumb-label{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    color:#888;font-size:11px;letter-spacing:.2em;
+  }
+  .pcard .info{padding:14px 14px 16px}
+  .pcard .brand{font-size:9px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;margin-bottom:3px}
+  .pcard .name{font-size:14px;font-weight:600;letter-spacing:-.005em;margin:0}
+  .pcard .meta{font-size:11px;color:var(--muted);margin-top:4px}
+  .pcard .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  .pcard .price-tag{font-size:14px;font-weight:700}
+  /* dial color dots — preview-before-click */
+  .pcard .dots{display:flex;gap:4px;align-items:center}
+  .pcard .dots span{
+    width:14px;height:14px;border-radius:50%;
+    border:1px solid rgba(0,0,0,.15);display:block;
+  }
+  .pcard .dots .more{
+    width:auto;height:14px;padding:0 5px;border:1px solid var(--line);
+    border-radius:7px;font-size:9px;color:var(--muted);background:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:600;
+  }
+
+  /* Custom-concept call-out card (full row) */
+  .custom-card{
+    grid-column:1/-1;border:2px dashed var(--acc);background:var(--acc-soft);
+    padding:24px;display:flex;align-items:center;justify-content:space-between;
+    gap:24px;cursor:pointer;
+  }
+  .custom-card .cc-text{max-width:70%}
+  .custom-card h3{margin:0 0 6px;font-size:18px}
+  .custom-card p{margin:0;color:var(--muted);font-size:12px}
+  .custom-card .pill{
+    padding:14px 22px;background:var(--acc);color:var(--ink);
+    font-size:11px;letter-spacing:.22em;font-weight:700;border:0;cursor:pointer;
+  }
+
+  /* Pagination */
+  .pagination{
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    padding:24px 30px 46px;border-top:1px solid var(--line);background:var(--paper);
+  }
+  .pg-btn,.pg-num{
+    width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);background:#fff;cursor:pointer;
+    font:inherit;font-size:12px;font-weight:600;color:var(--ink);
+  }
+  .pg-btn:hover:not([disabled]),.pg-num:hover{border-color:var(--ink)}
+  .pg-btn[disabled]{color:#ccc;cursor:not-allowed}
+  .pg-num.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .pg-info{font-size:11px;color:var(--muted);margin-left:14px;letter-spacing:.08em}
+
+  /* Quick view trigger on watch/design cards */
+  .pcard .quickview{
+    position:absolute;top:10px;right:10px;z-index:3;
+    width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.92);
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;opacity:0;transform:translateY(-4px);
+    transition:.15s var(--ease);
+    color:var(--ink);
+  }
+  .pcard:hover .quickview{opacity:1;transform:translateY(0)}
+  .pcard .quickview:hover{background:var(--acc);border-color:var(--acc)}
+  .pcard .quickview svg{width:16px;height:16px}
+
+  /* Selected badge — top-left pill on picked watch/design card */
+  .pcard .sel-badge{
+    position:absolute;top:10px;left:10px;z-index:3;
+    background:var(--acc);color:var(--ink);
+    font-size:9px;letter-spacing:.22em;font-weight:700;
+    padding:5px 9px;text-transform:uppercase;
+    display:flex;align-items:center;gap:5px;
+    box-shadow:0 2px 8px rgba(64,190,193,.35);
+  }
+  .pcard .sel-badge::before{content:"✓";font-size:11px;line-height:1}
+
+  /* Lightbox modal */
+  .lightbox{
+    position:fixed;inset:0;background:rgba(8,24,32,.78);
+    display:none;align-items:center;justify-content:center;
+    z-index:50;padding:30px;
+    backdrop-filter:blur(4px);
+  }
+  .lightbox.open{display:flex;animation:fadeIn .25s ease}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .lb-card{
+    background:#fff;width:min(1100px,96vw);max-height:calc(100vh - 60px);
+    display:grid;grid-template-columns:1fr 1fr;overflow:hidden;
+    box-shadow:0 40px 100px -20px rgba(0,0,0,.4);
+    animation:zoomIn .3s var(--ease);
+    position:relative;
+  }
+  @keyframes zoomIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+  .lb-image{
+    background:linear-gradient(180deg,#ebebeb,#cdcdcd);
+    display:flex;align-items:center;justify-content:center;
+    color:#888;font-size:12px;letter-spacing:.2em;position:relative;
+    aspect-ratio:1/1;
+  }
+  .lb-image .hint{position:absolute;bottom:16px;left:16px;font-size:10px;color:var(--muted);letter-spacing:.1em;background:#fff;padding:5px 10px;border-radius:20px}
+  .lb-details{padding:34px 34px 28px;display:flex;flex-direction:column;overflow-y:auto}
+  .lb-close{
+    position:absolute;top:14px;right:14px;
+    width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid var(--line);
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    font-size:18px;color:var(--ink);z-index:3;
+  }
+  .lb-close:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .lb-brand{font-size:10px;letter-spacing:.3em;color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:4px}
+  .lb-title{margin:0 0 4px;font-size:28px;letter-spacing:-.01em;font-weight:600}
+  .lb-sub{font-size:13px;color:var(--muted);margin-bottom:18px}
+  .lb-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+  .lb-chips .chip{font-size:10px;letter-spacing:.15em;padding:5px 10px;background:var(--bg);border:1px solid var(--line);color:var(--ink);font-weight:600;text-transform:uppercase}
+  .lb-specs{
+    display:grid;grid-template-columns:1fr 1fr;gap:0 18px;
+    border-top:1px solid var(--line);padding-top:14px;margin-top:4px;
+  }
+  .lb-specs .row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;color:var(--muted);border-bottom:1px dotted #eee}
+  .lb-specs .row:last-child{border-bottom:0}
+  .lb-specs .row span:last-child{color:var(--ink);font-weight:500}
+  .lb-specs .row.full{grid-column:1/-1}
+  .lb-swatches{margin-top:18px}
+  .lb-sw-row{display:flex;gap:8px;margin:6px 0 14px}
+  .lb-sw-row span{width:28px;height:28px;border-radius:50%;border:1px solid #bbb}
+  .lb-price-row{
+    margin-top:auto;padding-top:18px;border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .lb-price{font-size:22px;font-weight:700}
+  .lb-price small{display:block;font-size:10px;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-bottom:2px;font-weight:500}
+  .lb-cta{
+    background:var(--ink);color:#fff;border:0;padding:14px 22px;
+    letter-spacing:.22em;font-size:11px;cursor:pointer;font-weight:600;
+  }
+  .lb-cta:hover{background:var(--acc);color:var(--ink)}
+
+  /* ─────── PREVIEW COLUMN
+     Wrapper = grid item for row 1. Preview-unit sticks inside wrapper
+     bound by row 1 height. Canvas keeps fixed aspect-ratio 3:4 —
+     no viewport-height scaling.                                        */
+  .preview-col{
+    grid-area:preview;
+    min-width:0;
+    position:relative;
+  }
+  .preview-unit{
+    display:flex;flex-direction:column;
+    background:linear-gradient(180deg,#fff,#ebedef);
+    min-width:0;
+    overflow-y:auto;overflow-x:hidden;
+    position:sticky;top:0;
+    max-height:100vh;
+  }
+  .preview-area{
+    flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
+    position:relative;padding:24px 24px 60px;
+  }
+  .preview-canvas{
+    height:min(72vh,640px);
+    aspect-ratio:3/4;
+    max-width:96%;
+    background:linear-gradient(180deg,#ececec,#d6d6d6);
+    border:1px solid #b8b8b8;
+    display:flex;align-items:center;justify-content:center;
+    color:#888;font-weight:600;letter-spacing:.2em;
+    box-shadow:0 30px 80px -30px rgba(0,0,0,.18);
+    transition:transform .25s var(--ease);
+  }
+  .preview-trust{
+    position:absolute;bottom:18px;left:0;right:0;
+    display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:0 12px;
+  }
+  .preview-trust span{
+    background:#fff;border:1px solid var(--line);
+    padding:4px 10px;font-size:10px;border-radius:20px;
+    color:var(--muted);letter-spacing:.08em;
+  }
+
+  /* Swatch hotbar — stays under preview always */
+  .hotbar{
+    background:#fff;border-top:1px solid var(--line);
+    padding:14px 20px;
+    display:flex;gap:22px;align-items:flex-start;justify-content:center;
+    flex-wrap:wrap;row-gap:12px;
+  }
+  .hotbar .hg{flex:0 0 auto}
+  .hg{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+  .hg-l{font-size:9px;letter-spacing:.28em;color:var(--muted);text-transform:uppercase;font-weight:600}
+  .hg-row{display:flex;gap:7px;align-items:center}
+  .sw{
+    width:30px;height:30px;border-radius:50%;
+    background:#ccc;border:1px solid #aaa;cursor:pointer;
+    transition:.12s;position:relative;
+  }
+  .sw:hover{transform:scale(1.08)}
+  .sw.sel{outline:2px solid var(--ink);outline-offset:2px}
+  .sizes{display:flex;gap:4px}
+  .sizes span{
+    padding:7px 12px;border:1px solid var(--line);font-size:11px;
+    cursor:pointer;min-width:40px;text-align:center;font-weight:600;
+    background:#fff;
+  }
+  .sizes span:hover{border-color:var(--ink)}
+  .sizes .sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .vsep{width:1px;height:42px;background:var(--line)}
+
+  /* Browse mode: fixed canvas size (no viewport scaling).
+     Canvas width follows preview-col width, aspect-ratio 3:4 sacred. */
+  [data-mode^="browse-"] .preview-area{
+    padding:14px;flex:none;
+    display:flex;align-items:center;justify-content:center;
+  }
+  [data-mode^="browse-"] .preview-canvas{
+    aspect-ratio:3/4;
+    width:100%;
+    height:auto;
+  }
+  [data-mode^="browse-"] .preview-trust{display:none}
+  [data-mode^="browse-"] .hotbar{
+    padding:12px 14px;gap:12px;flex:none;
+    display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;
+    min-height:140px;align-content:start;
+  }
+  [data-mode^="browse-"] .hotbar .hg{flex:none;width:100%}
+  [data-mode^="browse-"] .hotbar .hg:nth-child(1){grid-column:1/-1}
+  [data-mode^="browse-"] .hotbar .hg:nth-child(3){grid-column:1}
+  [data-mode^="browse-"] .hotbar .hg:nth-child(5){grid-column:2}
+  [data-mode^="browse-"] .hotbar .vsep{display:none}
+  [data-mode^="browse-"] .hg-l{font-size:8px;letter-spacing:.22em;margin-bottom:6px}
+  [data-mode^="browse-"] .sw{width:26px;height:26px}
+  [data-mode^="browse-"] .sizes span{padding:5px 9px;min-width:34px;font-size:10px}
+
+  /* preview-info: compact 3-line spec summary shown under hotbar in browse modes */
+  .preview-info{display:none}
+  [data-mode^="browse-"] .preview-info{
+    display:flex;flex-direction:column;gap:6px;
+    background:#fff;border-top:1px solid var(--line);
+    padding:12px 16px 12px;
+    flex:none;
+  }
+  .pi-line{
+    display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+    font-size:12px;letter-spacing:-.005em;color:var(--ink);
+  }
+  .pi-line .pi-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .pi-line .pi-name small{color:var(--muted);font-weight:500;margin-left:5px;font-size:11px}
+  .pi-line .pi-price{font-weight:600;font-size:12px;flex:none}
+  .pi-divider{height:1px;background:var(--line);margin:4px 0 2px}
+  .pi-total{
+    display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+    font-size:13px;color:var(--ink);
+  }
+  .pi-total .pi-total-l{font-size:10px;letter-spacing:.22em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+  .pi-total .pi-total-v{font-weight:700;font-size:15px;letter-spacing:-.005em}
+
+  /* ─────── CONFIG PANEL (right column) ─────── */
+  .config{
+    grid-area:config;
+    background:#fff;border-left:1px solid var(--line);
+    display:flex;flex-direction:column;
+    overflow:hidden;
+    position:relative;
+    min-width:0;
+  }
+  .config-inner{width:var(--config-w);display:flex;flex-direction:column}
+  .config-scroll{padding:22px 24px}
+  .cfg-foot{position:sticky;bottom:0}
+  .cfg-eyebrow{font-size:9px;letter-spacing:.28em;color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:6px}
+  .cfg-section{padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+  .cfg-section:last-child{border-bottom:0;margin-bottom:0}
+  .cfg-design-name{margin:0;font-size:20px;letter-spacing:-.01em}
+  .cfg-design-type{font-size:12px;color:var(--muted);margin:3px 0 0}
+  .cfg-design-price{font-size:13px;font-weight:600;margin-top:8px}
+  .cfg-pick{
+    display:flex;gap:12px;align-items:center;
+    padding:12px;border:1px solid var(--line);background:#fff;
+    cursor:pointer;transition:.15s;
+  }
+  .cfg-pick:hover{border-color:var(--ink)}
+  .cfg-pick .thumb{width:50px;height:50px;background:#eee;flex:none}
+  .cfg-pick .grow{flex:1;min-width:0}
+  .cfg-pick strong{display:block;font-size:13px;font-weight:600}
+  .cfg-pick small{color:var(--muted);font-size:11px}
+  .cfg-pick .act{font-size:10px;color:var(--acc);letter-spacing:.18em;text-transform:uppercase;font-weight:700}
+
+  .cfg-addon{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 0;font-size:12px;border-bottom:1px dotted #eee;cursor:pointer;
+  }
+  .cfg-addon:last-child{border-bottom:0}
+  .cfg-addon-l{flex:1}
+  .cfg-addon-l strong{display:block;font-weight:600}
+  .cfg-addon-l small{color:var(--muted);font-size:11px;display:block;margin-top:1px}
+  .cfg-addon-r{font-size:12px;font-weight:600;color:var(--muted);margin-left:10px}
+  .toggle{
+    width:36px;height:20px;background:#e5e7eb;border-radius:12px;
+    position:relative;flex:none;cursor:pointer;transition:.15s;margin-left:10px;
+  }
+  .toggle::after{
+    content:"";width:14px;height:14px;background:#fff;border-radius:50%;
+    position:absolute;top:3px;left:3px;transition:.15s;
+    box-shadow:0 1px 3px rgba(0,0,0,.2);
+  }
+  .toggle.on{background:var(--ink)}
+  .toggle.on::after{left:19px}
+
+  .cfg-price{padding:14px;background:var(--bg);border:1px solid var(--line)}
+  .cfg-price .pl{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;color:var(--muted)}
+  .cfg-price .pl.tot{
+    font-size:16px;font-weight:700;color:var(--ink);
+    border-top:1px solid var(--line);padding-top:10px;margin-top:6px;
+  }
+
+  .cfg-foot{border-top:1px solid var(--line);padding:18px 24px;background:#fff}
+  .cart-row{display:flex;gap:8px;margin-bottom:8px}
+  .qty{display:flex;align-items:center;border:1px solid var(--line)}
+  .qty button{width:38px;height:48px;border:0;background:#fff;cursor:pointer;font-size:16px;color:var(--ink)}
+  .qty input{width:40px;text-align:center;border:0;outline:0;height:48px;font:inherit;font-weight:600}
+  .cart-cta{
+    flex:1;background:var(--ink);color:#fff;border:0;padding:14px;
+    letter-spacing:.22em;font-size:11px;cursor:pointer;font-weight:600;
+  }
+  .cart-cta:hover{background:#000}
+  .save-cmp{
+    width:100%;padding:11px;border:1px solid var(--line);background:#fff;
+    font-size:10px;letter-spacing:.22em;cursor:pointer;color:var(--ink);font-weight:600;
+  }
+  .save-cmp:hover{border-color:var(--ink);background:var(--bg)}
+
+  .cfg-badges{
+    display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:14px;
+  }
+  .cfg-badges .b{
+    background:var(--bg);padding:8px 10px;font-size:10px;text-align:center;
+    border:1px solid var(--line);
+  }
+  .cfg-badges .b strong{display:block;font-size:10px;font-weight:700;letter-spacing:.05em}
+  .cfg-badges .b small{color:var(--muted);font-size:9px}
+
+  /* Config collapse handle (visible when config is hidden in browse modes) */
+  .config-handle{
+    position:fixed;top:50vh;right:0;transform:translateY(-50%);
+    width:26px;height:88px;background:var(--ink);color:#fff;
+    border:0;cursor:pointer;display:none;
+    align-items:center;justify-content:center;font-size:16px;
+    box-shadow:-3px 0 12px rgba(0,0,0,.12);z-index:20;
+  }
+  .config-handle:hover{background:var(--acc);color:var(--ink)}
+  .config-collapse-btn{
+    position:absolute;top:14px;right:14px;
+    width:28px;height:28px;border-radius:50%;
+    background:var(--bg);border:1px solid var(--line);
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    font-size:14px;color:var(--muted);z-index:1;
+  }
+  .config-collapse-btn:hover{border-color:var(--ink);color:var(--ink)}
+
+  /* ─────── COMPARE VIEW ─────── */
+  .compare-view{
+    grid-column:2/5;grid-row:1;
+    background:var(--line);
+    display:none;grid-template-columns:repeat(3,1fr);gap:1px;
+    z-index:4;
+    min-height:0;
+  }
+  .ccol{
+    background:#fff;display:flex;flex-direction:column;overflow:hidden;min-height:0;
+  }
+  .ccol-head{
+    padding:12px 18px;border-bottom:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:center;flex-shrink:0;
+  }
+  .ccol-head h3{margin:0;font-size:14px}
+  .ccol-head small{color:var(--muted);font-size:9px;letter-spacing:.22em;text-transform:uppercase}
+  .ccol-prev{
+    margin:14px 18px 10px;border:1px solid #b8b8b8;flex-shrink:0;
+    aspect-ratio:3/4;
+    background:linear-gradient(180deg,#ebebeb,#d6d6d6);
+    display:flex;align-items:center;justify-content:center;
+    color:#888;font-size:11px;letter-spacing:.2em;
+  }
+  .ccol-prices{
+    margin:14px 18px 8px;padding:10px 0;border-top:1px solid var(--line);
+  }
+  .ccol-prices .pl{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;color:var(--muted)}
+  .ccol-prices .pl strong{color:var(--ink);font-weight:600}
+  .ccol-prices .pl.tot{
+    font-size:14px;font-weight:700;color:var(--ink);
+    border-top:1px solid var(--line);padding-top:8px;margin-top:6px;
+  }
+  .ccol-prices .pl.tot span:last-child{font-size:16px}
+  .ccol-body{padding:0 18px 8px}
+  .ccol-row{
+    display:flex;justify-content:space-between;font-size:11px;
+    padding:5px 0;border-bottom:1px dotted #eee;color:var(--muted);
+  }
+  .ccol-row:last-child{border-bottom:0}
+  .ccol-row span:last-child{color:var(--ink);font-weight:500}
+  .ccol-foot{
+    border-top:1px solid var(--line);padding:14px 18px;
+    display:flex;justify-content:flex-end;align-items:center;background:var(--bg);
+  }
+  .ccol-price{font-weight:700;font-size:16px}
+  .ccol-foot button{
+    background:var(--ink);color:#fff;border:0;padding:10px 14px;
+    font-size:10px;letter-spacing:.2em;cursor:pointer;font-weight:600;
+  }
+  .ccol-empty{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:#bbb;font-size:11px;text-align:center;padding:40px 20px;letter-spacing:.05em;
+  }
+  .ccol-empty .big{font-size:54px;color:#e5e7eb;margin-bottom:14px;line-height:1}
+  .ccol-empty button{
+    margin-top:18px;background:#fff;color:var(--ink);border:1px solid var(--line);
+    padding:10px 16px;font-size:10px;letter-spacing:.22em;cursor:pointer;font-weight:600;
+  }
+  .ccol-empty button:hover{border-color:var(--ink)}
+
+  /* ═══════════ COMPARE DOCK ═══════════ */
+  .dock{
+    grid-area:dock;
+    background:#fff;border-top:1px solid var(--line);
+    padding:12px 20px;display:flex;gap:14px;align-items:center;
+    transition:transform .35s var(--ease);
+    min-width:0;
+  }
+  .dock-label{
+    font-size:9px;letter-spacing:.26em;color:var(--muted);
+    text-transform:uppercase;width:100px;line-height:1.4;font-weight:600;flex-shrink:0;
+  }
+  .dock-label small{color:#aaa;display:block;font-size:8px;margin-top:2px;font-weight:500;letter-spacing:.2em}
+  .slots{display:flex;gap:10px;flex:1;min-width:0}
+  .slot{
+    flex:1;min-width:0;height:72px;border:1px dashed var(--line-d);background:var(--bg);
+    display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;
+    position:relative;transition:.15s;
+  }
+  .slot:hover{border-color:var(--ink);background:#fff}
+  .slot.empty{justify-content:center;color:#bbb;font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:600}
+  .slot.filled{border-style:solid;background:#fff}
+  .slot .thumb{width:54px;height:54px;background:linear-gradient(135deg,#cdd0d3,#e1e3e5);border:1px solid #b9bcbe;flex:none}
+  .slot .info{min-width:0;overflow:hidden;font-size:11px}
+  .slot .info strong{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+  .slot .info small{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;font-size:10px}
+  .slot .price{margin-left:auto;font-weight:700;font-size:12px;flex:none}
+  .slot .x{position:absolute;top:4px;right:6px;color:#bbb;font-size:14px;line-height:1;cursor:pointer;width:16px;height:16px;display:flex;align-items:center;justify-content:center}
+  .slot .x:hover{color:var(--ink)}
+  .save-btn{
+    padding:0 18px;height:72px;background:var(--ink);color:#fff;border:0;
+    font-size:10px;letter-spacing:.22em;cursor:pointer;font-weight:600;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    flex-shrink:0;
+  }
+  .save-btn:hover{background:#000}
+  .save-btn .plus{font-size:18px;color:var(--acc);font-weight:700}
+
+  /* ═══════════ MODE STATE — handle/visibility only.
+     Column widths are driven by the 3 vars at the top of the file.    */
+  [data-mode="configure"] .config-handle{display:none}
+  [data-mode="configure"] .compare-view{display:none}
+
+  [data-mode^="browse-"] .config-handle{display:flex}
+  [data-mode^="browse-"] .compare-view{display:none}
+
+  [data-mode="browse-watches"] .browse-content-watches{display:flex;flex-direction:column;height:100%}
+  [data-mode="browse-watches"] .browse-content-designs{display:none}
+  [data-mode="browse-designs"] .browse-content-designs{display:flex;flex-direction:column;height:100%}
+  [data-mode="browse-designs"] .browse-content-watches{display:none}
+  .browse-content-watches,.browse-content-designs{display:none}
+
+  [data-mode="compare"] .config-handle{display:none}
+  [data-mode="compare"] .compare-view{display:grid}
+  [data-mode="compare"] .dock{display:none}
+
+  /* ═══════════ FLASH ANIM (save to compare) ═══════════ */
+  @keyframes flashGreen{0%{background:#fff}50%{background:var(--acc-soft)}100%{background:#fff}}
+  .dock.flash{animation:flashGreen .55s ease}
+</style>
 </head>
 <body>
 
-<!-- ═══ HEADER (theme stub) ═══ -->
-<header class="site-header" id="siteHeader">
-    <div class="header-inner">
-        <a href="#" class="header-logo">IFLWATCHES</a>
-        <nav class="header-nav">
-            <a href="#">WATCHES</a>
-            <a href="#">BRANDS</a>
-            <a href="#">ART GALLERY</a>
-            <a href="#">ACCESSORIES</a>
-            <a href="#" class="nav-active">BESPOKE</a>
-            <a href="#">BLOG</a>
-        </nav>
-        <div class="header-icons">
-            <button class="h-icon">&#128269;</button>
-            <button class="h-icon">&#128100;</button>
-            <button class="h-icon">&#128092;</button>
-        </div>
+<header class="site-header">SITE HEADER · iflwatches.com</header>
+
+<div class="customizer" data-mode="configure" id="cz">
+
+  <!-- ═══════════ LEFT RAIL (wrapper is grid item; nav sticks inside) ═══════════ -->
+  <div class="rail-col">
+  <nav class="rail">
+    <div class="rail-logo" aria-label="IFL Watches">
+      <svg viewBox="0 0 105.03 105.03" xmlns="http://www.w3.org/2000/svg" role="img">
+        <rect fill="#40bec1" x="81.69" width="23.34" height="64.18" rx=".96" ry=".96"/>
+        <path fill="#40bec1" d="M104.07,81.69h-38.92c-.53,0-.96-.43-.96-.96V.96c0-.53-.43-.96-.96-.96h-21.41c-.53,0-.96.43-.96.96v79.76c0,.53-.43.96-.96.96h-15.58c-.53,0-.96-.43-.96-.96V.96c0-.53-.43-.96-.96-.96H.96C.43,0,0,.43,0,.96v103.1c0,.53.43.96.96.96h103.1c.53,0,.96-.43.96-.96v-21.41c0-.53-.43-.96-.96-.96h.01Z"/>
+      </svg>
     </div>
-</header>
 
-<!-- ═══ TOOLBAR (panel triggers) ═══ -->
-<div class="toolbar">
-    <button class="toolbar-btn" id="btnWatches" onclick="togglePanel('watches')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-        Watches
-        <span class="toolbar-badge" id="watchBadge" style="display:none">0</span>
+    <button class="r-btn on" data-mode="configure">
+      <span class="ic">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/></svg>
+      </span>
+      Configure
     </button>
-    <button class="toolbar-btn" id="btnDesigns" onclick="togglePanel('designs')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        Designs
+
+    <button class="r-btn" data-mode="browse-watches">
+      <span class="ic">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2.5"/></svg>
+      </span>
+      Watches
     </button>
-    <button class="toolbar-btn" id="btnCustom" onclick="togglePanel('custom')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-        Custom
+
+    <button class="r-btn" data-mode="browse-designs">
+      <span class="ic">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
+      </span>
+      Designs
     </button>
-    <div class="toolbar-spacer"></div>
-    <span class="toolbar-crumb" id="toolbarCrumb">Select a watch and design to begin</span>
-</div>
 
-<!-- ═══ MAIN LAYOUT ═══ -->
-<div class="main-layout" id="mainLayout">
+    <button class="r-btn" data-mode="custom">
+      <span class="ic">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      </span>
+      Custom
+    </button>
 
-    <!-- LEFT: Filter Panel (push-style, like portfolio) -->
-    <aside class="filter-panel" id="filterPanel">
+    <button class="r-btn" data-mode="compare">
+      <span class="ic">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h13"/><path d="M16 3l4 4-4 4"/><path d="M21 17H8"/><path d="M8 21l-4-4 4-4"/></svg>
+      </span>
+      Compare
+    </button>
 
-        <!-- ═══ WATCHES PANEL ═══ -->
-        <div class="fp-content" id="panelWatches" style="display:none">
-            <div class="fp-panel-title">Select Watch</div>
+    <div class="rail-spacer"></div>
+  </nav>
+  </div>
 
-            <!-- Search -->
-            <div class="fp-search">
-                <input type="text" placeholder="Search watches..." id="watchSearch" oninput="renderWatchGrid()">
+    <!-- ─── BROWSE PANEL ─── -->
+    <section class="browse">
+      <div class="browse-inner">
+
+        <!-- WATCHES content -->
+        <div class="browse-content-watches">
+          <div class="browse-head">
+            <div class="row-1">
+              <button class="close-btn" data-mode="configure">← Back to Preview</button>
             </div>
-
-            <!-- Collapsible filters (like old customizer) -->
-            <div class="fp-filter-toggle" onclick="toggleFilters('watch')">
-                <span class="fp-ft-text">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="16" y2="12"/><line x1="4" y1="18" x2="12" y2="18"/></svg>
-                    Filter Watches
-                </span>
-                <span class="fp-ft-arrow" id="filterArrow">&#9660;</span>
+            <div class="row-2">
+              <h2>Watches</h2>
+              <span class="count">· 8 in catalog</span>
+              <span class="sp"></span>
+              <input type="search" placeholder="Search watches…" />
+              <select><option>All Brands</option><option>Seiko</option><option>Hamilton</option><option>Tissot</option></select>
+              <select><option>All Sizes</option><option>36mm</option><option>38mm</option><option>40mm</option><option>42mm</option></select>
+              <select><option>Movement</option><option>Automatic</option><option>Quartz</option></select>
             </div>
-
-            <!-- Active filters -->
-            <div class="fp-active-filters" id="activeFilters" style="display:none">
-                <span class="fp-af-label">Filters:</span>
-                <div class="fp-af-tags" id="activeFilterTags"></div>
-                <button class="fp-af-clear" onclick="clearAllFilters()">Clear</button>
-            </div>
-
-            <!-- Collapsible filter content -->
-            <div class="fp-filters-body" id="filtersBody" style="display:none">
-                <div class="fp-group">
-                    <label class="fp-label">Brand</label>
-                    <div class="fp-pills" id="brandPills"></div>
-                </div>
-                <div class="fp-group">
-                    <label class="fp-label">Case Size</label>
-                    <div class="fp-pills" id="sizePills"></div>
-                </div>
-                <div class="fp-group">
-                    <label class="fp-label">Dial Color</label>
-                    <div class="fp-pills" id="dialPills"></div>
-                </div>
-                <div class="fp-group">
-                    <label class="fp-label">Case Color</label>
-                    <div class="fp-pills" id="casePills"></div>
-                </div>
-            </div>
-
-            <!-- Results count -->
-            <div class="fp-results">
-                Showing <strong id="watchCount">8</strong> watches
-            </div>
-
-            <!-- Watch Grid -->
-            <div class="fp-watch-grid" id="watchGrid"></div>
-
-            <!-- Variant options (appear when watch selected) -->
-            <div class="fp-variants" id="variantSection" style="display:none">
-                <div class="fp-variant-header" id="variantHeader"></div>
-                <div class="fp-group" id="varSizes"></div>
-                <div class="fp-group" id="varDials"></div>
-                <div class="fp-group" id="varCases"></div>
-            </div>
+          </div>
+          <div class="browse-grid" id="watchGrid"></div>
+          <div class="pagination">
+            <button class="pg-btn" disabled>‹</button>
+            <button class="pg-num on">1</button>
+            <button class="pg-num">2</button>
+            <button class="pg-num">3</button>
+            <button class="pg-btn">›</button>
+            <span class="pg-info">1–8 of 18</span>
+          </div>
         </div>
 
-        <!-- ═══ DESIGNS PANEL ═══ -->
-        <div class="fp-content" id="panelDesigns" style="display:none">
-            <div class="fp-panel-title">Choose Design</div>
-
-            <!-- Search -->
-            <div class="fp-search">
-                <input type="text" placeholder="Search designs..." id="designSearch" oninput="renderDesignGrid()">
+        <!-- DESIGNS content -->
+        <div class="browse-content-designs">
+          <div class="browse-head">
+            <div class="row-1">
+              <button class="close-btn" data-mode="configure">← Back to Preview</button>
             </div>
-
-            <!-- Collapsible filters -->
-            <div class="fp-filter-toggle" onclick="toggleFilters('design')">
-                <span class="fp-ft-text">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="16" y2="12"/><line x1="4" y1="18" x2="12" y2="18"/></svg>
-                    Filter Designs
-                </span>
-                <span class="fp-ft-arrow">&#9660;</span>
+            <div class="row-2">
+              <h2>Designs</h2>
+              <span class="count">· 9 in gallery</span>
+              <span class="sp"></span>
+              <input type="search" placeholder="Search designs…" />
+              <select><option>All Themes</option><option>Space</option><option>Nature</option><option>Ocean</option><option>Urban</option></select>
+              <select><option>All Styles</option><option>Fine Art</option><option>Abstract</option><option>Illustration</option></select>
             </div>
-
-            <div class="fp-filters-body" id="designFiltersBody" style="display:none">
-                <div class="fp-group">
-                    <label class="fp-label">Theme</label>
-                    <div class="fp-pills" id="themePills"></div>
-                </div>
-                <div class="fp-group">
-                    <label class="fp-label">Style</label>
-                    <div class="fp-pills" id="stylePills"></div>
-                </div>
-            </div>
-
-            <!-- Design Grid -->
-            <div class="fp-design-grid" id="designGrid"></div>
+          </div>
+          <div class="browse-grid" id="designGrid"></div>
+          <div class="pagination">
+            <button class="pg-btn" disabled>‹</button>
+            <button class="pg-num on">1</button>
+            <button class="pg-num">2</button>
+            <button class="pg-btn">›</button>
+            <span class="pg-info">1–9 of 12</span>
+          </div>
         </div>
 
-        <!-- ═══ CUSTOM PANEL ═══ -->
-        <div class="fp-content" id="panelCustom" style="display:none">
-            <div class="fp-panel-title">Custom Design</div>
-            <div class="fp-custom-info">
-                <p><strong>Create Your Own Design — $1,490</strong></p>
-                <p style="color:#666;font-size:13px;margin-top:10px;line-height:1.7">
-                    Have a unique idea? Select Custom Concept and after checkout you'll receive a form to describe your vision, upload reference images, and share your preferences with our artists.
-                </p>
-                <button class="fp-custom-btn" onclick="selectCustomConcept()">SELECT CUSTOM CONCEPT</button>
-            </div>
+      </div>
+    </section>
+
+    <!-- ─── PREVIEW COLUMN (wrapper = grid item; preview-unit sticky inside) ─── -->
+    <div class="preview-col">
+    <section class="preview-unit" id="previewUnit">
+      <div class="preview-area">
+        <div class="preview-canvas" id="previewCanvas">LIVE PREVIEW</div>
+        <div class="preview-trust">
+          <span>Free Revisions</span><span>2-Year Warranty</span><span>Premium Box</span><span>3–4 Week Delivery</span>
         </div>
+      </div>
+
+      <div class="hotbar">
+        <div class="hg">
+          <span class="hg-l">Dial</span>
+          <div class="hg-row" data-swatch-group="dial" id="hotbarDial">
+            <span class="sw sel" style="background:#081820"></span>
+            <span class="sw" style="background:#40bec1"></span>
+            <span class="sw" style="background:#efe6c7"></span>
+            <span class="sw" style="background:#7a1220"></span>
+            <span class="sw" style="background:#c7c7c7"></span>
+            <span class="sw" style="background:#2b3a2f"></span>
+          </div>
+        </div>
+        <div class="vsep"></div>
+        <div class="hg">
+          <span class="hg-l">Case</span>
+          <div class="hg-row" data-swatch-group="case">
+            <span class="sw sel" style="background:#d4d4d4"></span>
+            <span class="sw" style="background:#c9a96e"></span>
+            <span class="sw" style="background:#2b2b2b"></span>
+            <span class="sw" style="background:#b87333"></span>
+          </div>
+        </div>
+        <div class="vsep"></div>
+        <div class="hg">
+          <span class="hg-l">Size</span>
+          <div class="sizes" data-swatch-group="size" id="hotbarSize">
+            <span class="sel">37</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-info" id="previewInfo">
+        <div class="pi-line"><span class="pi-name" id="piDesignName">Northern Lights</span><span class="pi-price" id="piDesignPrice">$1,200</span></div>
+        <div class="pi-line"><span class="pi-name"><span id="piWatchName">Seiko · SNK807</span> <small id="piWatchSpec">(37mm)</small></span><span class="pi-price" id="piWatchPrice">$320</span></div>
+        <div class="pi-divider"></div>
+        <div class="pi-total"><span class="pi-total-l">Total</span><span class="pi-total-v" id="piTotal">$1,520</span></div>
+      </div>
+
+    </section>
+    </div>
+
+    <!-- ─── CONFIG PANEL (right side — collapses in browse modes) ─── -->
+    <aside class="config">
+      <div class="config-inner">
+        <button class="config-collapse-btn" title="Hide panel" id="cfgCollapse">›</button>
+
+        <div class="config-scroll">
+
+          <div class="cfg-section">
+            <div class="cfg-eyebrow">Your Design</div>
+            <h2 class="cfg-design-name">Northern Lights</h2>
+            <p class="cfg-design-type">Bespoke Edition · Custom Watch Service</p>
+            <div class="cfg-design-price">Service Price · $1,200</div>
+          </div>
+
+          <div class="cfg-section">
+            <div class="cfg-eyebrow">Your Watch</div>
+            <div class="cfg-pick" data-mode="browse-watches">
+              <div class="thumb"></div>
+              <div class="grow">
+                <strong>Seiko SNK807</strong>
+                <small>Automatic · 37mm · $320</small>
+              </div>
+              <span class="act">Change →</span>
+            </div>
+          </div>
+
+          <div class="cfg-section">
+            <div class="cfg-eyebrow">Choose Design</div>
+            <div class="cfg-pick" data-mode="browse-designs">
+              <div class="thumb"></div>
+              <div class="grow">
+                <strong>Northern Lights</strong>
+                <small>Space · Fine Art</small>
+              </div>
+              <span class="act">Browse →</span>
+            </div>
+          </div>
+
+          <div class="cfg-section">
+            <div class="cfg-eyebrow">Add-Ons</div>
+            <div class="cfg-addon" data-toggle>
+              <div class="cfg-addon-l">
+                <strong>Engraving</strong>
+                <small>Up to 4 characters on the dial</small>
+              </div>
+              <span class="cfg-addon-r">+$150</span>
+              <div class="toggle"></div>
+            </div>
+            <div class="cfg-addon" data-toggle>
+              <div class="cfg-addon-l">
+                <strong>Extra Strap</strong>
+                <small>A second band in any compatible style</small>
+              </div>
+              <span class="cfg-addon-r">+$95</span>
+              <div class="toggle"></div>
+            </div>
+          </div>
+
+          <div class="cfg-section">
+            <div class="cfg-eyebrow">Price Summary</div>
+            <div class="cfg-price">
+              <div class="pl"><span>Design service</span><span>$1,200</span></div>
+              <div class="pl"><span>Base watch (Seiko SNK807)</span><span>$320</span></div>
+              <div class="pl" data-line="engraving" style="display:none"><span>Engraving</span><span>$150</span></div>
+              <div class="pl" data-line="strap" style="display:none"><span>Extra strap</span><span>$95</span></div>
+              <div class="pl tot"><span>Total</span><span id="totalPrice">$1,520</span></div>
+            </div>
+          </div>
+
+          <div class="cfg-section">
+            <div class="cfg-eyebrow">Guarantee</div>
+            <div class="cfg-badges">
+              <div class="b"><strong>Ready Design</strong><small>Proven artwork</small></div>
+              <div class="b"><strong>3–4 Weeks</strong><small>Faster delivery</small></div>
+              <div class="b"><strong>2-Year Warranty</strong><small>IFL guarantee</small></div>
+              <div class="b"><strong>Premium Box</strong><small>Certificate inc.</small></div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="cfg-foot">
+          <div class="cart-row">
+            <div class="qty"><button>−</button><input value="1" /><button>+</button></div>
+            <button class="cart-cta">ADD TO CART</button>
+          </div>
+          <button class="save-cmp" id="saveCmp">＋ SAVE TO COMPARE</button>
+        </div>
+      </div>
     </aside>
 
-    <!-- CENTER: Canvas Preview -->
-    <div class="preview-area">
-        <div class="preview-wrap">
-            <canvas id="previewCanvas" width="750" height="1000"></canvas>
+    <!-- ─── CONFIG HANDLE (shown only in browse modes) ─── -->
+    <button class="config-handle" id="cfgHandle" title="Show details" data-mode="configure">‹</button>
+
+    <!-- ─── COMPARE VIEW ─── -->
+    <section class="compare-view" id="compareView">
+      <div class="ccol" data-cmp-slot="0">
+        <div class="ccol-head"><h3>Build A</h3><small>SLOT 1</small></div>
+        <div class="ccol-prev">PREVIEW A</div>
+        <div class="ccol-body">
+          <div class="ccol-row"><span>Model</span><span>Seiko SNK807</span></div>
+          <div class="ccol-row"><span>Design</span><span>Northern Lights</span></div>
+          <div class="ccol-row"><span>Type</span><span>Bespoke Edition</span></div>
+          <div class="ccol-row"><span>Dial</span><span>Navy</span></div>
+          <div class="ccol-row"><span>Case</span><span>Steel</span></div>
+          <div class="ccol-row"><span>Size</span><span>38 mm</span></div>
+          <div class="ccol-row"><span>Movement</span><span>Automatic 7S26</span></div>
         </div>
+        <div class="ccol-prices">
+          <div class="pl"><span>Watch</span><strong>$320</strong></div>
+          <div class="pl"><span>Design service</span><strong>$1,200</strong></div>
+          <div class="pl tot"><span>Total</span><span>$1,520</span></div>
+        </div>
+        <div class="ccol-foot"><button data-mode="configure">LOAD &amp; EDIT →</button></div>
+      </div>
+
+      <div class="ccol" data-cmp-slot="1">
+        <div class="ccol-head"><h3>Build B</h3><small>SLOT 2</small></div>
+        <div class="ccol-prev">PREVIEW B</div>
+        <div class="ccol-body">
+          <div class="ccol-row"><span>Model</span><span>Hamilton Khaki</span></div>
+          <div class="ccol-row"><span>Design</span><span>Alpine Map</span></div>
+          <div class="ccol-row"><span>Type</span><span>Bespoke Edition</span></div>
+          <div class="ccol-row"><span>Dial</span><span>Olive</span></div>
+          <div class="ccol-row"><span>Case</span><span>Steel</span></div>
+          <div class="ccol-row"><span>Size</span><span>38 mm</span></div>
+          <div class="ccol-row"><span>Movement</span><span>Automatic H-10</span></div>
+        </div>
+        <div class="ccol-prices">
+          <div class="pl"><span>Watch</span><strong>$695</strong></div>
+          <div class="pl"><span>Design service</span><strong>$1,200</strong></div>
+          <div class="pl tot"><span>Total</span><span>$1,895</span></div>
+        </div>
+        <div class="ccol-foot"><button data-mode="configure">LOAD &amp; EDIT →</button></div>
+      </div>
+
+      <div class="ccol" data-cmp-slot="2">
+        <div class="ccol-empty">
+          <div class="big">＋</div>
+          SLOT 3 IS EMPTY
+          <small style="margin-top:8px;display:block;font-size:10px;letter-spacing:.05em">Save another build to compare three side-by-side</small>
+          <button data-mode="configure">GO BUILD ONE →</button>
+        </div>
+      </div>
+    </section>
+
+  <!-- ═══════════ COMPARE DOCK ═══════════ -->
+  <div class="dock" id="dock">
+    <div class="dock-label">COMPARE DOCK<small>up to 3 builds</small></div>
+    <div class="slots">
+      <div class="slot filled" data-slot="0" data-mode="compare">
+        <div class="thumb"></div>
+        <div class="info"><strong>Seiko SNK807</strong><small>Northern Lights · Navy · 38mm</small></div>
+        <span class="price">$1,520</span>
+        <span class="x">✕</span>
+      </div>
+      <div class="slot filled" data-slot="1" data-mode="compare">
+        <div class="thumb" style="background:linear-gradient(135deg,#a8b89a,#c8d6bc)"></div>
+        <div class="info"><strong>Hamilton Khaki</strong><small>Alpine Map · Olive · 38mm</small></div>
+        <span class="price">$1,895</span>
+        <span class="x">✕</span>
+      </div>
+      <div class="slot empty" data-slot="2">＋ EMPTY SLOT</div>
     </div>
+    <button class="save-btn" id="saveBtn"><span class="plus">＋</span>SAVE<br>CURRENT</button>
+  </div>
 
-    <!-- RIGHT: Configuration Panel (sticky) -->
-    <aside class="config-panel">
-        <!-- Design info -->
-        <div class="cp-section">
-            <div class="cp-eyebrow">YOUR DESIGN</div>
-            <h2 class="cp-design-name" id="cpDesignName">Galaxy Concept</h2>
-            <p class="cp-design-type">Bespoke Edition — Custom Watch Service</p>
-            <div class="cp-design-price">Service Price: $1,200</div>
-        </div>
-
-        <!-- Selected watch -->
-        <div class="cp-section">
-            <div class="cp-eyebrow">YOUR WATCH</div>
-            <div id="cpWatchDisplay">
-                <div class="cp-empty">Click "Watches" to select a base model</div>
-            </div>
-        </div>
-
-        <!-- Add-ons -->
-        <div class="cp-section">
-            <div class="cp-eyebrow">ADD-ONS</div>
-            <button class="cp-addon" id="engravingBtn" onclick="toggleEngraving()">
-                <span>&#9998; Add Engraving (Initials)</span>
-                <span class="cp-addon-price">+$150</span>
-            </button>
-            <div class="cp-engraving" id="engravingConfig" style="display:none">
-                <input type="text" class="cp-engrave-input" id="engravingInput" maxlength="4" placeholder="Up to 4 characters" oninput="updatePreview()">
-            </div>
-            <button class="cp-addon" id="strapBtn" onclick="toggleStrap()">
-                <span>&#9711; Add Extra Strap</span>
-                <span class="cp-addon-price">+$95</span>
-            </button>
-        </div>
-
-        <!-- Price Summary -->
-        <div class="cp-section">
-            <div class="cp-price-box">
-                <div class="cp-eyebrow" style="margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e0e0e0">PRICE SUMMARY</div>
-                <div class="cp-price-line">
-                    <span>Custom Design Service</span>
-                    <span class="cp-price-val">$1,200</span>
-                </div>
-                <div class="cp-price-line" id="priceWatchLine" style="display:none">
-                    <span id="priceWatchLabel">Base Watch</span>
-                    <span class="cp-price-val" id="priceWatch">$0</span>
-                </div>
-                <div class="cp-price-line" id="priceEngLine" style="display:none">
-                    <span>Engraving</span>
-                    <span class="cp-price-val">$150</span>
-                </div>
-                <div class="cp-price-line" id="priceStrapLine" style="display:none">
-                    <span>Extra Strap</span>
-                    <span class="cp-price-val">$95</span>
-                </div>
-                <div class="cp-price-line cp-price-total">
-                    <span><strong>Total Price</strong></span>
-                    <span class="cp-price-val"><strong id="priceTotal">$1,200</strong></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Cart -->
-        <div class="cp-cart-row">
-            <div class="cp-qty">
-                <button class="cp-qty-btn" onclick="changeQty(-1)">&minus;</button>
-                <input type="number" class="cp-qty-input" id="qtyInput" value="1" min="1" readonly>
-                <button class="cp-qty-btn" onclick="changeQty(1)">+</button>
-            </div>
-            <button class="cp-add-cart" onclick="addToCart()">ADD TO CART</button>
-        </div>
-
-        <!-- Trust Badges -->
-        <div class="cp-badges">
-            <div class="cp-badge"><strong>Ready Design</strong><small>Proven artwork</small></div>
-            <div class="cp-badge"><strong>3-4 Weeks</strong><small>Faster delivery</small></div>
-            <div class="cp-badge"><strong>2 Year Warranty</strong><small>IFL guarantee</small></div>
-            <div class="cp-badge"><strong>Premium Box</strong><small>Certificate included</small></div>
-        </div>
-    </aside>
 </div>
 
-<!-- ═══ FOOTER (theme stub) ═══ -->
-<footer class="site-footer">
-    <div class="footer-inner">
-        <div class="footer-col"><strong>IFLWATCHES</strong><p>Hand-painted custom watches</p></div>
-        <div class="footer-col"><strong>Shop</strong><a href="#">All Watches</a><a href="#">Bespoke</a><a href="#">Limited Edition</a></div>
-        <div class="footer-col"><strong>Support</strong><a href="#">Contact</a><a href="#">FAQ</a><a href="#">Shipping</a></div>
-        <div class="footer-col"><strong>Follow</strong><a href="#">Instagram</a><a href="#">Facebook</a><a href="#">YouTube</a></div>
+<!-- ═══════════ QUICK-VIEW LIGHTBOX ═══════════ -->
+<div class="lightbox" id="lightbox">
+  <div class="lb-card">
+    <div class="lb-image" id="lbImage">
+      WATCH IMAGE · LARGE
     </div>
-    <div class="footer-bottom">&copy; 2026 IFL Watches. All rights reserved.</div>
-</footer>
+    <div class="lb-details">
+      <button class="lb-close" id="lbClose">✕</button>
+      <div class="lb-brand" id="lbBrand">SEIKO</div>
+      <h2 class="lb-title" id="lbTitle">SNK807</h2>
+      <div class="lb-sub" id="lbSub">Automatic · 37mm · Field watch</div>
+      <div class="lb-chips" id="lbChips"></div>
+      <div class="lb-specs" id="lbSpecs"></div>
+      <div class="lb-swatches" id="lbDialsWrap">
+        <div class="pi-eyebrow" style="font-size:9px;letter-spacing:.25em;color:var(--muted);text-transform:uppercase;font-weight:600">Available Dial Colors</div>
+        <div class="lb-sw-row" id="lbDials"></div>
+      </div>
+      <div class="lb-swatches" id="lbCasesWrap">
+        <div class="pi-eyebrow" style="font-size:9px;letter-spacing:.25em;color:var(--muted);text-transform:uppercase;font-weight:600">Available Case Colors</div>
+        <div class="lb-sw-row" id="lbCases"></div>
+      </div>
+      <div class="lb-price-row">
+        <div class="lb-price"><small>Base price</small><span id="lbPrice">$320</span></div>
+        <button class="lb-cta" id="lbSelect">SELECT THIS WATCH →</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-<script src="shared/v2-light.js"></script>
+<footer class="site-footer">SITE FOOTER · iflwatches.com</footer>
+
+<script>
+  // ────── DATA ──────
+  const watches = [
+    {brand:'Seiko',    name:'SNK807',        price:320,  sizes:[37],          mvmt:'Automatic', cal:'7S26',  thickness:11,  l2l:43, lugW:18, crystal:'Hardlex',  wr:'30 m',  ref:'SNK807K2',   sel:true, dials:['#081820','#40bec1','#efe6c7','#7a1220','#c7c7c7','#2b3a2f']},
+    {brand:'Seiko',    name:'SKX007',        price:450,  sizes:[42],          mvmt:'Automatic', cal:'7S26',  thickness:13,  l2l:46, lugW:22, crystal:'Hardlex',  wr:'200 m', ref:'SKX007K',    dials:['#081820','#1a2a3a','#2b2b2b']},
+    {brand:'Orient',   name:'Bambino',       price:280,  sizes:[38,40],       mvmt:'Automatic', cal:'F6724', thickness:11.5,l2l:45, lugW:21, crystal:'Mineral',  wr:'30 m',  ref:'FAC00005W0', dials:['#fff8e7','#1a1a1a','#3a2818','#8a4a2a']},
+    {brand:'Hamilton', name:'Khaki Field',   price:695,  sizes:[38,42],       mvmt:'Automatic', cal:'H-10',  thickness:11,  l2l:47, lugW:20, crystal:'Sapphire', wr:'100 m', ref:'H68419931',  dials:['#2b3a2f','#1a1a1a','#7a6a4a']},
+    {brand:'Tissot',   name:'PRX',           price:675,  sizes:[35,40],       mvmt:'Quartz',    cal:'ETA',   thickness:10.4,l2l:42, lugW:0,  crystal:'Sapphire', wr:'100 m', ref:'T137.410',   dials:['#1e3a5f','#000','#c0c0c0','#7a1220']},
+    {brand:'Citizen',  name:'NY0040 Diver',  price:380,  sizes:[42],          mvmt:'Automatic', cal:'Miyota 8203', thickness:13,l2l:48, lugW:20,crystal:'Mineral',wr:'200 m', ref:'NY0040-09E', dials:['#1a3a5a','#000','#1a3a1a']},
+    {brand:'Longines', name:'HydroConquest', price:1250, sizes:[39,41,43],    mvmt:'Automatic', cal:'L888',  thickness:12,  l2l:49, lugW:21, crystal:'Sapphire', wr:'300 m', ref:'L3.781',     dials:['#1e3a5f','#000','#2b3a2f','#7a1220','#c0c0c0']},
+    {brand:'Oris',     name:'Diver 65',      price:1800, sizes:[36,38,40,42], mvmt:'Automatic', cal:'Sellita SW200', thickness:13,l2l:47,lugW:20,crystal:'Sapphire',wr:'100 m',ref:'01 733',     dials:['#1a3a5a','#2b3a2f','#5a3a2a']},
+  ];
+
+  function fmtSizes(arr){
+    if(!arr || !arr.length) return '';
+    if(arr.length === 1) return arr[0] + 'mm';
+    if(arr.length <= 3) return arr.join('/') + 'mm';
+    return arr[0] + '–' + arr[arr.length-1] + 'mm';
+  }
+
+  const designs = [
+    {name:'Northern Lights', theme:'Space',  style:'Fine Art',     price:1200, sel:true, grad:'linear-gradient(135deg,#0a1628,#1e4a6d 40%,#40bec1 100%)'},
+    {name:'Coral Reef',      theme:'Ocean',  style:'Illustration', price:1200, grad:'linear-gradient(135deg,#0e3a4d,#2a8a8e 50%,#f4a261)'},
+    {name:'Tokyo Rain',      theme:'Urban',  style:'Abstract',     price:1200, grad:'linear-gradient(135deg,#1a1a2e,#3a4a5e 60%,#a8b8c8)'},
+    {name:'Alpine Map',      theme:'Nature', style:'Illustration', price:1200, grad:'linear-gradient(135deg,#3e5a3e,#7a8a6a 60%,#d4c8a8)'},
+    {name:'Ink on Water',    theme:'Nature', style:'Fine Art',     price:1200, grad:'linear-gradient(135deg,#0a0a14,#3a3a5a)'},
+    {name:'Solstice',        theme:'Space',  style:'Abstract',     price:1200, grad:'linear-gradient(180deg,#1a0a2e,#7a3a5a 50%,#f4d4a8)'},
+    {name:'Velvet Opera',    theme:'Urban',  style:'Fine Art',     price:1200, grad:'linear-gradient(135deg,#2e0a1a,#7a1a3a)'},
+    {name:'Desert Line',     theme:'Nature', style:'Abstract',     price:1200, grad:'linear-gradient(180deg,#f4d4a8,#c89a6a 60%,#5a3a2a)'},
+    {name:'Mossland',        theme:'Nature', style:'Illustration', price:1200, grad:'linear-gradient(135deg,#1a3a2a,#5a7a4a)'},
+  ];
+
+  // ────── RENDER GRIDS ──────
+  function renderWatches(){
+    const grid = document.getElementById('watchGrid');
+    grid.innerHTML = watches.map(w => `
+      <div class="pcard ${w.sel?'sel':''}" data-watch="${w.name}">
+        ${w.sel?'<span class="sel-badge">Selected</span>':''}
+        <button class="quickview" title="Quick view" data-qv-watch="${w.name}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <div class="thumb">
+          <span class="thumb-label">WATCH IMAGE</span>
+        </div>
+        <div class="info">
+          <div class="brand">${w.brand}</div>
+          <h4 class="name">${w.name}</h4>
+          <div class="meta">${w.mvmt} · ${fmtSizes(w.sizes)}</div>
+          <div class="row">
+            <div class="dots" title="Available dial colors">
+              ${w.dials.slice(0,4).map(c=>`<span style="background:${c}"></span>`).join('')}
+              ${w.dials.length>4?`<span class="more">+${w.dials.length-4}</span>`:''}
+            </div>
+            <span class="price-tag">$${w.price.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderDesigns(){
+    const grid = document.getElementById('designGrid');
+    const customCard = `
+      <div class="custom-card" onclick="alert('Custom Concept flow — TBD')">
+        <div class="cc-text">
+          <h3>Custom Concept · $1,490</h3>
+          <p>Don't see your idea? Commission an original design with our art director — two sketches, one final render, unlimited revisions.</p>
+        </div>
+        <button class="pill">START CUSTOM →</button>
+      </div>
+    `;
+    grid.innerHTML = customCard + designs.map(d => `
+      <div class="pcard design ${d.sel?'sel':''}" data-design="${d.name}">
+        ${d.sel?'<span class="sel-badge">Selected</span>':''}
+        <button class="quickview" title="Quick view" data-qv-design="${d.name}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <div class="thumb" style="background:${d.grad}"></div>
+        <div class="info">
+          <div class="brand">${d.theme} · ${d.style}</div>
+          <h4 class="name">${d.name}</h4>
+          <div class="row">
+            <span class="meta">Bespoke Edition</span>
+            <span class="price-tag">$${d.price.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  renderWatches();
+  renderDesigns();
+
+  // ────── MODE SWITCHING ──────
+  const cz = document.getElementById('cz');
+  function setMode(mode){
+    cz.dataset.mode = mode;
+    document.querySelectorAll('.r-btn').forEach(b => {
+      b.classList.toggle('on', b.dataset.mode === mode);
+    });
+  }
+  document.addEventListener('click', e => {
+    const trg = e.target.closest('[data-mode]');
+    if(trg && trg.dataset.mode !== cz.dataset.mode){
+      setMode(trg.dataset.mode);
+    }
+  });
+
+  // collapse button (config → browse-watches as default if you want a quick browse)
+  document.getElementById('cfgCollapse').addEventListener('click', e => {
+    e.stopPropagation();
+    setMode('browse-watches');
+  });
+
+  // ────── ADDONS / PRICE ──────
+  const prices = {design:1200, watch:320, eng:150, strap:95};
+  let st = {eng:false, strap:false};
+  function recalc(){
+    const eng = st.eng ? prices.eng : 0;
+    const strap = st.strap ? prices.strap : 0;
+    document.querySelector('[data-line="engraving"]').style.display = st.eng ? 'flex' : 'none';
+    document.querySelector('[data-line="strap"]').style.display     = st.strap ? 'flex' : 'none';
+    document.getElementById('totalPrice').textContent = '$' + (prices.design + prices.watch + eng + strap).toLocaleString();
+    if(typeof updateSummary === 'function') updateSummary();
+  }
+  document.querySelectorAll('[data-toggle]').forEach((row, i) => {
+    row.addEventListener('click', () => {
+      const t = row.querySelector('.toggle');
+      t.classList.toggle('on');
+      const key = i === 0 ? 'eng' : 'strap';
+      st[key] = t.classList.contains('on');
+      recalc();
+    });
+  });
+
+  // ────── SWATCHES ──────
+  document.querySelectorAll('[data-swatch-group]').forEach(grp => {
+    grp.addEventListener('click', e => {
+      const sw = e.target.closest('.sw, span');
+      if(!sw || !grp.contains(sw) || sw === grp) return;
+      grp.querySelectorAll('.sel').forEach(s => s.classList.remove('sel'));
+      sw.classList.add('sel');
+      // pulse the preview to demonstrate "live update"
+      const canvas = document.getElementById('previewCanvas');
+      canvas.style.transform = 'scale(.97)';
+      setTimeout(()=>canvas.style.transform='', 160);
+    });
+  });
+
+  // ────── COMPARE DOCK ──────
+  function flashDock(){
+    const d = document.getElementById('dock');
+    d.classList.add('flash');
+    setTimeout(()=>d.classList.remove('flash'), 600);
+  }
+  window.flashDock = flashDock;
+  document.getElementById('saveBtn').addEventListener('click', flashDock);
+  document.getElementById('saveCmp').addEventListener('click', flashDock);
+
+  document.querySelectorAll('.slot .x').forEach(x => {
+    x.addEventListener('click', e => {
+      e.stopPropagation();
+      const slot = x.closest('.slot');
+      slot.classList.remove('filled');
+      slot.classList.add('empty');
+      slot.innerHTML = '＋ EMPTY SLOT';
+    });
+  });
+
+  // ────── PCARDS — visual select + update hotbar swatches + preview-info ──────
+  let selWatch  = watches.find(w => w.sel) || watches[0];
+  let selDesign = designs.find(d => d.sel) || designs[0];
+
+  function updateSummary(){
+    document.getElementById('piDesignName').textContent  = selDesign.name;
+    document.getElementById('piDesignPrice').textContent = `$${selDesign.price.toLocaleString()}`;
+    document.getElementById('piWatchName').textContent   = `${selWatch.brand} · ${selWatch.name}`;
+    document.getElementById('piWatchSpec').textContent   = `(${fmtSizes(selWatch.sizes)})`;
+    document.getElementById('piWatchPrice').textContent  = `$${selWatch.price.toLocaleString()}`;
+    const eng   = st.eng   ? prices.eng   : 0;
+    const strap = st.strap ? prices.strap : 0;
+    const total = selWatch.price + selDesign.price + eng + strap;
+    document.getElementById('piTotal').textContent = `$${total.toLocaleString()}`;
+  }
+
+  function updateSelectedWatch(w){
+    selWatch = w;
+    // replace dial swatches in hotbar to reflect this watch's options
+    const dialBox = document.getElementById('hotbarDial');
+    dialBox.innerHTML = w.dials.map((c,i)=>`<span class="sw${i===0?' sel':''}" style="background:${c}"></span>`).join('');
+
+    // replace size pills in hotbar
+    const sizeBox = document.getElementById('hotbarSize');
+    sizeBox.innerHTML = w.sizes.map((s,i)=>`<span${i===0?' class="sel"':''}>${s}</span>`).join('');
+
+    updateSummary();
+  }
+
+  function updateSelectedDesign(d){
+    selDesign = d;
+    updateSummary();
+  }
+
+  // initialize preview-info with selected watch + design
+  updateSelectedWatch(selWatch);
+
+  // ────── QUICK VIEW LIGHTBOX ──────
+  const lb = document.getElementById('lightbox');
+  function openWatchLightbox(w){
+    document.getElementById('lbBrand').textContent = w.brand.toUpperCase();
+    document.getElementById('lbTitle').textContent = w.name;
+    const sizeLabel = fmtSizes(w.sizes);
+    document.getElementById('lbSub').textContent = `${w.mvmt} · ${sizeLabel} · ${w.wr} water resistance`;
+    document.getElementById('lbChips').innerHTML = `
+      <span class="chip">${w.mvmt}</span>
+      <span class="chip">${sizeLabel}</span>
+      <span class="chip">${w.crystal}</span>
+      <span class="chip">${w.wr}</span>`;
+    document.getElementById('lbSpecs').innerHTML = `
+      <div class="row"><span>Movement</span><span>${w.mvmt}</span></div>
+      <div class="row"><span>Caliber</span><span>${w.cal}</span></div>
+      <div class="row"><span>Diameter</span><span>${sizeLabel}</span></div>
+      <div class="row"><span>Thickness</span><span>${w.thickness} mm</span></div>
+      <div class="row"><span>Lug-to-lug</span><span>${w.l2l} mm</span></div>
+      <div class="row"><span>Lug width</span><span>${w.lugW ? w.lugW + ' mm' : '—'}</span></div>
+      <div class="row"><span>Crystal</span><span>${w.crystal}</span></div>
+      <div class="row"><span>Water res.</span><span>${w.wr}</span></div>
+      <div class="row full"><span>Reference</span><span>${w.ref}</span></div>`;
+    document.getElementById('lbDials').innerHTML = w.dials.map(c => `<span style="background:${c}"></span>`).join('');
+    document.getElementById('lbDialsWrap').style.display = 'block';
+    const cases = ['#d4d4d4','#c9a96e','#2b2b2b','#b87333']; // steel, gold, PVD, bronze
+    document.getElementById('lbCases').innerHTML = cases.map(c => `<span style="background:${c}"></span>`).join('');
+    document.getElementById('lbCasesWrap').style.display = 'block';
+    document.getElementById('lbPrice').textContent = `$${w.price.toLocaleString()}`;
+    document.getElementById('lbImage').firstChild.textContent = `${w.brand.toUpperCase()} ${w.name} · LARGE IMAGE`;
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function openDesignLightbox(d){
+    document.getElementById('lbBrand').textContent = 'IFL · BESPOKE EDITION';
+    document.getElementById('lbTitle').textContent = d.name;
+    document.getElementById('lbSub').textContent = `${d.theme} · ${d.style}`;
+    document.getElementById('lbChips').innerHTML = `
+      <span class="chip">${d.theme}</span>
+      <span class="chip">${d.style}</span>
+      <span class="chip">Bespoke</span>
+      <span class="chip">Ready Design</span>`;
+    document.getElementById('lbSpecs').innerHTML = `
+      <div class="row full"><span>Theme</span><span>${d.theme}</span></div>
+      <div class="row full"><span>Style</span><span>${d.style}</span></div>
+      <div class="row full"><span>Edition</span><span>Bespoke · Ready to apply</span></div>
+      <div class="row full"><span>Revisions</span><span>Unlimited</span></div>
+      <div class="row full"><span>Delivery</span><span>3–4 weeks</span></div>
+      <div class="row full"><span>Warranty</span><span>2-year IFL guarantee</span></div>`;
+    document.getElementById('lbDials').innerHTML = '';
+    document.getElementById('lbCasesWrap').style.display = 'none';
+    document.getElementById('lbDialsWrap').style.display = 'none';
+    document.getElementById('lbPrice').textContent = `$${d.price.toLocaleString()}`;
+    document.getElementById('lbImage').style.background = d.grad;
+    document.getElementById('lbImage').firstChild.textContent = `${d.name.toUpperCase()} · LARGE DESIGN`;
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox(){
+    lb.classList.remove('open');
+    document.body.style.overflow = '';
+    document.getElementById('lbImage').style.background = '';
+  }
+  document.getElementById('lbClose').addEventListener('click', closeLightbox);
+  lb.addEventListener('click', e => { if(e.target === lb) closeLightbox(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && lb.classList.contains('open')) closeLightbox(); });
+  document.getElementById('lbSelect').addEventListener('click', closeLightbox);
+
+  document.addEventListener('click', e => {
+    const qvW = e.target.closest('[data-qv-watch]');
+    if(qvW){ e.stopPropagation(); const w = watches.find(x => x.name === qvW.dataset.qvWatch); if(w) openWatchLightbox(w); return; }
+    const qvD = e.target.closest('[data-qv-design]');
+    if(qvD){ e.stopPropagation(); const d = designs.find(x => x.name === qvD.dataset.qvDesign); if(d) openDesignLightbox(d); return; }
+  });
+
+  document.addEventListener('click', e => {
+    const card = e.target.closest('.pcard');
+    if(!card) return;
+    const watchName = card.dataset.watch;
+    const designName = card.dataset.design;
+    if(watchName){
+      watches.forEach(x => x.sel = x.name === watchName);
+      renderWatches();
+      const w = watches.find(x => x.name === watchName);
+      if(w) updateSelectedWatch(w);
+    } else if(designName){
+      designs.forEach(x => x.sel = x.name === designName);
+      renderDesigns();
+      const d = designs.find(x => x.name === designName);
+      if(d) updateSelectedDesign(d);
+    }
+  });
+</script>
 </body>
 </html>
