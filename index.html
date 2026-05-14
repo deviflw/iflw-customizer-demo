@@ -30,8 +30,8 @@
     --bg:#fafafa;
     --paper:#fff;
     --rail-w:clamp(96px,7vw,130px);
-    --config-w:clamp(420px,28vw,480px);
-    --preview-browse-w:clamp(380px,26vw,460px);
+    --config-w:clamp(440px,30vw,520px);
+    --preview-browse-w:clamp(360px,24vw,400px);
     --dock-h:96px;
     --header-h:60px;
     --footer-h:60px;
@@ -56,10 +56,7 @@
       var(--col-browse,0)
       var(--col-preview,1fr)
       var(--col-config,0);
-    grid-template-rows:1fr var(--dock-h);
-    grid-template-areas:
-      "rail browse preview config"
-      "rail dock   dock    dock";
+    grid-template-areas: "rail browse preview config";
     min-height:calc(100vh - var(--header-h) - var(--footer-h));
     max-width:var(--cap);
     margin:0 auto;
@@ -82,7 +79,6 @@
     --col-preview:minmax(0,1fr);
     --col-config:0;
   }
-  .customizer[data-mode="compare"]{grid-template-rows:1fr 0}
   [data-mode="compare"] .preview-unit{visibility:hidden}
 
   /* ═══════════ LEFT RAIL ═══════════
@@ -127,7 +123,11 @@
   .r-btn.on .ic{background:rgba(64,190,193,.12);border-color:var(--acc);color:var(--acc)}
   .rail-spacer{flex:1}
 
-  /* ─────── BROWSE PANEL ─────── */
+  /* ─────── BROWSE PANEL ───────
+     --col-gutter is the single source of truth for horizontal alignment
+     of every block inside the browse column. Cards, pagination, dock,
+     filter-bar — everything uses it. Eliminates the "staircase" effect
+     of mismatched per-block padding values. */
   .browse{
     grid-area:browse;
     background:var(--paper);
@@ -135,10 +135,11 @@
     overflow:clip;
     display:flex;flex-direction:column;
     min-width:0;
+    --col-gutter:30px;
   }
   .browse-inner{width:100%;min-width:560px;display:flex;flex-direction:column}
   .browse-head{
-    padding:16px 24px;border-bottom:1px solid var(--line);
+    padding:16px var(--col-gutter);
     background:var(--paper);
     position:sticky;top:0;z-index:10;
   }
@@ -171,7 +172,7 @@
   .browse-head .close-btn:hover{background:var(--ink);color:#fff}
 
   .browse-grid{
-    padding:24px 30px;
+    padding:24px var(--col-gutter);
     display:grid;gap:20px;
     grid-template-columns:repeat(3,minmax(0,1fr));
   }
@@ -229,8 +230,42 @@
   /* Pagination */
   .pagination{
     display:flex;align-items:center;justify-content:center;gap:6px;
-    padding:24px 30px 46px;border-top:1px solid var(--line);background:var(--paper);
+    padding:24px var(--col-gutter);background:var(--paper);
   }
+
+  /* ═══════════ INSET DIVIDERS (variant 1) ═══════════
+     Single utility — every panel that needs a hairline separator from
+     its sibling gets one inset by --divider-inset (default = element's
+     own horizontal padding). Lines never touch column edges, so when
+     two panels stack the borders don't visually compound into a
+     "double-thick" stripe. DRY: one rule controls all dividers. */
+  .pagination, .dock, [data-mode^="browse-"] .preview-info{
+    position:relative;
+  }
+  /* .browse-head already has position:sticky which serves as positioning
+     context for its ::after divider — no override needed.
+     .hotbar deliberately has NO divider — the gradient bg of preview-area
+     above already provides a visual edge. */
+  .pagination::before,
+  .dock::before,
+  [data-mode^="browse-"] .preview-info::before{
+    content:""; position:absolute;
+    left:var(--divider-inset, 24px); right:var(--divider-inset, 24px);
+    top:0; height:1px; background:var(--line);
+    pointer-events:none;
+  }
+  .browse-head::after{
+    content:""; position:absolute;
+    left:var(--divider-inset, 24px); right:var(--divider-inset, 24px);
+    bottom:0; height:1px; background:var(--line);
+    pointer-events:none;
+  }
+  /* Per-panel inset to match each element's own horizontal padding.
+     Browse-column panels share --col-gutter as the source of truth. */
+  .pagination{--divider-inset:var(--col-gutter)}
+  .dock{--divider-inset:var(--col-gutter)}
+  .browse-head{--divider-inset:var(--col-gutter)}
+  [data-mode^="browse-"] .preview-info{--divider-inset:16px}
   .pg-btn,.pg-num{
     width:36px;height:36px;display:flex;align-items:center;justify-content:center;
     border:1px solid var(--line);background:#fff;cursor:pointer;
@@ -289,7 +324,7 @@
     aspect-ratio:1/1;
   }
   .lb-image .hint{position:absolute;bottom:16px;left:16px;font-size:10px;color:var(--muted);letter-spacing:.1em;background:#fff;padding:5px 10px;border-radius:20px}
-  .lb-details{padding:34px 34px 28px;display:flex;flex-direction:column;overflow-y:auto}
+  .lb-details{padding:26px 28px 22px;display:flex;flex-direction:column;overflow-y:auto}
   .lb-close{
     position:absolute;top:14px;right:14px;
     width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid var(--line);
@@ -299,20 +334,25 @@
   .lb-close:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
   .lb-brand{font-size:10px;letter-spacing:.3em;color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:4px}
   .lb-title{margin:0 0 4px;font-size:28px;letter-spacing:-.01em;font-weight:600}
-  .lb-sub{font-size:13px;color:var(--muted);margin-bottom:18px}
-  .lb-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
-  .lb-chips .chip{font-size:10px;letter-spacing:.15em;padding:5px 10px;background:var(--bg);border:1px solid var(--line);color:var(--ink);font-weight:600;text-transform:uppercase}
+  .lb-sub{font-size:11px;color:var(--muted);letter-spacing:.04em;margin-bottom:12px}
+  .lb-sub strong{color:var(--ink);font-weight:500;letter-spacing:.02em}
+  .lb-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+  .lb-chips .chip{font-size:9px;letter-spacing:.14em;padding:4px 8px;background:var(--bg);border:1px solid var(--line);color:var(--ink);font-weight:600;text-transform:uppercase}
   .lb-specs{
-    display:grid;grid-template-columns:1fr 1fr;gap:0 18px;
-    border-top:1px solid var(--line);padding-top:14px;margin-top:4px;
+    display:grid;grid-template-columns:1fr 1fr;gap:0 16px;
+    border-top:1px solid var(--line);padding-top:10px;margin-top:2px;
   }
-  .lb-specs .row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;color:var(--muted);border-bottom:1px dotted #eee}
+  .lb-specs .row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;color:var(--muted);border-bottom:1px dotted #eee;gap:8px}
   .lb-specs .row:last-child{border-bottom:0}
   .lb-specs .row span:last-child{color:var(--ink);font-weight:500}
   .lb-specs .row.full{grid-column:1/-1}
   .lb-swatches{margin-top:18px}
   .lb-sw-row{display:flex;gap:8px;margin:6px 0 14px}
   .lb-sw-row span{width:28px;height:28px;border-radius:50%;border:1px solid #bbb}
+
+  /* What's Included (Packaging + Warranty) — NOT in lightbox.
+     This info lives in the Configure panel + checkout flow instead, to
+     avoid duplicating it across surfaces. */
   .lb-price-row{
     margin-top:auto;padding-top:18px;border-top:1px solid var(--line);
     display:flex;justify-content:space-between;align-items:center;
@@ -333,23 +373,29 @@
     grid-area:preview;
     min-width:0;
     position:relative;
+    /* Matches preview-unit's gradient end (#ebedef) so any preview-col
+       area visible below the sticky preview-unit reads as a seamless
+       continuation, not a distinct grey plate. */
+    background:#ebedef;
   }
   .preview-unit{
     display:flex;flex-direction:column;
     background:linear-gradient(180deg,#fff,#ebedef);
     min-width:0;
-    overflow-y:auto;overflow-x:hidden;
     position:sticky;top:0;
-    max-height:100vh;
+    /* Natural content height — no max-height, no overflow. With
+       preview-col upper-clamp at 400px the canvas+hotbar+summary stack
+       fits inside one viewport on standard 16:9 screens, so no internal
+       scrollbar can appear. */
   }
   .preview-area{
     flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
-    position:relative;padding:24px 24px 60px;
+    position:relative;padding:24px;
   }
   .preview-canvas{
-    height:min(72vh,640px);
+    height:min(82vh,820px);
     aspect-ratio:3/4;
-    max-width:96%;
+    max-width:100%;
     background:linear-gradient(180deg,#ececec,#d6d6d6);
     border:1px solid #b8b8b8;
     display:flex;align-items:center;justify-content:center;
@@ -369,7 +415,7 @@
 
   /* Swatch hotbar — stays under preview always */
   .hotbar{
-    background:#fff;border-top:1px solid var(--line);
+    background:#fff;
     padding:14px 20px;
     display:flex;gap:22px;align-items:flex-start;justify-content:center;
     flex-wrap:wrap;row-gap:12px;
@@ -396,15 +442,20 @@
   .vsep{width:1px;height:42px;background:var(--line)}
 
   /* Browse mode: fixed canvas size (no viewport scaling).
-     Canvas width follows preview-col width, aspect-ratio 3:4 sacred. */
+     Canvas width follows preview-col width, aspect-ratio 3:4 sacred.
+     Sides padding smaller than top/bottom — taller canvas reads as
+     visually balanced when horizontal whitespace is tighter. */
   [data-mode^="browse-"] .preview-area{
-    padding:14px;flex:none;
+    padding:0;flex:none;
     display:flex;align-items:center;justify-content:center;
   }
   [data-mode^="browse-"] .preview-canvas{
     aspect-ratio:3/4;
     width:100%;
     height:auto;
+    max-width:none;
+    border:0;
+    box-shadow:none;
   }
   [data-mode^="browse-"] .preview-trust{display:none}
   [data-mode^="browse-"] .hotbar{
@@ -413,9 +464,11 @@
     min-height:140px;align-content:start;
   }
   [data-mode^="browse-"] .hotbar .hg{flex:none;width:100%}
-  [data-mode^="browse-"] .hotbar .hg:nth-child(1){grid-column:1/-1}
-  [data-mode^="browse-"] .hotbar .hg:nth-child(3){grid-column:1}
-  [data-mode^="browse-"] .hotbar .hg:nth-child(5){grid-column:2}
+  /* Row 1: CASE (left, swatches) + SIZE (right, pill)
+     Row 2: DIAL (full width, biggest palette) */
+  [data-mode^="browse-"] .hotbar .hg:nth-child(3){grid-column:1;grid-row:1}  /* CASE */
+  [data-mode^="browse-"] .hotbar .hg:nth-child(5){grid-column:2;grid-row:1}  /* SIZE */
+  [data-mode^="browse-"] .hotbar .hg:nth-child(1){grid-column:1/-1;grid-row:2}  /* DIAL */
   [data-mode^="browse-"] .hotbar .vsep{display:none}
   [data-mode^="browse-"] .hg-l{font-size:8px;letter-spacing:.22em;margin-bottom:6px}
   [data-mode^="browse-"] .sw{width:26px;height:26px}
@@ -425,8 +478,8 @@
   .preview-info{display:none}
   [data-mode^="browse-"] .preview-info{
     display:flex;flex-direction:column;gap:6px;
-    background:#fff;border-top:1px solid var(--line);
-    padding:12px 16px 12px;
+    background:#fff;
+    padding:12px 16px 20px;
     flex:none;
   }
   .pi-line{
@@ -457,8 +510,20 @@
   .config-scroll{padding:22px 24px}
   .cfg-foot{position:sticky;bottom:0}
   .cfg-eyebrow{font-size:9px;letter-spacing:.28em;color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:6px}
-  .cfg-section{padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--line)}
-  .cfg-section:last-child{border-bottom:0;margin-bottom:0}
+  .cfg-header{margin-bottom:22px}
+  .cfg-header .cfg-eyebrow{margin-bottom:10px}
+  .cfg-header h2{
+    margin:0 0 6px;font-size:22px;font-weight:600;letter-spacing:-.01em;
+    color:var(--ink);
+  }
+  .cfg-header p{
+    margin:0;font-size:14px;color:var(--muted);letter-spacing:.005em;font-weight:500;
+  }
+  .cfg-section{padding-bottom:0;margin-bottom:22px}
+  .cfg-section:last-child{margin-bottom:0}
+  /* Section divider: thin top border + extra top padding to space the
+     content away from the line. Applied selectively via .cfg-divide. */
+  .cfg-section.cfg-divide{padding-top:22px;border-top:1px solid var(--line)}
   .cfg-design-name{margin:0;font-size:20px;letter-spacing:-.01em}
   .cfg-design-type{font-size:12px;color:var(--muted);margin:3px 0 0}
   .cfg-design-price{font-size:13px;font-weight:600;margin-top:8px}
@@ -467,11 +532,13 @@
     padding:12px;border:1px solid var(--line);background:#fff;
     cursor:pointer;transition:.15s;
   }
-  .cfg-pick:hover{border-color:var(--ink)}
+  .cfg-pick:hover{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
   .cfg-pick .thumb{width:50px;height:50px;background:#eee;flex:none}
   .cfg-pick .grow{flex:1;min-width:0}
   .cfg-pick strong{display:block;font-size:13px;font-weight:600}
   .cfg-pick small{color:var(--muted);font-size:11px}
+  .cfg-pick .end{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
+  .cfg-pick .price{font-size:14px;font-weight:700;color:var(--ink);letter-spacing:-.005em}
   .cfg-pick .act{font-size:10px;color:var(--acc);letter-spacing:.18em;text-transform:uppercase;font-weight:700}
 
   .cfg-addon{
@@ -502,31 +569,67 @@
     border-top:1px solid var(--line);padding-top:10px;margin-top:6px;
   }
 
-  .cfg-foot{border-top:1px solid var(--line);padding:18px 24px;background:#fff}
+  .cfg-foot{padding:8px 24px 18px;background:#fff}
   .cart-row{display:flex;gap:8px;margin-bottom:8px}
   .qty{display:flex;align-items:center;border:1px solid var(--line)}
-  .qty button{width:38px;height:48px;border:0;background:#fff;cursor:pointer;font-size:16px;color:var(--ink)}
+  .qty button{width:38px;height:48px;border:0;background:#fff;cursor:pointer;font-size:16px;color:var(--ink);transition:.12s}
+  .qty button:hover{background:var(--bg)}
   .qty input{width:40px;text-align:center;border:0;outline:0;height:48px;font:inherit;font-weight:600}
   .cart-cta{
-    flex:1;background:var(--ink);color:#fff;border:0;padding:14px;
-    letter-spacing:.22em;font-size:11px;cursor:pointer;font-weight:600;
+    flex:1;background:var(--acc);color:#fff;border:0;padding:14px;
+    letter-spacing:.22em;font-size:11px;cursor:pointer;font-weight:700;
   }
-  .cart-cta:hover{background:#000}
+  .cart-cta:hover{background:#3aa8aa}
   .save-cmp{
     width:100%;padding:11px;border:1px solid var(--line);background:#fff;
     font-size:10px;letter-spacing:.22em;cursor:pointer;color:var(--ink);font-weight:600;
   }
   .save-cmp:hover{border-color:var(--ink);background:var(--bg)}
 
+  /* Accordion section — supplementary info (description, shipping &
+     returns, warranty, how it works). Native <details>/<summary>,
+     no JS needed. Each summary row gets a chevron via ::after. */
+  .cfg-accordion{padding:0;margin-top:14px}
+  .cfg-accordion .acc-item{border-bottom:1px solid var(--line)}
+  .cfg-accordion .acc-item:last-child{border-bottom:0}
+  .cfg-accordion summary{
+    list-style:none;cursor:pointer;
+    padding:14px 0;font-size:12px;font-weight:600;color:var(--ink);
+    letter-spacing:.02em;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .cfg-accordion summary::-webkit-details-marker{display:none}
+  .cfg-accordion summary::after{
+    content:"+";font-size:18px;font-weight:400;color:var(--muted);
+    transition:transform .2s var(--ease);
+  }
+  .cfg-accordion .acc-item[open] summary::after{content:"−"}
+  .cfg-accordion .acc-content{
+    padding:0 0 14px;font-size:11px;line-height:1.55;color:var(--muted);
+  }
+  .cfg-accordion .acc-content strong{color:var(--ink);font-weight:600}
+
+  /* Trust badges under Add to Cart — 2×2 grid.
+     Desktop: icon-on-left + left-aligned text, no border, generous gap.
+     Mobile: icon-on-top + centered text (compact / scannable). */
   .cfg-badges{
-    display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:14px;
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px;
   }
   .cfg-badges .b{
-    background:var(--bg);padding:8px 10px;font-size:10px;text-align:center;
-    border:1px solid var(--line);
+    background:var(--bg);padding:14px;border:0;
+    display:flex;flex-direction:row;align-items:center;gap:12px;
+    text-align:left;
   }
-  .cfg-badges .b strong{display:block;font-size:10px;font-weight:700;letter-spacing:.05em}
-  .cfg-badges .b small{color:var(--muted);font-size:9px}
+  .cfg-badges .b svg{flex:none;width:24px;height:24px;color:var(--acc);stroke:currentColor;fill:none;stroke-width:1.5}
+  .cfg-badges .b-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .cfg-badges .b strong{display:block;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--ink)}
+  .cfg-badges .b small{color:var(--muted);font-size:10px;line-height:1.25}
+
+  @media (max-width: 768px){
+    .cfg-badges .b{
+      flex-direction:column;align-items:center;gap:4px;text-align:center;
+    }
+  }
 
   /* Config collapse handle (visible when config is hidden in browse modes) */
   .config-handle{
@@ -607,11 +710,12 @@
   }
   .ccol-empty button:hover{border-color:var(--ink)}
 
-  /* ═══════════ COMPARE DOCK ═══════════ */
+  /* ═══════════ COMPARE DOCK ═══════════
+     Lives inside browse-inner, after pagination. Only renders inside browse modes
+     (because the browse column itself is collapsed to 0 width in other modes). */
   .dock{
-    grid-area:dock;
-    background:#fff;border-top:1px solid var(--line);
-    padding:12px 20px;display:flex;gap:14px;align-items:center;
+    background:var(--paper);
+    padding:20px var(--col-gutter);display:flex;gap:14px;align-items:center;
     transition:transform .35s var(--ease);
     min-width:0;
   }
@@ -648,20 +752,20 @@
   /* ═══════════ MODE STATE — handle/visibility only.
      Column widths are driven by the 3 vars at the top of the file.    */
   [data-mode="configure"] .config-handle{display:none}
+  [data-mode="configure"] .config-collapse-btn{display:none}
   [data-mode="configure"] .compare-view{display:none}
 
   [data-mode^="browse-"] .config-handle{display:flex}
   [data-mode^="browse-"] .compare-view{display:none}
 
-  [data-mode="browse-watches"] .browse-content-watches{display:flex;flex-direction:column;height:100%}
+  [data-mode="browse-watches"] .browse-content-watches{display:flex;flex-direction:column}
   [data-mode="browse-watches"] .browse-content-designs{display:none}
-  [data-mode="browse-designs"] .browse-content-designs{display:flex;flex-direction:column;height:100%}
+  [data-mode="browse-designs"] .browse-content-designs{display:flex;flex-direction:column}
   [data-mode="browse-designs"] .browse-content-watches{display:none}
   .browse-content-watches,.browse-content-designs{display:none}
 
   [data-mode="compare"] .config-handle{display:none}
   [data-mode="compare"] .compare-view{display:grid}
-  [data-mode="compare"] .dock{display:none}
 
   /* ═══════════ FLASH ANIM (save to compare) ═══════════ */
   @keyframes flashGreen{0%{background:#fff}50%{background:var(--acc-soft)}100%{background:#fff}}
@@ -779,6 +883,27 @@
           </div>
         </div>
 
+        <!-- ═══════════ COMPARE DOCK (inside browse column, after pagination) ═══════════ -->
+        <div class="dock" id="dock">
+          <div class="dock-label">COMPARE DOCK<small>up to 3 builds</small></div>
+          <div class="slots">
+            <div class="slot filled" data-slot="0" data-mode="compare">
+              <div class="thumb"></div>
+              <div class="info"><strong>Seiko SNK807</strong><small>Northern Lights · Navy · 38mm</small></div>
+              <span class="price">$1,520</span>
+              <span class="x">✕</span>
+            </div>
+            <div class="slot filled" data-slot="1" data-mode="compare">
+              <div class="thumb" style="background:linear-gradient(135deg,#a8b89a,#c8d6bc)"></div>
+              <div class="info"><strong>Hamilton Khaki</strong><small>Alpine Map · Olive · 38mm</small></div>
+              <span class="price">$1,895</span>
+              <span class="x">✕</span>
+            </div>
+            <div class="slot empty" data-slot="2">＋ EMPTY SLOT</div>
+          </div>
+          <button class="save-btn" id="saveBtn"><span class="plus">＋</span>SAVE<br>CURRENT</button>
+        </div>
+
       </div>
     </section>
 
@@ -787,9 +912,6 @@
     <section class="preview-unit" id="previewUnit">
       <div class="preview-area">
         <div class="preview-canvas" id="previewCanvas">LIVE PREVIEW</div>
-        <div class="preview-trust">
-          <span>Free Revisions</span><span>2-Year Warranty</span><span>Premium Box</span><span>3–4 Week Delivery</span>
-        </div>
       </div>
 
       <div class="hotbar">
@@ -840,34 +962,36 @@
 
         <div class="config-scroll">
 
-          <div class="cfg-section">
-            <div class="cfg-eyebrow">Your Design</div>
-            <h2 class="cfg-design-name">Northern Lights</h2>
-            <p class="cfg-design-type">Bespoke Edition · Custom Watch Service</p>
-            <div class="cfg-design-price">Service Price · $1,200</div>
+          <div class="cfg-header">
+            <div class="cfg-eyebrow">Your Build</div>
+            <h2 id="cfgBuildTitle">Seiko SNK807</h2>
+            <p id="cfgBuildSub">Northern Lights</p>
           </div>
 
-          <div class="cfg-section">
+          <div class="cfg-section cfg-divide">
             <div class="cfg-eyebrow">Your Watch</div>
             <div class="cfg-pick" data-mode="browse-watches">
               <div class="thumb"></div>
               <div class="grow">
-                <strong>Seiko SNK807</strong>
-                <small>Automatic · 37mm · $320</small>
+                <strong id="cfgPickName">Seiko SNK807</strong>
+                <small id="cfgPickMeta">Black / Steel / 37mm</small>
               </div>
-              <span class="act">Change →</span>
+              <div class="end">
+                <span class="price">$320</span>
+                <span class="act">Change →</span>
+              </div>
             </div>
-          </div>
-
-          <div class="cfg-section">
-            <div class="cfg-eyebrow">Choose Design</div>
+            <div class="cfg-eyebrow" style="margin-top:18px">Your Design</div>
             <div class="cfg-pick" data-mode="browse-designs">
               <div class="thumb"></div>
               <div class="grow">
                 <strong>Northern Lights</strong>
                 <small>Space · Fine Art</small>
               </div>
-              <span class="act">Browse →</span>
+              <div class="end">
+                <span class="price">$1,200</span>
+                <span class="act">Change →</span>
+              </div>
             </div>
           </div>
 
@@ -875,8 +999,8 @@
             <div class="cfg-eyebrow">Add-Ons</div>
             <div class="cfg-addon" data-toggle>
               <div class="cfg-addon-l">
-                <strong>Engraving</strong>
-                <small>Up to 4 characters on the dial</small>
+                <strong>Hand-Painted Monogram</strong>
+                <small>Up to 4 characters · hand-painted on dial by IFL artists</small>
               </div>
               <span class="cfg-addon-r">+$150</span>
               <div class="toggle"></div>
@@ -891,24 +1015,14 @@
             </div>
           </div>
 
-          <div class="cfg-section">
+          <div class="cfg-section cfg-divide">
             <div class="cfg-eyebrow">Price Summary</div>
             <div class="cfg-price">
-              <div class="pl"><span>Design service</span><span>$1,200</span></div>
-              <div class="pl"><span>Base watch (Seiko SNK807)</span><span>$320</span></div>
-              <div class="pl" data-line="engraving" style="display:none"><span>Engraving</span><span>$150</span></div>
+              <div class="pl"><span>Base watch</span><span>$320</span></div>
+              <div class="pl"><span>Customization service</span><span>$1,200</span></div>
+              <div class="pl" data-line="monogram" style="display:none"><span>Hand-Painted Monogram</span><span>$150</span></div>
               <div class="pl" data-line="strap" style="display:none"><span>Extra strap</span><span>$95</span></div>
               <div class="pl tot"><span>Total</span><span id="totalPrice">$1,520</span></div>
-            </div>
-          </div>
-
-          <div class="cfg-section">
-            <div class="cfg-eyebrow">Guarantee</div>
-            <div class="cfg-badges">
-              <div class="b"><strong>Ready Design</strong><small>Proven artwork</small></div>
-              <div class="b"><strong>3–4 Weeks</strong><small>Faster delivery</small></div>
-              <div class="b"><strong>2-Year Warranty</strong><small>IFL guarantee</small></div>
-              <div class="b"><strong>Premium Box</strong><small>Certificate inc.</small></div>
             </div>
           </div>
 
@@ -916,10 +1030,55 @@
 
         <div class="cfg-foot">
           <div class="cart-row">
-            <div class="qty"><button>−</button><input value="1" /><button>+</button></div>
+            <div class="qty" id="cartQty">
+              <button data-qty="-1" aria-label="Decrease">−</button>
+              <input value="1" id="cartQtyInput" inputmode="numeric" />
+              <button data-qty="+1" aria-label="Increase">+</button>
+            </div>
             <button class="cart-cta">ADD TO CART</button>
           </div>
-          <button class="save-cmp" id="saveCmp">＋ SAVE TO COMPARE</button>
+          <div class="cfg-badges">
+            <div class="b">
+              <svg viewBox="0 0 24 24"><path d="M3 21l3-3"/><path d="M14 4l6 6-9 9H5v-6l9-9z"/><path d="M14 4l3-3 3 3-3 3"/></svg>
+              <div class="b-text"><strong>Hand-Painted</strong><small>In-house artistry</small></div>
+            </div>
+            <div class="b">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M12 2v12M8 8h8"/><path d="M9 14l-2 8 5-3 5 3-2-8"/></svg>
+              <div class="b-text"><strong>Made-to-Order</strong><small>Crafted for you</small></div>
+            </div>
+            <div class="b">
+              <svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>
+              <div class="b-text"><strong>2-Year</strong><small>IFL warranty</small></div>
+            </div>
+            <div class="b">
+              <svg viewBox="0 0 24 24"><path d="M3 7h11v8H3z"/><path d="M14 10h4l3 3v2h-7"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+              <div class="b-text"><strong>Free</strong><small>Worldwide shipping</small></div>
+            </div>
+          </div>
+
+          <div class="cfg-accordion">
+            <details class="acc-item">
+              <summary>Production</summary>
+              <div class="acc-content">
+                <strong>3–4 weeks</strong> for ready-made designs.<br>
+                <strong>3–6 weeks</strong> for Custom Concepts, depending on design complexity.<br>
+                Add ~3 days if a Hand-Painted Monogram is included.
+              </div>
+            </details>
+            <details class="acc-item">
+              <summary>Shipping &amp; Returns</summary>
+              <div class="acc-content">
+                <strong>Shipping:</strong> Free worldwide express delivery, fully insured and tracked.<br>
+                <strong>Returns:</strong> 14-day return window from delivery for unworn pieces. Custom Concepts are final sale.
+              </div>
+            </details>
+            <details class="acc-item">
+              <summary>Warranty</summary>
+              <div class="acc-content">
+                Covered by a 2-year IFL Watches warranty against manufacturing defects in the customization layer. Base watch movement carries the original manufacturer's warranty. Warranty documentation is included in the box.
+              </div>
+            </details>
+          </div>
         </div>
       </div>
     </aside>
@@ -979,27 +1138,6 @@
       </div>
     </section>
 
-  <!-- ═══════════ COMPARE DOCK ═══════════ -->
-  <div class="dock" id="dock">
-    <div class="dock-label">COMPARE DOCK<small>up to 3 builds</small></div>
-    <div class="slots">
-      <div class="slot filled" data-slot="0" data-mode="compare">
-        <div class="thumb"></div>
-        <div class="info"><strong>Seiko SNK807</strong><small>Northern Lights · Navy · 38mm</small></div>
-        <span class="price">$1,520</span>
-        <span class="x">✕</span>
-      </div>
-      <div class="slot filled" data-slot="1" data-mode="compare">
-        <div class="thumb" style="background:linear-gradient(135deg,#a8b89a,#c8d6bc)"></div>
-        <div class="info"><strong>Hamilton Khaki</strong><small>Alpine Map · Olive · 38mm</small></div>
-        <span class="price">$1,895</span>
-        <span class="x">✕</span>
-      </div>
-      <div class="slot empty" data-slot="2">＋ EMPTY SLOT</div>
-    </div>
-    <button class="save-btn" id="saveBtn"><span class="plus">＋</span>SAVE<br>CURRENT</button>
-  </div>
-
 </div>
 
 <!-- ═══════════ QUICK-VIEW LIGHTBOX ═══════════ -->
@@ -1015,14 +1153,6 @@
       <div class="lb-sub" id="lbSub">Automatic · 37mm · Field watch</div>
       <div class="lb-chips" id="lbChips"></div>
       <div class="lb-specs" id="lbSpecs"></div>
-      <div class="lb-swatches" id="lbDialsWrap">
-        <div class="pi-eyebrow" style="font-size:9px;letter-spacing:.25em;color:var(--muted);text-transform:uppercase;font-weight:600">Available Dial Colors</div>
-        <div class="lb-sw-row" id="lbDials"></div>
-      </div>
-      <div class="lb-swatches" id="lbCasesWrap">
-        <div class="pi-eyebrow" style="font-size:9px;letter-spacing:.25em;color:var(--muted);text-transform:uppercase;font-weight:600">Available Case Colors</div>
-        <div class="lb-sw-row" id="lbCases"></div>
-      </div>
       <div class="lb-price-row">
         <div class="lb-price"><small>Base price</small><span id="lbPrice">$320</span></div>
         <button class="lb-cta" id="lbSelect">SELECT THIS WATCH →</button>
@@ -1035,15 +1165,67 @@
 
 <script>
   // ────── DATA ──────
+  // Common feature/packaging/warranty defaults — overridden per-watch when needed
+  const defaultPackaging = 'Delivered in IFL Watches branded packaging. Includes warranty documentation.';
+  const defaultWarranty  = 'Covered by 2-year IFL Watches warranty.';
+
   const watches = [
-    {brand:'Seiko',    name:'SNK807',        price:320,  sizes:[37],          mvmt:'Automatic', cal:'7S26',  thickness:11,  l2l:43, lugW:18, crystal:'Hardlex',  wr:'30 m',  ref:'SNK807K2',   sel:true, dials:['#081820','#40bec1','#efe6c7','#7a1220','#c7c7c7','#2b3a2f']},
-    {brand:'Seiko',    name:'SKX007',        price:450,  sizes:[42],          mvmt:'Automatic', cal:'7S26',  thickness:13,  l2l:46, lugW:22, crystal:'Hardlex',  wr:'200 m', ref:'SKX007K',    dials:['#081820','#1a2a3a','#2b2b2b']},
-    {brand:'Orient',   name:'Bambino',       price:280,  sizes:[38,40],       mvmt:'Automatic', cal:'F6724', thickness:11.5,l2l:45, lugW:21, crystal:'Mineral',  wr:'30 m',  ref:'FAC00005W0', dials:['#fff8e7','#1a1a1a','#3a2818','#8a4a2a']},
-    {brand:'Hamilton', name:'Khaki Field',   price:695,  sizes:[38,42],       mvmt:'Automatic', cal:'H-10',  thickness:11,  l2l:47, lugW:20, crystal:'Sapphire', wr:'100 m', ref:'H68419931',  dials:['#2b3a2f','#1a1a1a','#7a6a4a']},
-    {brand:'Tissot',   name:'PRX',           price:675,  sizes:[35,40],       mvmt:'Quartz',    cal:'ETA',   thickness:10.4,l2l:42, lugW:0,  crystal:'Sapphire', wr:'100 m', ref:'T137.410',   dials:['#1e3a5f','#000','#c0c0c0','#7a1220']},
-    {brand:'Citizen',  name:'NY0040 Diver',  price:380,  sizes:[42],          mvmt:'Automatic', cal:'Miyota 8203', thickness:13,l2l:48, lugW:20,crystal:'Mineral',wr:'200 m', ref:'NY0040-09E', dials:['#1a3a5a','#000','#1a3a1a']},
-    {brand:'Longines', name:'HydroConquest', price:1250, sizes:[39,41,43],    mvmt:'Automatic', cal:'L888',  thickness:12,  l2l:49, lugW:21, crystal:'Sapphire', wr:'300 m', ref:'L3.781',     dials:['#1e3a5f','#000','#2b3a2f','#7a1220','#c0c0c0']},
-    {brand:'Oris',     name:'Diver 65',      price:1800, sizes:[36,38,40,42], mvmt:'Automatic', cal:'Sellita SW200', thickness:13,l2l:47,lugW:20,crystal:'Sapphire',wr:'100 m',ref:'01 733',     dials:['#1a3a5a','#2b3a2f','#5a3a2a']},
+    {brand:'Seiko',    name:'SNK807',        price:320,  sizes:[37],          style:'Field watch · Heritage',
+     mvmt:'Automatic', cal:'7S26',          jewels:21, freq:'21,600 vph (3 Hz)',  power:'41 hours',
+     thickness:11,  l2l:43, lugW:18, crystal:'Hardlex Crystal',  wr:'3 bar (30m)',
+     wrist:'15.5–21.5cm (6.1–8.5in)', material:'Stainless steel', display:'Analog', weight:'68 g',
+     features:['Luminous hands','Day/Date','Exhibition caseback','Skeleton dial'],
+     ref:'SNK807K2', sel:true, dials:['#081820','#40bec1','#efe6c7','#7a1220','#c7c7c7','#2b3a2f'],
+     dialNames:['Black','Teal','Cream','Burgundy','Silver','Olive']},
+    {brand:'Seiko',    name:'SKX007',        price:450,  sizes:[42],          style:'Sport diver · ISO 6425',
+     mvmt:'Automatic', cal:'7S26',          jewels:21, freq:'21,600 vph (3 Hz)',  power:'41 hours',
+     thickness:13,  l2l:46, lugW:22, crystal:'Hardlex Crystal',  wr:'20 bar (200m)',
+     wrist:'15.5–22.5cm (6.1–8.9in)', material:'Stainless steel', display:'Analog', weight:'138 g',
+     features:['Unidirectional bezel','Luminous hands','Screw-down crown','Day/Date'],
+     ref:'SKX007K', dials:['#081820','#1a2a3a','#2b2b2b'],
+     dialNames:['Black','Navy','Graphite']},
+    {brand:'Orient',   name:'Bambino',       price:280,  sizes:[38,40],       style:'Dress watch · Vintage',
+     mvmt:'Automatic', cal:'F6724',         jewels:22, freq:'21,600 vph (3 Hz)',  power:'40 hours',
+     thickness:11.5,l2l:45, lugW:21, crystal:'Mineral Crystal',  wr:'3 bar (30m)',
+     wrist:'14–20cm (5.5–7.9in)', material:'Stainless steel', display:'Analog', weight:'78 g',
+     features:['Domed crystal','Date','Exhibition caseback'],
+     ref:'FAC00005W0', dials:['#fff8e7','#1a1a1a','#3a2818','#8a4a2a'],
+     dialNames:['Ivory','Black','Espresso','Caramel']},
+    {brand:'Hamilton', name:'Khaki Field',   price:695,  sizes:[38,42],       style:'Field watch · Military heritage',
+     mvmt:'Automatic', cal:'H-10',          jewels:25, freq:'21,600 vph (3 Hz)',  power:'80 hours',
+     thickness:11,  l2l:47, lugW:20, crystal:'Sapphire Crystal', wr:'10 bar (100m)',
+     wrist:'15.5–22cm (6.1–8.7in)', material:'Stainless steel', display:'Analog', weight:'95 g',
+     features:['Anti-reflective','Luminous hands','Date','Screw-down crown'],
+     ref:'H68419931', dials:['#2b3a2f','#1a1a1a','#7a6a4a'],
+     dialNames:['Olive','Black','Sand']},
+    {brand:'Tissot',   name:'PRX',           price:675,  sizes:[35,40],       style:'Integrated bracelet · 70s revival',
+     mvmt:'Quartz',    cal:'ETA F06',       jewels:7,  freq:'32,768 Hz',           power:'~3 years (battery)',
+     thickness:10.4,l2l:42, lugW:0,  crystal:'Sapphire Crystal', wr:'10 bar (100m)',
+     wrist:'14–19.5cm (5.5–7.7in)', material:'Stainless steel', display:'Analog', weight:'125 g',
+     features:['Anti-reflective','Integrated bracelet','Date','Tapisserie dial'],
+     ref:'T137.410', dials:['#1e3a5f','#000','#c0c0c0','#7a1220'],
+     dialNames:['Navy','Black','Silver','Burgundy']},
+    {brand:'Citizen',  name:'NY0040 Diver',  price:380,  sizes:[42],          style:'Sport diver · Tank',
+     mvmt:'Automatic', cal:'Miyota 8203',   jewels:21, freq:'21,600 vph (3 Hz)',  power:'42 hours',
+     thickness:13,  l2l:48, lugW:20, crystal:'Mineral Crystal',  wr:'20 bar (200m)',
+     wrist:'15–22cm (5.9–8.7in)', material:'Stainless steel', display:'Analog', weight:'150 g',
+     features:['Unidirectional bezel','Screw-down crown','Day/Date','Luminous hands'],
+     ref:'NY0040-09E', dials:['#1a3a5a','#000','#1a3a1a'],
+     dialNames:['Navy','Black','Forest']},
+    {brand:'Longines', name:'HydroConquest', price:1250, sizes:[39,41,43],    style:'Diver · Sport luxury',
+     mvmt:'Automatic', cal:'L888',          jewels:21, freq:'25,200 vph (3.5 Hz)', power:'72 hours',
+     thickness:12,  l2l:49, lugW:21, crystal:'Sapphire Crystal', wr:'30 bar (300m)',
+     wrist:'15.5–22cm (6.1–8.7in)', material:'Stainless steel', display:'Analog', weight:'170 g',
+     features:['Anti-reflective','Unidirectional bezel','Screw-down crown','Date'],
+     ref:'L3.781', dials:['#1e3a5f','#000','#2b3a2f','#7a1220','#c0c0c0'],
+     dialNames:['Navy','Black','Olive','Burgundy','Silver']},
+    {brand:'Oris',     name:'Diver 65',      price:1800, sizes:[36,38,40,42], style:'Vintage diver · Heritage',
+     mvmt:'Automatic', cal:'Sellita SW200', jewels:26, freq:'28,800 vph (4 Hz)',  power:'38 hours',
+     thickness:13,  l2l:47, lugW:20, crystal:'Sapphire Crystal', wr:'10 bar (100m)',
+     wrist:'15–22cm (5.9–8.7in)', material:'Stainless steel', display:'Analog', weight:'135 g',
+     features:['Domed sapphire','Unidirectional bezel','Super-LumiNova','Date'],
+     ref:'01 733', dials:['#1a3a5a','#2b3a2f','#5a3a2a'],
+     dialNames:['Navy','Olive','Bronze']},
   ];
 
   function fmtSizes(arr){
@@ -1148,25 +1330,42 @@
   });
 
   // ────── ADDONS / PRICE ──────
-  const prices = {design:1200, watch:320, eng:150, strap:95};
-  let st = {eng:false, strap:false};
+  const prices = {design:1200, watch:320, mono:150, strap:95};
+  let st = {mono:false, strap:false};
   function recalc(){
-    const eng = st.eng ? prices.eng : 0;
+    const mono  = st.mono  ? prices.mono  : 0;
     const strap = st.strap ? prices.strap : 0;
-    document.querySelector('[data-line="engraving"]').style.display = st.eng ? 'flex' : 'none';
-    document.querySelector('[data-line="strap"]').style.display     = st.strap ? 'flex' : 'none';
-    document.getElementById('totalPrice').textContent = '$' + (prices.design + prices.watch + eng + strap).toLocaleString();
+    document.querySelector('[data-line="monogram"]').style.display = st.mono  ? 'flex' : 'none';
+    document.querySelector('[data-line="strap"]').style.display    = st.strap ? 'flex' : 'none';
+    document.getElementById('totalPrice').textContent = '$' + (prices.design + prices.watch + mono + strap).toLocaleString();
     if(typeof updateSummary === 'function') updateSummary();
   }
   document.querySelectorAll('[data-toggle]').forEach((row, i) => {
     row.addEventListener('click', () => {
       const t = row.querySelector('.toggle');
       t.classList.toggle('on');
-      const key = i === 0 ? 'eng' : 'strap';
+      const key = i === 0 ? 'mono' : 'strap';
       st[key] = t.classList.contains('on');
       recalc();
     });
   });
+
+  // ────── QUANTITY ──────
+  // +/- buttons step the quantity input (clamped 1..99). Manual typing
+  // also clamps on blur. Quantity is mockup-only — Shopify handles the
+  // real cart state in production.
+  (function(){
+    const input = document.getElementById('cartQtyInput');
+    if(!input) return;
+    const clamp = v => Math.max(1, Math.min(99, parseInt(v,10) || 1));
+    document.querySelectorAll('#cartQty button[data-qty]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const step = parseInt(btn.dataset.qty, 10);
+        input.value = clamp((parseInt(input.value,10) || 1) + step);
+      });
+    });
+    input.addEventListener('blur', () => { input.value = clamp(input.value); });
+  })();
 
   // ────── SWATCHES ──────
   document.querySelectorAll('[data-swatch-group]').forEach(grp => {
@@ -1190,7 +1389,6 @@
   }
   window.flashDock = flashDock;
   document.getElementById('saveBtn').addEventListener('click', flashDock);
-  document.getElementById('saveCmp').addEventListener('click', flashDock);
 
   document.querySelectorAll('.slot .x').forEach(x => {
     x.addEventListener('click', e => {
@@ -1212,14 +1410,41 @@
     document.getElementById('piWatchName').textContent   = `${selWatch.brand} · ${selWatch.name}`;
     document.getElementById('piWatchSpec').textContent   = `(${fmtSizes(selWatch.sizes)})`;
     document.getElementById('piWatchPrice').textContent  = `$${selWatch.price.toLocaleString()}`;
-    const eng   = st.eng   ? prices.eng   : 0;
+    const mono  = st.mono  ? prices.mono  : 0;
     const strap = st.strap ? prices.strap : 0;
-    const total = selWatch.price + selDesign.price + eng + strap;
+    const total = selWatch.price + selDesign.price + mono + strap;
     document.getElementById('piTotal').textContent = `$${total.toLocaleString()}`;
+  }
+
+  // Shared case color palette (steel/gold/PVD/bronze) — used in hotbar render
+  const CASES = [
+    {hex:'#d4d4d4', name:'Steel'},
+    {hex:'#c9a96e', name:'Gold'},
+    {hex:'#2b2b2b', name:'PVD'},
+    {hex:'#b87333', name:'Bronze'},
+  ];
+
+  // Selected indices for current watch's swatch picks (reset on watch swap)
+  let selDialIdx = 0;
+  let selCaseIdx = 0;
+  let selSizeIdx = 0;
+
+  function refreshCfgPickMeta(){
+    const meta = document.getElementById('cfgPickMeta');
+    if(!meta) return;
+    const w = selWatch;
+    const dialName = (w.dialNames && w.dialNames[selDialIdx]) || '—';
+    const caseName = (CASES[selCaseIdx] && CASES[selCaseIdx].name) || '—';
+    const size = w.sizes[selSizeIdx];
+    meta.textContent = `${dialName} / ${caseName} / ${size}mm`;
   }
 
   function updateSelectedWatch(w){
     selWatch = w;
+    selDialIdx = 0;
+    selCaseIdx = 0;
+    selSizeIdx = 0;
+
     // replace dial swatches in hotbar to reflect this watch's options
     const dialBox = document.getElementById('hotbarDial');
     dialBox.innerHTML = w.dials.map((c,i)=>`<span class="sw${i===0?' sel':''}" style="background:${c}"></span>`).join('');
@@ -1228,12 +1453,42 @@
     const sizeBox = document.getElementById('hotbarSize');
     sizeBox.innerHTML = w.sizes.map((s,i)=>`<span${i===0?' class="sel"':''}>${s}</span>`).join('');
 
+    // mirror selected watch into the cfg-pick card on the right (title only)
+    const cfgName = document.getElementById('cfgPickName');
+    if(cfgName) cfgName.textContent = `${w.brand} ${w.name}`;
+    refreshCfgPickMeta();
+
+    updateBuildHeader();
     updateSummary();
   }
 
+  // Hotbar swatch / size click → update state + cfg-pick meta line
+  document.addEventListener('click', e => {
+    const sw = e.target.closest('.sw, .sizes span');
+    if(!sw) return;
+    const grp = sw.closest('[data-swatch-group]');
+    if(!grp) return;
+    const idx = Array.from(grp.children).indexOf(sw);
+    if(idx < 0) return;
+    if(grp.id === 'hotbarDial')      selDialIdx = idx;
+    else if(grp.dataset.swatchGroup === 'case') selCaseIdx = idx;
+    else if(grp.id === 'hotbarSize') selSizeIdx = idx;
+    refreshCfgPickMeta();
+  });
+
   function updateSelectedDesign(d){
     selDesign = d;
+    updateBuildHeader();
     updateSummary();
+  }
+
+  // Composite build header in Configure panel: design name · movement · size,
+  // with watch brand+model as the bigger title above.
+  function updateBuildHeader(){
+    const t = document.getElementById('cfgBuildTitle');
+    const s = document.getElementById('cfgBuildSub');
+    if(t) t.textContent = `${selWatch.brand} ${selWatch.name}`;
+    if(s) s.textContent = selDesign.name;
   }
 
   // initialize preview-info with selected watch + design
@@ -1245,27 +1500,29 @@
     document.getElementById('lbBrand').textContent = w.brand.toUpperCase();
     document.getElementById('lbTitle').textContent = w.name;
     const sizeLabel = fmtSizes(w.sizes);
-    document.getElementById('lbSub').textContent = `${w.mvmt} · ${sizeLabel} · ${w.wr} water resistance`;
-    document.getElementById('lbChips').innerHTML = `
-      <span class="chip">${w.mvmt}</span>
-      <span class="chip">${sizeLabel}</span>
-      <span class="chip">${w.crystal}</span>
-      <span class="chip">${w.wr}</span>`;
+    // Sub now carries the reference number (specs-line moved up under title)
+    document.getElementById('lbSub').innerHTML = `Ref. <strong>${w.ref}</strong>`;
+    // Chips: features (with movement auto-prepended as "X movement", per IFL site format)
+    const movementChip = `<span class="chip">${w.mvmt} movement</span>`;
+    const featChips = (w.features || []).map(f => `<span class="chip">${f}</span>`).join('');
+    document.getElementById('lbChips').innerHTML = movementChip + featChips;
+    // Specs: drop duplicates (movement/diameter/reference are above)
+    const fmt = v => v || '—';
     document.getElementById('lbSpecs').innerHTML = `
-      <div class="row"><span>Movement</span><span>${w.mvmt}</span></div>
-      <div class="row"><span>Caliber</span><span>${w.cal}</span></div>
+      <div class="row"><span>Caliber</span><span>${fmt(w.cal)}</span></div>
+      <div class="row"><span>Jewels</span><span>${fmt(w.jewels)}</span></div>
+      <div class="row"><span>Frequency</span><span>${fmt(w.freq)}</span></div>
+      <div class="row"><span>Power Reserve</span><span>${fmt(w.power)}</span></div>
       <div class="row"><span>Diameter</span><span>${sizeLabel}</span></div>
       <div class="row"><span>Thickness</span><span>${w.thickness} mm</span></div>
-      <div class="row"><span>Lug-to-lug</span><span>${w.l2l} mm</span></div>
-      <div class="row"><span>Lug width</span><span>${w.lugW ? w.lugW + ' mm' : '—'}</span></div>
-      <div class="row"><span>Crystal</span><span>${w.crystal}</span></div>
-      <div class="row"><span>Water res.</span><span>${w.wr}</span></div>
-      <div class="row full"><span>Reference</span><span>${w.ref}</span></div>`;
-    document.getElementById('lbDials').innerHTML = w.dials.map(c => `<span style="background:${c}"></span>`).join('');
-    document.getElementById('lbDialsWrap').style.display = 'block';
-    const cases = ['#d4d4d4','#c9a96e','#2b2b2b','#b87333']; // steel, gold, PVD, bronze
-    document.getElementById('lbCases').innerHTML = cases.map(c => `<span style="background:${c}"></span>`).join('');
-    document.getElementById('lbCasesWrap').style.display = 'block';
+      <div class="row"><span>Lug to Lug</span><span>${w.l2l} mm</span></div>
+      <div class="row"><span>Lug Width</span><span>${w.lugW ? w.lugW + ' mm' : '—'}</span></div>
+      <div class="row"><span>Crystal</span><span>${fmt(w.crystal)}</span></div>
+      <div class="row"><span>Water Resistance</span><span>${fmt(w.wr)}</span></div>
+      <div class="row"><span>Wrist Size</span><span>${fmt(w.wrist)}</span></div>
+      <div class="row"><span>Material</span><span>${fmt(w.material)}</span></div>
+      <div class="row"><span>Display</span><span>${fmt(w.display)}</span></div>
+      <div class="row"><span>Weight</span><span>${fmt(w.weight)}</span></div>`;
     document.getElementById('lbPrice').textContent = `$${w.price.toLocaleString()}`;
     document.getElementById('lbImage').firstChild.textContent = `${w.brand.toUpperCase()} ${w.name} · LARGE IMAGE`;
     lb.classList.add('open');
@@ -1287,9 +1544,6 @@
       <div class="row full"><span>Revisions</span><span>Unlimited</span></div>
       <div class="row full"><span>Delivery</span><span>3–4 weeks</span></div>
       <div class="row full"><span>Warranty</span><span>2-year IFL guarantee</span></div>`;
-    document.getElementById('lbDials').innerHTML = '';
-    document.getElementById('lbCasesWrap').style.display = 'none';
-    document.getElementById('lbDialsWrap').style.display = 'none';
     document.getElementById('lbPrice').textContent = `$${d.price.toLocaleString()}`;
     document.getElementById('lbImage').style.background = d.grad;
     document.getElementById('lbImage').firstChild.textContent = `${d.name.toUpperCase()} · LARGE DESIGN`;
