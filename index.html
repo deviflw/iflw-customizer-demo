@@ -79,7 +79,9 @@
     --col-preview:minmax(0,1fr);
     --col-config:0;
   }
-  [data-mode="compare"] .preview-unit{visibility:hidden}
+  /* display:none (not visibility:hidden) — visibility kept layout space and
+     forced the grid row to the preview-unit's 800+px height in Compare mode. */
+  [data-mode="compare"] .preview-unit{display:none}
 
   /* ═══════════ LEFT RAIL ═══════════
      Natural height, sticky top:0, no overflow/max-height. On normal
@@ -99,10 +101,10 @@
     position:sticky;top:0;
   }
   .rail-logo{
-    height:64px;display:flex;align-items:center;justify-content:center;
+    height:96px;display:flex;align-items:center;justify-content:center;
     border-bottom:1px solid var(--ink-2);
   }
-  .rail-logo svg{width:22px;height:22px;display:block}
+  .rail-logo svg{width:32px;height:32px;display:block}
   .r-btn{
     display:flex;flex-direction:column;align-items:center;gap:6px;
     padding:14px 8px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
@@ -148,6 +150,10 @@
   }
   .browse-head .row-2{
     display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    /* Reserve the filter-bar height even on tabs without filters (Custom)
+       so the sticky header — and the divider below it — stays at the same
+       Y across all tabs. Prevents the header "jumping" on tab switch. */
+    min-height:39px;
   }
   .browse-head h2{margin:0;font-size:17px;letter-spacing:-.005em;font-weight:600}
   .browse-head .count{font-size:11px;color:var(--muted);letter-spacing:.05em}
@@ -196,7 +202,7 @@
     color:#888;font-size:11px;letter-spacing:.2em;
   }
   .pcard .info{padding:14px 14px 16px}
-  .pcard .brand{font-size:9px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;margin-bottom:3px}
+  .pcard .brand{font-size:9px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .pcard .name{font-size:14px;font-weight:600;letter-spacing:-.005em;margin:0}
   .pcard .meta{font-size:11px;color:var(--muted);margin-top:4px}
   .pcard .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
@@ -220,12 +226,14 @@
     gap:24px;cursor:pointer;
   }
   .custom-card .cc-text{max-width:70%}
-  .custom-card h3{margin:0 0 6px;font-size:18px}
-  .custom-card p{margin:0;color:var(--muted);font-size:12px}
+  .custom-card .cc-eyebrow{font-size:10px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:6px}
+  .custom-card h3{margin:0 0 8px;font-size:22px;letter-spacing:-.01em}
+  .custom-card p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
   .custom-card .pill{
-    padding:14px 22px;background:var(--acc);color:var(--ink);
+    padding:14px 22px;background:var(--acc);color:#fff;
     font-size:11px;letter-spacing:.22em;font-weight:700;border:0;cursor:pointer;
   }
+  .custom-card .pill:hover{background:#3aa8aa}
 
   /* Pagination */
   .pagination{
@@ -292,7 +300,7 @@
   /* Selected badge — top-left pill on picked watch/design card */
   .pcard .sel-badge{
     position:absolute;top:10px;left:10px;z-index:3;
-    background:var(--acc);color:var(--ink);
+    background:var(--acc);color:#fff;
     font-size:9px;letter-spacing:.22em;font-weight:700;
     padding:5px 9px;text-transform:uppercase;
     display:flex;align-items:center;gap:5px;
@@ -346,6 +354,9 @@
   .lb-specs .row:last-child{border-bottom:0}
   .lb-specs .row span:last-child{color:var(--ink);font-weight:500}
   .lb-specs .row.full{grid-column:1/-1}
+  .lb-description{grid-column:1/-1;font-size:13px;line-height:1.55;color:var(--ink)}
+  .lb-description p{margin:0 0 12px}
+  .lb-description p:last-child{margin-bottom:0}
   .lb-swatches{margin-top:18px}
   .lb-sw-row{display:flex;gap:8px;margin:6px 0 14px}
   .lb-sw-row span{width:28px;height:28px;border-radius:50%;border:1px solid #bbb}
@@ -363,7 +374,7 @@
     background:var(--ink);color:#fff;border:0;padding:14px 22px;
     letter-spacing:.22em;font-size:11px;cursor:pointer;font-weight:600;
   }
-  .lb-cta:hover{background:var(--acc);color:var(--ink)}
+  .lb-cta:hover{background:var(--acc);color:#fff}
 
   /* ─────── PREVIEW COLUMN
      Wrapper = grid item for row 1. Preview-unit sticks inside wrapper
@@ -391,6 +402,9 @@
   .preview-area{
     flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
     position:relative;padding:24px;
+    /* Smooths the canvas position shift between Configure (padded) and
+     * browse modes (no padding) so it doesn't snap into place at the end. */
+    transition:padding .45s var(--ease);
   }
   .preview-canvas{
     height:min(82vh,820px);
@@ -486,8 +500,10 @@
     display:flex;justify-content:space-between;align-items:baseline;gap:10px;
     font-size:12px;letter-spacing:-.005em;color:var(--ink);
   }
+  /* .pi-line's display:flex would otherwise beat the [hidden] UA rule, so the
+     add-on summary line must explicitly collapse when its hidden attr is set. */
+  .pi-line[hidden]{display:none}
   .pi-line .pi-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-  .pi-line .pi-name small{color:var(--muted);font-weight:500;margin-left:5px;font-size:11px}
   .pi-line .pi-price{font-weight:600;font-size:12px;flex:none}
   .pi-divider{height:1px;background:var(--line);margin:4px 0 2px}
   .pi-total{
@@ -545,11 +561,26 @@
     display:flex;justify-content:space-between;align-items:center;
     padding:10px 0;font-size:12px;border-bottom:1px dotted #eee;cursor:pointer;
   }
+  /* display:flex above would beat the [hidden] UA rule, so CC-only add-ons
+     (Time-Lapse / Photos) must explicitly collapse when hidden is set. */
+  .cfg-addon[hidden]{display:none}
   .cfg-addon:last-child{border-bottom:0}
   .cfg-addon-l{flex:1}
   .cfg-addon-l strong{display:block;font-weight:600}
   .cfg-addon-l small{color:var(--muted);font-size:11px;display:block;margin-top:1px}
   .cfg-addon-r{font-size:12px;font-weight:600;color:var(--muted);margin-left:10px}
+  .cfg-mono-field{padding:14px 0 4px}
+  .cfg-mono-field[hidden]{display:none}
+  .cfg-mono-field input{
+    width:100%;padding:13px 14px;border:1px solid var(--line);background:#fff;
+    font:inherit;font-size:15px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--ink);outline:0;transition:.15s var(--ease);
+  }
+  .cfg-mono-field input:focus{border-color:var(--acc)}
+  .cfg-mono-hint{
+    display:flex;justify-content:space-between;
+    font-size:11px;color:var(--muted);margin-top:6px;letter-spacing:.02em;
+  }
   .toggle{
     width:36px;height:20px;background:#e5e7eb;border-radius:12px;
     position:relative;flex:none;cursor:pointer;transition:.15s;margin-left:10px;
@@ -575,11 +606,18 @@
   .qty button{width:38px;height:48px;border:0;background:#fff;cursor:pointer;font-size:16px;color:var(--ink);transition:.12s}
   .qty button:hover{background:var(--bg)}
   .qty input{width:40px;text-align:center;border:0;outline:0;height:48px;font:inherit;font-weight:600}
-  .cart-cta{
-    flex:1;background:var(--acc);color:#fff;border:0;padding:14px;
-    letter-spacing:.22em;font-size:11px;cursor:pointer;font-weight:700;
+  .cart-secondary{
+    flex:1;background:var(--ink);color:#fff;border:0;
+    padding:14px;letter-spacing:.22em;font-size:11px;cursor:pointer;font-weight:700;
+    transition:.15s var(--ease);
   }
-  .cart-cta:hover{background:#3aa8aa}
+  .cart-secondary:hover{background:#000}
+  .cart-primary{
+    width:100%;background:var(--acc);color:#fff;border:0;
+    padding:18px;letter-spacing:.24em;font-size:13px;cursor:pointer;font-weight:800;
+    transition:.15s var(--ease);
+  }
+  .cart-primary:hover{background:#3aa8aa}
   .save-cmp{
     width:100%;padding:11px;border:1px solid var(--line);background:#fff;
     font-size:10px;letter-spacing:.22em;cursor:pointer;color:var(--ink);font-weight:600;
@@ -652,18 +690,53 @@
   /* ─────── COMPARE VIEW ─────── */
   .compare-view{
     grid-column:2/5;grid-row:1;
-    background:var(--line);
-    display:none;grid-template-columns:repeat(3,1fr);gap:1px;
+    background:#fafafa;
+    display:none;flex-direction:column;
     z-index:4;
     min-height:0;
   }
+  /* Compare flows naturally — page scrolls when content is taller than the
+     viewport. Preview keeps its 3:4 aspect (watches are vertical). */
+  .cmp-tops, .cmp-bottoms{
+    display:grid;grid-template-columns:repeat(3,1fr);background:#fff;
+  }
+  .cmp-tops{border-bottom:1px solid var(--line)}
+  .cmp-strip{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 22px;background:#fafafa;border-bottom:1px solid var(--line);
+  }
+  .cmp-count{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .cmp-diff-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--ink);user-select:none}
+  .cmp-diff-toggle input{margin:0;cursor:pointer;accent-color:var(--acc)}
+  /* Column dividers: subtle right border on every column except the last */
+  .cmp-tops > *, .cmp-bottoms > *{border-right:1px solid var(--line)}
+  .cmp-tops > *:last-child, .cmp-bottoms > *:last-child{border-right:0}
+  /* Visual section break before the Features rows */
+  .ccol-section-h{
+    font-size:9px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--muted);font-weight:700;
+    padding:14px 18px 6px;border-top:1px solid var(--line);
+    background:#fafafa;
+  }
+  /* Design subtitle under watch name in the head */
+  .ccol-head-design{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:0}
+  /* Rows identical across all filled slots are hidden when the toggle is on */
+  .compare-view.cmp-diff .ccol-row[data-same="1"]{display:none}
+  /* The Features section-header row also hides when there are no visible
+     feature rows to label (handled by JS via a data attribute). */
+  .compare-view.cmp-diff .ccol-section-h[data-same="1"]{display:none}
   .ccol{
-    background:#fff;display:flex;flex-direction:column;overflow:hidden;min-height:0;
+    background:#fff;display:flex;flex-direction:column;min-height:0;
   }
+  /* Split: ccol-top (head + preview) lives in cmp-tops; ccol-bot (specs +
+     prices + foot) lives in cmp-bottoms. Both keep the white column bg. */
+  .ccol-top, .ccol-bot{background:#fff;display:flex;flex-direction:column}
+  .ccol-bot-empty{justify-content:flex-start;padding:18px}
   .ccol-head{
-    padding:12px 18px;border-bottom:1px solid var(--line);
-    display:flex;justify-content:space-between;align-items:center;flex-shrink:0;
+    padding:12px 18px;
+    display:flex;align-items:center;gap:10px;flex-shrink:0;
   }
+  .ccol-head-text{flex:1;display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-width:0}
   .ccol-head h3{margin:0;font-size:14px}
   .ccol-head small{color:var(--muted);font-size:9px;letter-spacing:.22em;text-transform:uppercase}
   .ccol-prev{
@@ -683,7 +756,7 @@
     border-top:1px solid var(--line);padding-top:8px;margin-top:6px;
   }
   .ccol-prices .pl.tot span:last-child{font-size:16px}
-  .ccol-body{padding:0 18px 8px}
+  .ccol-body{padding:18px 18px 8px}
   .ccol-row{
     display:flex;justify-content:space-between;font-size:11px;
     padding:5px 0;border-bottom:1px dotted #eee;color:var(--muted);
@@ -692,23 +765,39 @@
   .ccol-row span:last-child{color:var(--ink);font-weight:500}
   .ccol-foot{
     border-top:1px solid var(--line);padding:14px 18px;
-    display:flex;justify-content:flex-end;align-items:center;background:var(--bg);
+    display:flex;justify-content:flex-end;align-items:center;gap:8px;background:var(--bg);
   }
   .ccol-price{font-weight:700;font-size:16px}
-  .ccol-foot button{
-    background:var(--ink);color:#fff;border:0;padding:10px 14px;
-    font-size:10px;letter-spacing:.2em;cursor:pointer;font-weight:600;
+  .ccol-rm-btn{
+    background:#fff;color:var(--ink);border:1px solid var(--line);
+    padding:10px 14px;font-size:10px;letter-spacing:.2em;cursor:pointer;font-weight:600;
+    transition:.15s var(--ease);
   }
-  .ccol-empty{
-    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    color:#bbb;font-size:11px;text-align:center;padding:40px 20px;letter-spacing:.05em;
+  .ccol-rm-btn:hover{border-color:var(--ink);background:var(--bg)}
+  .ccol-edit-btn{
+    background:var(--ink);color:#fff;border:0;
+    padding:10px 14px;font-size:10px;letter-spacing:.2em;cursor:pointer;font-weight:600;
+    transition:.15s var(--ease);
   }
-  .ccol-empty .big{font-size:54px;color:#e5e7eb;margin-bottom:14px;line-height:1}
-  .ccol-empty button{
-    margin-top:18px;background:#fff;color:var(--ink);border:1px solid var(--line);
+  .ccol-edit-btn:hover{background:var(--acc)}
+  /* Empty slot: the "+" placeholder lives ONLY in the preview-image area
+     (same dimensions as the filled cards' preview), not stretched across
+     the whole column height. Keeps the empty slot structurally aligned
+     with filled slots. */
+  .ccol-prev-empty{
+    flex-direction:column;color:#bbb;font-size:11px;text-align:center;
+    letter-spacing:.05em;background:linear-gradient(180deg,#f3f4f5,#e5e7e9);
+  }
+  .ccol-prev-empty .big{font-size:54px;color:#cfd2d4;line-height:1;margin-bottom:10px}
+  .ccol-prev-empty small{font-size:10px;line-height:1.5;letter-spacing:.04em}
+  .ccol-empty-foot{
+    padding:14px 18px;display:flex;justify-content:center;
+  }
+  .ccol-empty-foot button{
+    background:#fff;color:var(--ink);border:1px solid var(--line);
     padding:10px 16px;font-size:10px;letter-spacing:.22em;cursor:pointer;font-weight:600;
   }
-  .ccol-empty button:hover{border-color:var(--ink)}
+  .ccol-empty-foot button:hover{border-color:var(--ink)}
 
   /* ═══════════ COMPARE DOCK ═══════════
      Lives inside browse-inner, after pagination. Only renders inside browse modes
@@ -719,6 +808,11 @@
     transition:transform .35s var(--ease);
     min-width:0;
   }
+  /* Hard-hide (not fade) outside browse modes. When the catalog above the
+   * dock collapses on mode change, the dock would otherwise pop UP to where
+   * the catalog was and then fade — that's the visible flicker. display:none
+   * removes it instantly, no chance to reflow into a wrong position. */
+  [data-mode="configure"] .dock, [data-mode="compare"] .dock{display:none}
   .dock-label{
     font-size:9px;letter-spacing:.26em;color:var(--muted);
     text-transform:uppercase;width:100px;line-height:1.4;font-weight:600;flex-shrink:0;
@@ -757,15 +851,101 @@
 
   [data-mode^="browse-"] .config-handle{display:flex}
   [data-mode^="browse-"] .compare-view{display:none}
+  /* Collapsed config column (width 0 in browse modes) still has ~1180px of
+     tall content inside — without this it expands the grid row and creates
+     a phantom page scroll on short pages like Custom. Clip it to 0 height
+     in browse modes; .config already has overflow:hidden, and .config-handle
+     is a sibling so the re-open button stays visible. */
+  [data-mode^="browse-"] .config, [data-mode="compare"] .config{height:0}
+  /* In Compare mode the browse column is also 0-width but the dock inside
+     it has tall content — clip its height too so the grid row doesn't grow. */
+  [data-mode="compare"] .browse{height:0}
 
   [data-mode="browse-watches"] .browse-content-watches{display:flex;flex-direction:column}
   [data-mode="browse-watches"] .browse-content-designs{display:none}
   [data-mode="browse-designs"] .browse-content-designs{display:flex;flex-direction:column}
   [data-mode="browse-designs"] .browse-content-watches{display:none}
-  .browse-content-watches,.browse-content-designs{display:none}
+  [data-mode="browse-custom"] .browse-content-custom{display:flex;flex-direction:column}
+  .browse-content-watches,.browse-content-designs,.browse-content-custom{display:none}
+  /* Compare dock is a Compare-feature element — irrelevant in Custom mode
+     (nothing to compare). Hide so Custom matches the clean watches/designs feel. */
+  [data-mode="browse-custom"] .dock{display:none}
+
+  /* Custom Concept info page — reuses .browse-grid (same padding/gutter as
+     watches & designs panels), overrides only the grid→column flow. */
+  /* Custom page fills the browse column height — banner anchored at the
+     bottom (margin-top:auto), cards stretch to fill, so there's no phantom
+     empty space below short content forcing a page scroll. */
+  [data-mode="browse-custom"] .browse-content-custom{flex:1}
+  .cu-body{display:flex;flex-direction:column;gap:16px;flex:1;padding-bottom:14px}
+  .cu-intro{max-width:600px}
+  .cu-title{font-size:23px;letter-spacing:-.015em;margin:0 0 8px;font-weight:600;line-height:1.15;color:var(--ink)}
+  .cu-lead{font-size:13px;line-height:1.55;color:var(--muted);margin:0}
+
+  /* 4 process cards — uniform, elongated (portrait), stretch to fill.
+     Informational only — no hover/cursor (not selectable). */
+  .cu-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;flex:1;min-height:240px}
+  .cu-card{
+    background:var(--bg);border:1px solid var(--line);
+    padding:26px 22px;display:flex;flex-direction:column;
+  }
+  .cu-num{
+    width:32px;height:32px;border-radius:50%;
+    background:var(--acc-soft);color:var(--acc);
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:700;margin-bottom:20px;
+  }
+  .cu-card h4{margin:0 0 8px;font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--ink)}
+  .cu-card p{margin:0;font-size:12px;line-height:1.55;color:var(--muted)}
+
+  /* TWO separate banners at the bottom, stacked. cu-bottom anchors the pair
+     to the bottom so the cards above keep their full height. */
+  /* Desktop: two columns — LEFT commission banner, RIGHT optional extras
+     (equal height). CTA is its own full-width row BELOW both columns.
+     No duplicate total (sidebar preview panel is the single Total source). */
+  .cu-bottom{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch}
+
+  /* Optional extras (no outer border per Mila); two add-ons side by side */
+  .cu-extras-banner{
+    border:0;background:transparent;padding:0;
+  }
+  .cu-extras-h{font-size:10px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:12px}
+  .cu-extras-grid{display:flex;flex-direction:column;gap:10px}
+  .cu-extra{
+    display:flex;align-items:center;gap:12px;
+    background:var(--bg);border:1px solid var(--line);padding:12px 14px;cursor:pointer;
+  }
+  .cu-extra-l{flex:1;min-width:0}
+  .cu-extra-l strong{display:block;font-weight:600;font-size:13px}
+  .cu-extra-l small{color:var(--muted);font-size:11px;display:block;margin-top:2px}
+  .cu-extra-r{font-size:12px;font-weight:600;color:var(--muted)}
+
+  /* Commission banner (teal dashed) — info only: price + base watch */
+  .cu-commit-banner{
+    border:2px dashed var(--acc);background:var(--acc-soft);
+    padding:20px 26px;display:flex;flex-direction:column;justify-content:center;
+  }
+  .cu-banner-eyebrow{font-size:10px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:8px}
+  .cu-banner-price{font-size:15px;color:var(--muted)}
+  .cu-banner-price strong{font-size:24px;color:var(--ink);font-weight:700;letter-spacing:-.01em}
+
+  /* CTA — its own full-width row below both columns */
+  .cu-cta{
+    background:var(--acc);color:#fff;border:0;width:100%;
+    padding:17px 28px;letter-spacing:.2em;font-size:13px;cursor:pointer;font-weight:700;
+    transition:.15s var(--ease);
+  }
+  .cu-cta:hover{background:#3aa8aa}
+  @media (max-width:900px){
+    .cu-cards{grid-template-columns:1fr 1fr}
+  }
+  @media (max-width:768px){
+    .cu-cards{grid-template-columns:1fr}
+    .cu-bottom{grid-template-columns:1fr}
+  }
 
   [data-mode="compare"] .config-handle{display:none}
-  [data-mode="compare"] .compare-view{display:grid}
+  [data-mode="compare"] .compare-view{display:flex}
 
   /* ═══════════ FLASH ANIM (save to compare) ═══════════ */
   @keyframes flashGreen{0%{background:#fff}50%{background:var(--acc-soft)}100%{background:#fff}}
@@ -809,7 +989,7 @@
       Designs
     </button>
 
-    <button class="r-btn" data-mode="custom">
+    <button class="r-btn" data-mode="browse-custom">
       <span class="ic">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
       </span>
@@ -835,7 +1015,7 @@
         <div class="browse-content-watches">
           <div class="browse-head">
             <div class="row-1">
-              <button class="close-btn" data-mode="configure">← Back to Preview</button>
+              <button class="close-btn" data-mode="configure">← Back to Configuration</button>
             </div>
             <div class="row-2">
               <h2>Watches</h2>
@@ -862,7 +1042,7 @@
         <div class="browse-content-designs">
           <div class="browse-head">
             <div class="row-1">
-              <button class="close-btn" data-mode="configure">← Back to Preview</button>
+              <button class="close-btn" data-mode="configure">← Back to Configuration</button>
             </div>
             <div class="row-2">
               <h2>Designs</h2>
@@ -883,24 +1063,82 @@
           </div>
         </div>
 
+        <!-- CUSTOM CONCEPT info page -->
+        <div class="browse-content-custom">
+          <div class="browse-head">
+            <div class="row-1">
+              <button class="close-btn" data-mode="configure">← Back to Configuration</button>
+            </div>
+            <div class="row-2">
+              <h2>Custom Concept</h2>
+              <span class="count">· Commission an original artwork</span>
+            </div>
+          </div>
+          <div class="browse-grid cu-body">
+            <div class="cu-intro">
+              <h2 class="cu-title">Have your own vision?</h2>
+              <p class="cu-lead">A one-of-a-kind concept from IFL, created for the watch model of your choice — drawn entirely from your idea.</p>
+            </div>
+            <div class="cu-cards">
+              <div class="cu-card">
+                <span class="cu-num">1</span>
+                <h4>Vision</h4>
+                <p>After checkout, our art director reaches out. Write your idea and send your reference images.</p>
+              </div>
+              <div class="cu-card">
+                <span class="cu-num">2</span>
+                <h4>Sketch</h4>
+                <p>We create an original concept based on your idea. First preview in 5–10 days.</p>
+              </div>
+              <div class="cu-card">
+                <span class="cu-num">3</span>
+                <h4>Revision</h4>
+                <p>Two free revisions. We refine until the design feels right.</p>
+              </div>
+              <div class="cu-card">
+                <span class="cu-num">4</span>
+                <h4>Production</h4>
+                <p>Hand-painted on your chosen watch. Ships in 4–6 weeks.</p>
+              </div>
+            </div>
+
+            <div class="cu-bottom">
+              <div class="cu-commit-banner">
+                <div class="cu-banner-text">
+                  <div class="cu-banner-eyebrow">Custom Concept · Commission</div>
+                  <div class="cu-banner-price"><strong>$1,490</strong> <span>+ base watch</span></div>
+                </div>
+              </div>
+              <div class="cu-extras-banner">
+                <div class="cu-extras-h">Optional extras</div>
+                <div class="cu-extras-grid">
+                  <div class="cu-extra" data-toggle data-addon="timelapse">
+                    <div class="cu-extra-l">
+                      <strong>Time-Lapse Video</strong>
+                      <small>Film of your watch being hand-painted</small>
+                    </div>
+                    <span class="cu-extra-r">+$120</span>
+                    <div class="toggle"></div>
+                  </div>
+                  <div class="cu-extra" data-toggle data-addon="photos">
+                    <div class="cu-extra-l">
+                      <strong>High-Resolution Photos</strong>
+                      <small>Professional photo set of the finished piece</small>
+                    </div>
+                    <span class="cu-extra-r">+$90</span>
+                    <div class="toggle"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="cu-cta" id="cuOrder">Choose Custom Concept →</button>
+          </div>
+        </div>
+
         <!-- ═══════════ COMPARE DOCK (inside browse column, after pagination) ═══════════ -->
         <div class="dock" id="dock">
           <div class="dock-label">COMPARE DOCK<small>up to 3 builds</small></div>
-          <div class="slots">
-            <div class="slot filled" data-slot="0" data-mode="compare">
-              <div class="thumb"></div>
-              <div class="info"><strong>Seiko SNK807</strong><small>Northern Lights · Navy · 38mm</small></div>
-              <span class="price">$1,520</span>
-              <span class="x">✕</span>
-            </div>
-            <div class="slot filled" data-slot="1" data-mode="compare">
-              <div class="thumb" style="background:linear-gradient(135deg,#a8b89a,#c8d6bc)"></div>
-              <div class="info"><strong>Hamilton Khaki</strong><small>Alpine Map · Olive · 38mm</small></div>
-              <span class="price">$1,895</span>
-              <span class="x">✕</span>
-            </div>
-            <div class="slot empty" data-slot="2">＋ EMPTY SLOT</div>
-          </div>
+          <div class="slots" id="dockSlots"></div>
           <button class="save-btn" id="saveBtn"><span class="plus">＋</span>SAVE<br>CURRENT</button>
         </div>
 
@@ -946,8 +1184,9 @@
       </div>
 
       <div class="preview-info" id="previewInfo">
+        <div class="pi-line"><span class="pi-name" id="piWatchName">Seiko SNK807</span><span class="pi-price" id="piWatchPrice">$320</span></div>
         <div class="pi-line"><span class="pi-name" id="piDesignName">Northern Lights</span><span class="pi-price" id="piDesignPrice">$1,200</span></div>
-        <div class="pi-line"><span class="pi-name"><span id="piWatchName">Seiko · SNK807</span> <small id="piWatchSpec">(37mm)</small></span><span class="pi-price" id="piWatchPrice">$320</span></div>
+        <div class="pi-line" id="piAddonsLine" hidden><span class="pi-name" id="piAddonsName">Add-ons</span><span class="pi-price" id="piAddonsPrice">$0</span></div>
         <div class="pi-divider"></div>
         <div class="pi-total"><span class="pi-total-l">Total</span><span class="pi-total-v" id="piTotal">$1,520</span></div>
       </div>
@@ -985,11 +1224,11 @@
             <div class="cfg-pick" data-mode="browse-designs">
               <div class="thumb"></div>
               <div class="grow">
-                <strong>Northern Lights</strong>
-                <small>Space · Fine Art</small>
+                <strong id="cfgDesignName">Northern Lights</strong>
+                <small id="cfgDesignMeta">Space · Fine Art</small>
               </div>
               <div class="end">
-                <span class="price">$1,200</span>
+                <span class="price" id="cfgDesignPrice">$1,200</span>
                 <span class="act">Change →</span>
               </div>
             </div>
@@ -997,15 +1236,22 @@
 
           <div class="cfg-section">
             <div class="cfg-eyebrow">Add-Ons</div>
-            <div class="cfg-addon" data-toggle>
+            <div class="cfg-addon" data-toggle data-addon="mono">
               <div class="cfg-addon-l">
                 <strong>Hand-Painted Monogram</strong>
-                <small>Up to 4 characters · hand-painted on dial by IFL artists</small>
+                <small>Up to 4 characters</small>
               </div>
               <span class="cfg-addon-r">+$150</span>
               <div class="toggle"></div>
             </div>
-            <div class="cfg-addon" data-toggle>
+            <div class="cfg-mono-field" id="monoField" hidden>
+              <input type="text" id="monoInput" maxlength="4" autocomplete="off"
+                     placeholder="Your initials" aria-label="Monogram text" />
+              <div class="cfg-mono-hint">
+                <span><span id="monoCount">0</span> / 4 characters</span>
+              </div>
+            </div>
+            <div class="cfg-addon" data-toggle data-addon="strap">
               <div class="cfg-addon-l">
                 <strong>Extra Strap</strong>
                 <small>A second band in any compatible style</small>
@@ -1013,15 +1259,33 @@
               <span class="cfg-addon-r">+$95</span>
               <div class="toggle"></div>
             </div>
+            <div class="cfg-addon cfg-addon-cc" data-toggle data-addon="timelapse" hidden>
+              <div class="cfg-addon-l">
+                <strong>Time-Lapse Video</strong>
+                <small>Film of your watch being hand-painted</small>
+              </div>
+              <span class="cfg-addon-r">+$120</span>
+              <div class="toggle"></div>
+            </div>
+            <div class="cfg-addon cfg-addon-cc" data-toggle data-addon="photos" hidden>
+              <div class="cfg-addon-l">
+                <strong>High-Resolution Photos</strong>
+                <small>Professional photo set of the finished piece</small>
+              </div>
+              <span class="cfg-addon-r">+$90</span>
+              <div class="toggle"></div>
+            </div>
           </div>
 
           <div class="cfg-section cfg-divide">
             <div class="cfg-eyebrow">Price Summary</div>
             <div class="cfg-price">
-              <div class="pl"><span>Base watch</span><span>$320</span></div>
-              <div class="pl"><span>Customization service</span><span>$1,200</span></div>
+              <div class="pl"><span>Base watch</span><span id="plWatchPrice">$320</span></div>
+              <div class="pl"><span id="plServiceLabel">Customization service</span><span id="plServicePrice">$1,200</span></div>
               <div class="pl" data-line="monogram" style="display:none"><span>Hand-Painted Monogram</span><span>$150</span></div>
               <div class="pl" data-line="strap" style="display:none"><span>Extra strap</span><span>$95</span></div>
+              <div class="pl" data-line="timelapse" style="display:none"><span>Time-Lapse Video</span><span>$120</span></div>
+              <div class="pl" data-line="photos" style="display:none"><span>High-Resolution Photos</span><span>$90</span></div>
               <div class="pl tot"><span>Total</span><span id="totalPrice">$1,520</span></div>
             </div>
           </div>
@@ -1035,8 +1299,9 @@
               <input value="1" id="cartQtyInput" inputmode="numeric" />
               <button data-qty="+1" aria-label="Increase">+</button>
             </div>
-            <button class="cart-cta">ADD TO CART</button>
+            <button class="cart-secondary">ADD TO CART</button>
           </div>
+          <button class="cart-primary">CHECKOUT</button>
           <div class="cfg-badges">
             <div class="b">
               <svg viewBox="0 0 24 24"><path d="M3 21l3-3"/><path d="M14 4l6 6-9 9H5v-6l9-9z"/><path d="M14 4l3-3 3 3-3 3"/></svg>
@@ -1088,54 +1353,15 @@
 
     <!-- ─── COMPARE VIEW ─── -->
     <section class="compare-view" id="compareView">
-      <div class="ccol" data-cmp-slot="0">
-        <div class="ccol-head"><h3>Build A</h3><small>SLOT 1</small></div>
-        <div class="ccol-prev">PREVIEW A</div>
-        <div class="ccol-body">
-          <div class="ccol-row"><span>Model</span><span>Seiko SNK807</span></div>
-          <div class="ccol-row"><span>Design</span><span>Northern Lights</span></div>
-          <div class="ccol-row"><span>Type</span><span>Bespoke Edition</span></div>
-          <div class="ccol-row"><span>Dial</span><span>Navy</span></div>
-          <div class="ccol-row"><span>Case</span><span>Steel</span></div>
-          <div class="ccol-row"><span>Size</span><span>38 mm</span></div>
-          <div class="ccol-row"><span>Movement</span><span>Automatic 7S26</span></div>
-        </div>
-        <div class="ccol-prices">
-          <div class="pl"><span>Watch</span><strong>$320</strong></div>
-          <div class="pl"><span>Design service</span><strong>$1,200</strong></div>
-          <div class="pl tot"><span>Total</span><span>$1,520</span></div>
-        </div>
-        <div class="ccol-foot"><button data-mode="configure">LOAD &amp; EDIT →</button></div>
+      <div class="cmp-tops" id="cmpTops"></div>
+      <div class="cmp-strip">
+        <span class="cmp-count" id="cmpCount">0 of 3 builds</span>
+        <label class="cmp-diff-toggle">
+          <input type="checkbox" id="cmpDiffOnly" />
+          <span>Show only differences</span>
+        </label>
       </div>
-
-      <div class="ccol" data-cmp-slot="1">
-        <div class="ccol-head"><h3>Build B</h3><small>SLOT 2</small></div>
-        <div class="ccol-prev">PREVIEW B</div>
-        <div class="ccol-body">
-          <div class="ccol-row"><span>Model</span><span>Hamilton Khaki</span></div>
-          <div class="ccol-row"><span>Design</span><span>Alpine Map</span></div>
-          <div class="ccol-row"><span>Type</span><span>Bespoke Edition</span></div>
-          <div class="ccol-row"><span>Dial</span><span>Olive</span></div>
-          <div class="ccol-row"><span>Case</span><span>Steel</span></div>
-          <div class="ccol-row"><span>Size</span><span>38 mm</span></div>
-          <div class="ccol-row"><span>Movement</span><span>Automatic H-10</span></div>
-        </div>
-        <div class="ccol-prices">
-          <div class="pl"><span>Watch</span><strong>$695</strong></div>
-          <div class="pl"><span>Design service</span><strong>$1,200</strong></div>
-          <div class="pl tot"><span>Total</span><span>$1,895</span></div>
-        </div>
-        <div class="ccol-foot"><button data-mode="configure">LOAD &amp; EDIT →</button></div>
-      </div>
-
-      <div class="ccol" data-cmp-slot="2">
-        <div class="ccol-empty">
-          <div class="big">＋</div>
-          SLOT 3 IS EMPTY
-          <small style="margin-top:8px;display:block;font-size:10px;letter-spacing:.05em">Save another build to compare three side-by-side</small>
-          <button data-mode="configure">GO BUILD ONE →</button>
-        </div>
-      </div>
+      <div class="cmp-bottoms" id="cmpBottoms"></div>
     </section>
 
 </div>
@@ -1236,15 +1462,24 @@
   }
 
   const designs = [
-    {name:'Northern Lights', theme:'Space',  style:'Fine Art',     price:1200, sel:true, grad:'linear-gradient(135deg,#0a1628,#1e4a6d 40%,#40bec1 100%)'},
-    {name:'Coral Reef',      theme:'Ocean',  style:'Illustration', price:1200, grad:'linear-gradient(135deg,#0e3a4d,#2a8a8e 50%,#f4a261)'},
-    {name:'Tokyo Rain',      theme:'Urban',  style:'Abstract',     price:1200, grad:'linear-gradient(135deg,#1a1a2e,#3a4a5e 60%,#a8b8c8)'},
-    {name:'Alpine Map',      theme:'Nature', style:'Illustration', price:1200, grad:'linear-gradient(135deg,#3e5a3e,#7a8a6a 60%,#d4c8a8)'},
-    {name:'Ink on Water',    theme:'Nature', style:'Fine Art',     price:1200, grad:'linear-gradient(135deg,#0a0a14,#3a3a5a)'},
-    {name:'Solstice',        theme:'Space',  style:'Abstract',     price:1200, grad:'linear-gradient(180deg,#1a0a2e,#7a3a5a 50%,#f4d4a8)'},
-    {name:'Velvet Opera',    theme:'Urban',  style:'Fine Art',     price:1200, grad:'linear-gradient(135deg,#2e0a1a,#7a1a3a)'},
-    {name:'Desert Line',     theme:'Nature', style:'Abstract',     price:1200, grad:'linear-gradient(180deg,#f4d4a8,#c89a6a 60%,#5a3a2a)'},
-    {name:'Mossland',        theme:'Nature', style:'Illustration', price:1200, grad:'linear-gradient(135deg,#1a3a2a,#5a7a4a)'},
+    {name:'Northern Lights', theme:'Space',  style:'Fine Art',     price:1200, sel:true, grad:'linear-gradient(135deg,#0a1628,#1e4a6d 40%,#40bec1 100%)',
+     description:'Inspired by the aurora borealis dancing over the Arctic — gradients of teal and indigo flow across the dial in soft, painterly waves.\n\nEach piece is hand-painted, slightly unique by nature. The light shifts as you turn your wrist.'},
+    {name:'Coral Reef',      theme:'Ocean',  style:'Illustration', price:1200, grad:'linear-gradient(135deg,#0e3a4d,#2a8a8e 50%,#f4a261)',
+     description:'A miniature world of branching corals, drifting fish, and warm tropical light captured in fine illustration.\n\nA piece for collectors drawn to the slow rhythm of the sea.'},
+    {name:'Tokyo Rain',      theme:'Urban',  style:'Abstract',     price:1200, grad:'linear-gradient(135deg,#1a1a2e,#3a4a5e 60%,#a8b8c8)',
+     description:'Neon reflections on wet pavement. Smudged silhouettes under umbrellas. The quiet drama of a city after dark, abstracted into mood and movement.'},
+    {name:'Alpine Map',      theme:'Nature', style:'Illustration', price:1200, grad:'linear-gradient(135deg,#3e5a3e,#7a8a6a 60%,#d4c8a8)',
+     description:'A topographic illustration of high mountain passes — ridge lines, contour curves, and a subtle compass rose hidden in the dial geometry.\n\nFor wearers who measure their lives in elevation gained.'},
+    {name:'Ink on Water',    theme:'Nature', style:'Fine Art',     price:1200, grad:'linear-gradient(135deg,#0a0a14,#3a3a5a)',
+     description:'Sumi-e ink dropped onto still water — bloom, settle, dissipate. A study in negative space and the discipline of restraint.'},
+    {name:'Solstice',        theme:'Space',  style:'Abstract',     price:1200, grad:'linear-gradient(180deg,#1a0a2e,#7a3a5a 50%,#f4d4a8)',
+     description:'The sky at the longest day of the year — deep violet at the zenith, flame-orange at the horizon. A moment of stillness before the year turns.'},
+    {name:'Velvet Opera',    theme:'Urban',  style:'Fine Art',     price:1200, grad:'linear-gradient(135deg,#2e0a1a,#7a1a3a)',
+     description:'Crimson curtains, gilded boxes, the held breath before the overture. A tribute to old-world theatre, painted in oil-rich burgundies.'},
+    {name:'Desert Line',     theme:'Nature', style:'Abstract',     price:1200, grad:'linear-gradient(180deg,#f4d4a8,#c89a6a 60%,#5a3a2a)',
+     description:'Wind-carved dunes at dusk, abstracted to their essential gradient — pale sand, warm rust, deep umber. For the long-haul traveler.'},
+    {name:'Mossland',        theme:'Nature', style:'Illustration', price:1200, grad:'linear-gradient(135deg,#1a3a2a,#5a7a4a)',
+     description:'Forest floor in deep summer — moss, fern, fallen leaves. The damp green hush of an old wood, illustrated in muted botanical detail.'},
   ];
 
   // ────── RENDER GRIDS ──────
@@ -1262,7 +1497,7 @@
         <div class="info">
           <div class="brand">${w.brand}</div>
           <h4 class="name">${w.name}</h4>
-          <div class="meta">${w.mvmt} · ${fmtSizes(w.sizes)}</div>
+          <div class="meta">${fmtSizes(w.sizes)}</div>
           <div class="row">
             <div class="dots" title="Available dial colors">
               ${w.dials.slice(0,4).map(c=>`<span style="background:${c}"></span>`).join('')}
@@ -1278,15 +1513,16 @@
   function renderDesigns(){
     const grid = document.getElementById('designGrid');
     const customCard = `
-      <div class="custom-card" onclick="alert('Custom Concept flow — TBD')">
+      <div class="custom-card" data-mode="browse-custom">
         <div class="cc-text">
-          <h3>Custom Concept · $1,490</h3>
-          <p>Don't see your idea? Commission an original design with our art director — two sketches, one final render, unlimited revisions.</p>
+          <div class="cc-eyebrow">Custom Concept · $1,490</div>
+          <h3>Don't see your idea?</h3>
+          <p>Commission an original design with our art director — two sketches, one final render, two free revisions.</p>
         </div>
-        <button class="pill">START CUSTOM →</button>
+        <button class="pill" data-mode="browse-custom">START CUSTOM →</button>
       </div>
     `;
-    grid.innerHTML = customCard + designs.map(d => `
+    grid.innerHTML = designs.map(d => `
       <div class="pcard design ${d.sel?'sel':''}" data-design="${d.name}">
         ${d.sel?'<span class="sel-badge">Selected</span>':''}
         <button class="quickview" title="Quick view" data-qv-design="${d.name}">
@@ -1302,7 +1538,7 @@
           </div>
         </div>
       </div>
-    `).join('');
+    `).join('') + customCard;
   }
 
   renderWatches();
@@ -1315,6 +1551,13 @@
     document.querySelectorAll('.r-btn').forEach(b => {
       b.classList.toggle('on', b.dataset.mode === mode);
     });
+    // Entering the Custom Concept tab puts the build into Custom Concept
+    // state so the preview panel + summary reflect the $1,490 commission.
+    if(mode === 'browse-custom' && typeof isCustomConcept !== 'undefined'){
+      isCustomConcept = true;
+      if(typeof updateBuildHeader === 'function') updateBuildHeader();
+      if(typeof recalc === 'function') recalc();
+    }
   }
   document.addEventListener('click', e => {
     const trg = e.target.closest('[data-mode]');
@@ -1329,26 +1572,86 @@
     setMode('browse-watches');
   });
 
+  // Custom Concept "OPEN MY COMMISSION" → carry Custom Concept state into Configure
+  const cuOrderBtn = document.getElementById('cuOrder');
+  if(cuOrderBtn){
+    cuOrderBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      isCustomConcept = true;
+      setMode('configure');
+      if(typeof updateBuildHeader === 'function') updateBuildHeader();
+      if(typeof recalc === 'function') recalc();
+    });
+  }
+
   // ────── ADDONS / PRICE ──────
-  const prices = {design:1200, watch:320, mono:150, strap:95};
-  let st = {mono:false, strap:false};
+  const prices = {design:1200, watch:320, mono:150, strap:95, timelapse:120, photos:90};
+  let st = {mono:false, strap:false, timelapse:false, photos:false};
+  // Which Price-Summary line (data-line) each add-on key drives
+  const ADDON_LINE = {mono:'monogram', strap:'strap', timelapse:'timelapse', photos:'photos'};
+
+  // Time-Lapse Video + High-Resolution Photos are Custom-Concept-only.
+  // The same two extras appear BOTH in the configurator Add-Ons AND on the
+  // Custom Concept info page — all driven by one `st` object so a pre-pick
+  // on the Custom page shows up already toggled in the configurator.
+  // Hide the CC-only rows when not in Custom Concept, but PRESERVE the
+  // selections in `st` — so if the user toggles Time-Lapse + Photos in
+  // Custom Concept, jumps to a ready design, then returns to Custom
+  // Concept, their picks come back exactly as they left them.
+  function refreshCCAddons(){
+    const cc = (typeof isCustomConcept !== 'undefined') && isCustomConcept;
+    document.querySelectorAll('.cfg-addon-cc').forEach(row => { row.hidden = !cc; });
+  }
+
+  // Mirror `st` onto every toggle that drives the same add-on key, wherever
+  // it lives (configurator row or Custom-page row), so they stay in sync.
+  function syncToggles(){
+    Object.keys(st).forEach(key => {
+      document.querySelectorAll(`[data-addon="${key}"] .toggle`).forEach(t => {
+        t.classList.toggle('on', !!st[key]);
+      });
+    });
+  }
+
   function recalc(){
-    const mono  = st.mono  ? prices.mono  : 0;
-    const strap = st.strap ? prices.strap : 0;
-    document.querySelector('[data-line="monogram"]').style.display = st.mono  ? 'flex' : 'none';
-    document.querySelector('[data-line="strap"]').style.display    = st.strap ? 'flex' : 'none';
-    document.getElementById('totalPrice').textContent = '$' + (prices.design + prices.watch + mono + strap).toLocaleString();
+    refreshCCAddons();
+    const cc = (typeof isCustomConcept !== 'undefined') && isCustomConcept;
+    let addons = 0;
+    Object.keys(ADDON_LINE).forEach(key => {
+      const on = !!st[key];
+      // Time-Lapse + Photos only count toward price when Custom Concept
+      // is active (state stays in `st` but is gated here for pricing).
+      const ccOnly = (key === 'timelapse' || key === 'photos');
+      const activeForPrice = on && (!ccOnly || cc);
+      const line = document.querySelector(`[data-line="${ADDON_LINE[key]}"]`);
+      if(line) line.style.display = activeForPrice ? 'flex' : 'none';
+      if(activeForPrice) addons += prices[key];
+    });
+    syncToggles();
+    const svc = (typeof currentDesign === 'function') ? currentDesign().price : prices.design;
+    const watch = (typeof selWatch !== 'undefined') ? selWatch.price : prices.watch;
+    document.getElementById('totalPrice').textContent = '$' + (svc + watch + addons).toLocaleString();
     if(typeof updateSummary === 'function') updateSummary();
   }
-  document.querySelectorAll('[data-toggle]').forEach((row, i) => {
+  const monoField = document.getElementById('monoField');
+  const monoInput = document.getElementById('monoInput');
+  const monoCount = document.getElementById('monoCount');
+  document.querySelectorAll('[data-toggle]').forEach(row => {
     row.addEventListener('click', () => {
-      const t = row.querySelector('.toggle');
-      t.classList.toggle('on');
-      const key = i === 0 ? 'mono' : 'strap';
-      st[key] = t.classList.contains('on');
-      recalc();
-    });
+      const key = row.dataset.addon;
+      st[key] = !st[key];                 // flip shared state
+      if(key === 'mono' && monoField){
+        monoField.hidden = !st.mono;
+        if(st.mono) monoInput.focus();
+      }
+      recalc();                           // recalc() → syncToggles() mirrors
+    });                                   // every [data-addon] toggle to st
   });
+  if(monoInput){
+    monoInput.addEventListener('input', () => {
+      monoCount.textContent = monoInput.value.length;
+    });
+  }
 
   // ────── QUANTITY ──────
   // +/- buttons step the quantity input (clamped 1..99). Manual typing
@@ -1381,39 +1684,68 @@
     });
   });
 
-  // ────── COMPARE DOCK ──────
-  function flashDock(){
-    const d = document.getElementById('dock');
-    d.classList.add('flash');
-    setTimeout(()=>d.classList.remove('flash'), 600);
-  }
-  window.flashDock = flashDock;
-  document.getElementById('saveBtn').addEventListener('click', flashDock);
-
-  document.querySelectorAll('.slot .x').forEach(x => {
-    x.addEventListener('click', e => {
-      e.stopPropagation();
-      const slot = x.closest('.slot');
-      slot.classList.remove('filled');
-      slot.classList.add('empty');
-      slot.innerHTML = '＋ EMPTY SLOT';
-    });
-  });
+  // Compare dock + view are wired further down, after selWatch/selDesign/sel*Idx
+  // are initialized (those are the inputs captureCurrentBuild() reads).
 
   // ────── PCARDS — visual select + update hotbar swatches + preview-info ──────
   let selWatch  = watches.find(w => w.sel) || watches[0];
   let selDesign = designs.find(d => d.sel) || designs[0];
 
+  // Custom Concept state — when true the "design" is an open commission
+  // ($1,490 service) instead of a ready-made gallery design.
+  let isCustomConcept = false;
+  const CUSTOM_CONCEPT_PRICE = 1490;
+  function currentDesign(){
+    return isCustomConcept
+      ? {name:'Custom Concept', meta:'Original artwork by IFL', price:CUSTOM_CONCEPT_PRICE}
+      : {name:selDesign.name, meta:`${selDesign.theme} · ${selDesign.style}`, price:selDesign.price};
+  }
+  function refreshDesignPick(){
+    const d = currentDesign();
+    const set = (id,v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+    set('cfgDesignName',  d.name);
+    set('cfgDesignMeta',  d.meta);
+    set('cfgDesignPrice', `$${d.price.toLocaleString()}`);
+    set('plServiceLabel', isCustomConcept ? 'Custom Concept' : 'Customization service');
+    set('plServicePrice', `$${d.price.toLocaleString()}`);
+    set('plWatchPrice',   `$${selWatch.price.toLocaleString()}`);
+  }
+
+  function getWatchMetaString(){
+    const w = selWatch;
+    const dialName = (w.dialNames && w.dialNames[selDialIdx]) || '—';
+    const caseName = (CASES[selCaseIdx] && CASES[selCaseIdx].name) || '—';
+    const size = w.sizes[selSizeIdx] || w.sizes[0];
+    return `${dialName} / ${caseName} / ${size}mm`;
+  }
+
   function updateSummary(){
-    document.getElementById('piDesignName').textContent  = selDesign.name;
-    document.getElementById('piDesignPrice').textContent = `$${selDesign.price.toLocaleString()}`;
-    document.getElementById('piWatchName').textContent   = `${selWatch.brand} · ${selWatch.name}`;
-    document.getElementById('piWatchSpec').textContent   = `(${fmtSizes(selWatch.sizes)})`;
+    const d = currentDesign();
+    document.getElementById('piWatchName').textContent   = `${selWatch.brand} ${selWatch.name}`;
     document.getElementById('piWatchPrice').textContent  = `$${selWatch.price.toLocaleString()}`;
-    const mono  = st.mono  ? prices.mono  : 0;
-    const strap = st.strap ? prices.strap : 0;
-    const total = selWatch.price + selDesign.price + mono + strap;
-    document.getElementById('piTotal').textContent = `$${total.toLocaleString()}`;
+    document.getElementById('piDesignName').textContent  = d.name;
+    document.getElementById('piDesignPrice').textContent = `$${d.price.toLocaleString()}`;
+    // Sum every active add-on (monogram / strap / time-lapse / photos) into
+    // one "Add-ons" summary line so the preview Total reacts to any toggle.
+    // Time-Lapse / Photos only count in price when Custom Concept is active.
+    const cc = !!isCustomConcept;
+    let addons = 0, count = 0;
+    ['mono','strap','timelapse','photos'].forEach(k => {
+      const ccOnly = (k === 'timelapse' || k === 'photos');
+      if(st[k] && (!ccOnly || cc)){ addons += prices[k]; count++; }
+    });
+    const aLine = document.getElementById('piAddonsLine');
+    if(aLine){
+      aLine.hidden = addons === 0;
+      document.getElementById('piAddonsName').textContent  = count > 1 ? `Add-ons (${count})` : 'Add-on';
+      document.getElementById('piAddonsPrice').textContent = `$${addons.toLocaleString()}`;
+    }
+    const total = selWatch.price + d.price + addons;
+    const totalStr = `$${total.toLocaleString()}`;
+    document.getElementById('piTotal').textContent = totalStr;
+    const cuAT = document.getElementById('cuActionTotal');
+    if(cuAT) cuAT.textContent = totalStr;   // Custom-page action bar mirrors live total
+    refreshDesignPick();
   }
 
   // Shared case color palette (steel/gold/PVD/bronze) — used in hotbar render
@@ -1432,11 +1764,7 @@
   function refreshCfgPickMeta(){
     const meta = document.getElementById('cfgPickMeta');
     if(!meta) return;
-    const w = selWatch;
-    const dialName = (w.dialNames && w.dialNames[selDialIdx]) || '—';
-    const caseName = (CASES[selCaseIdx] && CASES[selCaseIdx].name) || '—';
-    const size = w.sizes[selSizeIdx];
-    meta.textContent = `${dialName} / ${caseName} / ${size}mm`;
+    meta.textContent = getWatchMetaString();
   }
 
   function updateSelectedWatch(w){
@@ -1478,8 +1806,9 @@
 
   function updateSelectedDesign(d){
     selDesign = d;
+    isCustomConcept = false;   // picking a ready design exits Custom Concept
     updateBuildHeader();
-    updateSummary();
+    if(typeof recalc === 'function') recalc(); else updateSummary();
   }
 
   // Composite build header in Configure panel: design name · movement · size,
@@ -1488,15 +1817,300 @@
     const t = document.getElementById('cfgBuildTitle');
     const s = document.getElementById('cfgBuildSub');
     if(t) t.textContent = `${selWatch.brand} ${selWatch.name}`;
-    if(s) s.textContent = selDesign.name;
+    if(s) s.textContent = currentDesign().name;
   }
 
   // initialize preview-info with selected watch + design
   updateSelectedWatch(selWatch);
 
+  // ══════════════════════════════════════════════════════════════════════
+  //  COMPARE — dock + side-by-side view, persisted to localStorage so
+  //  saved builds survive page reload (matches the production direction
+  //  per V1 Compare scope). Mockup uses in-memory + localStorage; the
+  //  real implementation will hydrate from server-side persistence.
+  // ══════════════════════════════════════════════════════════════════════
+  const CMP_STORAGE_KEY = 'iflw-compare-v1';
+  const CMP_MAX = 3;
+  let compareBuilds = (function(){
+    try { return JSON.parse(localStorage.getItem(CMP_STORAGE_KEY) || '[]'); }
+    catch(e){ return []; }
+  })();
+
+  function persistCompare(){
+    try { localStorage.setItem(CMP_STORAGE_KEY, JSON.stringify(compareBuilds)); } catch(e){}
+  }
+
+  // Snapshot of the current Configure state — enough to fully restore the
+  // build later via loadBuildIntoConfigure().
+  function captureCurrentBuild(){
+    const w = selWatch, d = selDesign;
+    return {
+      watchName:  w.name,
+      designName: isCustomConcept ? null : d.name,
+      isCustom:   !!isCustomConcept,
+      dialIdx:    selDialIdx,
+      caseIdx:    selCaseIdx,
+      sizeIdx:    selSizeIdx,
+      addons:     {mono:!!st.mono, strap:!!st.strap, timelapse:!!st.timelapse, photos:!!st.photos},
+      savedAt:    Date.now(),
+    };
+  }
+
+  // Hydrate a snapshot into a renderable build — looks up the watch/design
+  // objects + resolves dial/case/size labels.
+  function hydrate(snap){
+    if(!snap) return null;
+    const w = watches.find(x => x.name === snap.watchName) || watches[0];
+    const d = snap.isCustom ? null : (designs.find(x => x.name === snap.designName) || designs[0]);
+    const dialName = (w.dialNames && w.dialNames[snap.dialIdx]) || (w.dialNames && w.dialNames[0]) || '—';
+    const caseName = (CASES[snap.caseIdx] && CASES[snap.caseIdx].name) || CASES[0].name;
+    const size = (w.sizes[snap.sizeIdx] != null ? w.sizes[snap.sizeIdx] : w.sizes[0]);
+    return {watch:w, design:d, isCustom:snap.isCustom, addons:snap.addons,
+            dial:dialName, case_:caseName, size:size,
+            dialIdx:snap.dialIdx, caseIdx:snap.caseIdx, sizeIdx:snap.sizeIdx};
+  }
+
+  function buildPrices(b){
+    const svc = b.isCustom ? CUSTOM_CONCEPT_PRICE : prices.design;
+    const a = b.addons || {};
+    const addOns = (a.mono?prices.mono:0) + (a.strap?prices.strap:0)
+                 + (a.timelapse?prices.timelapse:0) + (a.photos?prices.photos:0);
+    return {watch:b.watch.price, service:svc, addons:addOns, total:b.watch.price + svc + addOns};
+  }
+
+  function saveCurrentToCompare(){
+    if(compareBuilds.length >= CMP_MAX){
+      flashDock(true);   // shake/flash to signal "full"
+      return;
+    }
+    compareBuilds.push(captureCurrentBuild());
+    persistCompare();
+    renderDock();
+    renderCompareView();
+    flashDock();
+  }
+
+  function removeFromCompare(idx){
+    compareBuilds.splice(idx, 1);
+    persistCompare();
+    renderDock();
+    renderCompareView();
+  }
+
+  function loadBuildIntoConfigure(idx){
+    const snap = compareBuilds[idx];
+    if(!snap) return;
+    const b = hydrate(snap);
+    updateSelectedWatch(b.watch);              // resets sel*Idx to 0 internally
+    selDialIdx = snap.dialIdx; selCaseIdx = snap.caseIdx; selSizeIdx = snap.sizeIdx;
+    isCustomConcept = !!snap.isCustom;
+    if(!isCustomConcept && b.design) selDesign = b.design;
+    st.mono = !!snap.addons.mono; st.strap = !!snap.addons.strap;
+    st.timelapse = !!snap.addons.timelapse; st.photos = !!snap.addons.photos;
+    // Sync mono field visibility + value (mono text isn't snapshotted here, mockup)
+    if(monoField) monoField.hidden = !st.mono;
+    updateBuildHeader();
+    refreshCfgPickMeta();
+    recalc();
+    setMode('configure');
+  }
+
+  function flashDock(isFull){
+    const d = document.getElementById('dock');
+    if(!d) return;
+    d.classList.add('flash');
+    setTimeout(()=>d.classList.remove('flash'), 600);
+  }
+
+  // ─────── Dock render ───────
+  function renderDock(){
+    const slots = document.getElementById('dockSlots');
+    if(!slots) return;
+    let html = '';
+    for(let i = 0; i < CMP_MAX; i++){
+      const snap = compareBuilds[i];
+      if(snap){
+        const b = hydrate(snap);
+        const designLabel = snap.isCustom ? 'Custom Concept' : (b.design ? b.design.name : '—');
+        const p = buildPrices(b);
+        html += `<div class="slot filled" data-slot="${i}" data-mode="compare">
+                   <div class="thumb"${b.design && b.design.grad ? ` style="background:${b.design.grad}"` : ''}></div>
+                   <div class="info"><strong>${b.watch.brand} ${b.watch.name}</strong>
+                     <small>${designLabel} · ${b.dial} · ${b.size}mm</small></div>
+                   <span class="price">$${p.total.toLocaleString()}</span>
+                   <span class="x" data-rm="${i}" title="Remove">✕</span>
+                 </div>`;
+      } else {
+        html += `<div class="slot empty" data-slot="${i}">＋ EMPTY SLOT</div>`;
+      }
+    }
+    slots.innerHTML = html;
+  }
+
+  // ─────── Compare-view spec rows (label, value-fn) ───────
+  // Design name + theme/style are shown in the head as a subtitle, so they
+  // don't repeat in the spec rows below.
+  const COMPARE_ROWS = [
+    ['Reference',       b => b.watch.ref || '—'],
+    ['Dial',            b => b.dial],
+    ['Case',            b => b.case_],
+    ['Size',            b => b.size + ' mm'],
+    ['Movement',        b => b.watch.mvmt || '—'],
+    ['Caliber',         b => b.watch.cal || '—'],
+    ['Jewels',          b => b.watch.jewels != null ? String(b.watch.jewels) : '—'],
+    ['Frequency',       b => b.watch.freq || '—'],
+    ['Power Reserve',   b => b.watch.power || '—'],
+    ['Thickness',       b => (b.watch.thickness != null ? b.watch.thickness + ' mm' : '—')],
+    ['Lug to Lug',      b => (b.watch.l2l != null ? b.watch.l2l + ' mm' : '—')],
+    ['Lug Width',       b => (b.watch.lugW ? b.watch.lugW + ' mm' : '—')],
+    ['Crystal',         b => b.watch.crystal || '—'],
+    ['Water Resistance',b => b.watch.wr || '—'],
+    ['Material',        b => b.watch.material || '—'],
+    ['Display',         b => b.watch.display || '—'],
+    ['Weight',          b => b.watch.weight || '—'],
+    ['Wrist Size',      b => b.watch.wrist || '—'],
+  ];
+
+  // Union of features across all filled builds → one row per feature with ✓/—
+  function buildFeatureRows(builds){
+    const all = new Set();
+    builds.forEach(b => { if(b) (b.watch.features || []).forEach(f => all.add(f)); });
+    return Array.from(all).sort().map(f => [
+      f, b => (b.watch.features || []).includes(f) ? '✓' : '—'
+    ]);
+  }
+
+  // ─────── Compare-view render ───────
+  function renderCompareView(){
+    const tops = document.getElementById('cmpTops');
+    const bottoms = document.getElementById('cmpBottoms');
+    const count = document.getElementById('cmpCount');
+    if(!tops || !bottoms) return;
+    const builds = [0,1,2].map(i => hydrate(compareBuilds[i]));
+    if(count) count.textContent = `${compareBuilds.length} of ${CMP_MAX} build${compareBuilds.length===1?'':'s'}`;
+
+    const featureRows = buildFeatureRows(builds);
+    // Compute "all same" across FILLED builds (≥2 needed)
+    const filled = builds.filter(Boolean);
+    const sameMap = {};
+    if(filled.length >= 2){
+      COMPARE_ROWS.concat(featureRows).forEach(([label, fn]) => {
+        const vals = filled.map(b => fn(b));
+        sameMap[label] = vals.every(v => v === vals[0]);
+      });
+    }
+
+    // Design + style name (used as a subtitle under the watch name in head)
+    const designLabel = b => b.isCustom ? 'Custom Concept'
+      : (b.design ? `${b.design.name} · ${b.design.style}` : '—');
+
+    // Tops (head + preview image)
+    tops.innerHTML = builds.map((b, i) => {
+      if(b){
+        return `<div class="ccol-top" data-cmp-slot="${i}">
+                  <div class="ccol-head">
+                    <div class="ccol-head-text">
+                      <div><h3>${b.watch.brand} ${b.watch.name}</h3>
+                        <div class="ccol-head-design">${designLabel(b)}</div></div>
+                      <small>SLOT ${i+1}</small>
+                    </div>
+                  </div>
+                  <div class="ccol-prev"${b.design && b.design.grad ? ` style="background:${b.design.grad}"` : ''}>PREVIEW ${String.fromCharCode(65+i)}</div>
+                </div>`;
+      }
+      return `<div class="ccol-top" data-cmp-slot="${i}">
+                <div class="ccol-head">
+                  <div class="ccol-head-text">
+                    <div><h3>Empty</h3>
+                      <div class="ccol-head-design">&nbsp;</div></div>
+                    <small>SLOT ${i+1}</small>
+                  </div>
+                </div>
+                <div class="ccol-prev ccol-prev-empty">
+                  <div class="big">＋</div>
+                  <small>Save another build<br>to compare side-by-side</small>
+                </div>
+              </div>`;
+    }).join('');
+
+    // Bottoms (specs + features + prices + foot)
+    bottoms.innerHTML = builds.map((b, i) => {
+      if(b){
+        const p = buildPrices(b);
+        const specRowsHtml = COMPARE_ROWS.map(([label, fn]) => {
+          const same = sameMap[label] ? ' data-same="1"' : '';
+          return `<div class="ccol-row"${same}><span>${label}</span><span>${fn(b)}</span></div>`;
+        }).join('');
+        const featureRowsHtml = featureRows.map(([label, fn]) => {
+          const same = sameMap[label] ? ' data-same="1"' : '';
+          return `<div class="ccol-row"${same}><span>${label}</span><span>${fn(b)}</span></div>`;
+        }).join('');
+        const addonsLine = p.addons > 0
+          ? `<div class="pl"><span>Add-ons</span><strong>$${p.addons.toLocaleString()}</strong></div>` : '';
+        return `<div class="ccol-bot" data-cmp-slot="${i}">
+                  <div class="ccol-body">${specRowsHtml}${featureRowsHtml}</div>
+                  <div class="ccol-prices">
+                    <div class="pl"><span>Base watch</span><strong>$${p.watch.toLocaleString()}</strong></div>
+                    <div class="pl"><span>Customization service</span><strong>$${p.service.toLocaleString()}</strong></div>
+                    ${addonsLine}
+                    <div class="pl tot"><span>Total</span><span>$${p.total.toLocaleString()}</span></div>
+                  </div>
+                  <div class="ccol-foot">
+                    <button class="ccol-rm-btn" data-cmp-rm="${i}">REMOVE</button>
+                    <button class="ccol-edit-btn" data-cmp-edit="${i}">EDIT →</button>
+                  </div>
+                </div>`;
+      }
+      return `<div class="ccol-bot ccol-bot-empty" data-cmp-slot="${i}">
+                <div class="ccol-empty-foot"><button data-mode="configure">BUILD</button></div>
+              </div>`;
+    }).join('');
+  }
+
+  // ─────── Wire UI events ───────
+  document.getElementById('saveBtn').addEventListener('click', saveCurrentToCompare);
+
+  // Dock ✕ remove (event delegation since slots re-render)
+  document.getElementById('dockSlots').addEventListener('click', e => {
+    const x = e.target.closest('[data-rm]');
+    if(!x) return;
+    e.stopPropagation();   // don't trigger the slot's data-mode="compare"
+    removeFromCompare(parseInt(x.dataset.rm, 10));
+  });
+
+  // Compare-view EDIT buttons (event delegation, attached to compare-view
+  // since cmp-tops + cmp-bottoms both get re-rendered together)
+  document.getElementById('compareView').addEventListener('click', e => {
+    const edit = e.target.closest('[data-cmp-edit]');
+    if(edit){ loadBuildIntoConfigure(parseInt(edit.dataset.cmpEdit, 10)); return; }
+    const rm = e.target.closest('[data-cmp-rm]');
+    if(rm){ e.stopPropagation(); removeFromCompare(parseInt(rm.dataset.cmpRm, 10)); return; }
+  });
+
+  // "Show only differences" toggle
+  document.getElementById('cmpDiffOnly').addEventListener('change', e => {
+    document.getElementById('compareView').classList.toggle('cmp-diff', e.target.checked);
+  });
+
+  // Initial render — seed two demo builds if storage is empty so the page
+  // doesn't open with an empty Compare on first visit.
+  if(compareBuilds.length === 0){
+    compareBuilds = [
+      {watchName:'Seiko SNK807',    designName:'Northern Lights', isCustom:false,
+       dialIdx:1, caseIdx:0, sizeIdx:0, addons:{mono:false,strap:false,timelapse:false,photos:false}, savedAt:Date.now()},
+      {watchName:'Khaki Field', designName:'Alpine Map', isCustom:false,
+       dialIdx:0, caseIdx:0, sizeIdx:0, addons:{mono:false,strap:false,timelapse:false,photos:false}, savedAt:Date.now()},
+    ];
+    persistCompare();
+  }
+  renderDock();
+  renderCompareView();
+
   // ────── QUICK VIEW LIGHTBOX ──────
   const lb = document.getElementById('lightbox');
   function openWatchLightbox(w){
+    document.getElementById('lbSelect').textContent = 'SELECT THIS WATCH →';
+    document.getElementById('lbImage').style.background = '';
     document.getElementById('lbBrand').textContent = w.brand.toUpperCase();
     document.getElementById('lbTitle').textContent = w.name;
     const sizeLabel = fmtSizes(w.sizes);
@@ -1529,21 +2143,15 @@
     document.body.style.overflow = 'hidden';
   }
   function openDesignLightbox(d){
-    document.getElementById('lbBrand').textContent = 'IFL · BESPOKE EDITION';
+    document.getElementById('lbSelect').textContent = 'SELECT THIS DESIGN →';
+    document.getElementById('lbBrand').textContent = 'BESPOKE EDITION';
     document.getElementById('lbTitle').textContent = d.name;
-    document.getElementById('lbSub').textContent = `${d.theme} · ${d.style}`;
+    document.getElementById('lbSub').innerHTML = `Hand-Painted`;
     document.getElementById('lbChips').innerHTML = `
       <span class="chip">${d.theme}</span>
-      <span class="chip">${d.style}</span>
-      <span class="chip">Bespoke</span>
-      <span class="chip">Ready Design</span>`;
-    document.getElementById('lbSpecs').innerHTML = `
-      <div class="row full"><span>Theme</span><span>${d.theme}</span></div>
-      <div class="row full"><span>Style</span><span>${d.style}</span></div>
-      <div class="row full"><span>Edition</span><span>Bespoke · Ready to apply</span></div>
-      <div class="row full"><span>Revisions</span><span>Unlimited</span></div>
-      <div class="row full"><span>Delivery</span><span>3–4 weeks</span></div>
-      <div class="row full"><span>Warranty</span><span>2-year IFL guarantee</span></div>`;
+      <span class="chip">${d.style}</span>`;
+    const paragraphs = (d.description || '').split(/\n\n+/).map(p => `<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
+    document.getElementById('lbSpecs').innerHTML = `<div class="lb-description">${paragraphs}</div>`;
     document.getElementById('lbPrice').textContent = `$${d.price.toLocaleString()}`;
     document.getElementById('lbImage').style.background = d.grad;
     document.getElementById('lbImage').firstChild.textContent = `${d.name.toUpperCase()} · LARGE DESIGN`;
