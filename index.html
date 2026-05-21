@@ -766,11 +766,10 @@
      viewport. Preview keeps its 3:4 aspect (watches are vertical). */
   .cmp-tops, .cmp-bottoms{
     display:grid;grid-template-columns:repeat(3,1fr);
-    /* gap+bg technique for the column divider: the 1px grid gap shows the
-     * grid's background (the line color) through, perfectly centered
-     * between cells. More reliable cross-browser than border-right, which
-     * Safari rendered flush to one cell instead of "between". */
-    background:var(--line);gap:1px;
+    /* gap+bg technique for the column divider: the gap reveals the grid's
+     * background (a slightly darker line color) as a clearly-visible
+     * vertical strip centered between cells. */
+    background:var(--line-d);gap:3px;
   }
   .cmp-tops{border-bottom:1px solid var(--line)}
   .cmp-strip{
