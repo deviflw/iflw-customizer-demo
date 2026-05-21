@@ -34,8 +34,8 @@
 
     /* ─── LAYOUT ─── */
     --rail-w:clamp(100px,7vw,200px);
-    --config-w:clamp(440px,28vw,800px);
-    --preview-browse-w:clamp(360px,22vw,600px);
+    --config-w:clamp(440px,30vw,950px);
+    --preview-browse-w:clamp(360px,24vw,700px);
     --dock-h:96px;
     --header-h:clamp(56px,4vw,80px);
     --footer-h:clamp(56px,4vw,80px);
@@ -472,7 +472,7 @@
     /* Safari/WebKit has a known bug where aspect-ratio + flex-centered
      * parent + max-width:100% computes width as ~2px. Workaround: derive
      * width explicitly from the same height value via calc(). */
-    --canvas-h:clamp(500px,65vh,950px);
+    --canvas-h:clamp(500px,70vh,1100px);
     height:var(--canvas-h);
     width:calc(var(--canvas-h) * 3 / 4);
     aspect-ratio:3/4;
