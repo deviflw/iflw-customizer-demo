@@ -29,9 +29,9 @@
     --muted:#6b7280;
     --bg:#fafafa;
     --paper:#fff;
-    --rail-w:clamp(100px,7vw,160px);
-    --config-w:clamp(440px,28vw,620px);
-    --preview-browse-w:clamp(360px,22vw,480px);
+    --rail-w:clamp(100px,7vw,200px);
+    --config-w:clamp(440px,28vw,800px);
+    --preview-browse-w:clamp(360px,22vw,600px);
     --dock-h:96px;
     --header-h:clamp(56px,4vw,80px);
     --footer-h:clamp(56px,4vw,80px);
@@ -60,7 +60,10 @@
       var(--col-config,0);
     grid-template-areas: "rail browse preview config";
     min-height:calc(100vh - var(--header-h) - var(--footer-h));
-    max-width:var(--cap);
+    /* No max-width cap — customizer fills the entire viewport so big
+       monitors don't show empty side margins. The column clamps + media
+       queries below keep proportions sane at any width. */
+    width:100%;
     margin:0 auto;
     background:var(--bg);
     transition:grid-template-columns .45s var(--ease);
@@ -952,6 +955,60 @@
   /* ═══════════ FLASH ANIM (save to compare) ═══════════ */
   @keyframes flashGreen{0%{background:#fff}50%{background:var(--acc-soft)}100%{background:#fff}}
   .dock.flash{animation:flashGreen .55s ease}
+
+  /* ═══════════ BIG-SCREEN BUMPS ═══════════
+     Most fixed-px font sizes don't grow with the viewport. These media
+     queries bump the most visible text + preview canvas at common big-screen
+     breakpoints so the mockup feels proportional on 2560+ monitors. */
+  @media (min-width:1900px){
+    .preview-canvas{height:min(82vh,1400px)}
+    .lb-specs .row{font-size:13px}
+    .lb-sub{font-size:13px}
+    .lb-brand{font-size:11px}
+    .lb-title{font-size:32px}
+    .lb-chips .chip{font-size:10px}
+    .pi-line{font-size:13px}
+    .pi-line .pi-price{font-size:13px}
+    .pi-total .pi-total-v{font-size:22px}
+    .pcard .meta{font-size:12px}
+    .pcard .name{font-size:15px}
+    .pcard .price-tag{font-size:14px}
+    .pcard .brand{font-size:10px}
+    .cfg-price .pl{font-size:13px}
+    .cfg-price .pl.tot{font-size:16px}
+    .cart-cta,.cart-secondary,.cart-primary{font-size:13px}
+    .ccol-row{font-size:13px}
+    .ccol-prices .pl{font-size:13px}
+    .ccol-head h3{font-size:16px}
+    .ccol-head-design{font-size:12px}
+    .browse-head h2{font-size:19px}
+    .browse-head .count{font-size:12px}
+    .browse-head select,.browse-head input[type=search]{font-size:12px}
+    .cfg-eyebrow{font-size:10px}
+    .cfg-pick strong{font-size:14px}
+    .cfg-pick small{font-size:12px}
+    .cfg-addon strong{font-size:13px}
+    .cfg-addon small{font-size:12px}
+  }
+  @media (min-width:2400px){
+    .preview-canvas{height:min(82vh,1700px)}
+    .lb-specs .row{font-size:15px}
+    .lb-sub{font-size:14px}
+    .lb-title{font-size:36px}
+    .pi-line{font-size:15px}
+    .pi-line .pi-price{font-size:15px}
+    .pi-total .pi-total-v{font-size:26px}
+    .pcard .meta{font-size:13px}
+    .pcard .name{font-size:17px}
+    .pcard .price-tag{font-size:16px}
+    .cfg-price .pl{font-size:15px}
+    .cfg-price .pl.tot{font-size:18px}
+    .cart-cta,.cart-secondary,.cart-primary{font-size:14px}
+    .ccol-row{font-size:14px}
+    .ccol-head h3{font-size:18px}
+    .browse-head h2{font-size:22px}
+    .cfg-pick strong{font-size:15px}
+  }
 </style>
 </head>
 <body>
