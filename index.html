@@ -29,18 +29,20 @@
     --muted:#6b7280;
     --bg:#fafafa;
     --paper:#fff;
-    --rail-w:clamp(96px,7vw,130px);
-    --config-w:clamp(440px,30vw,520px);
-    --preview-browse-w:clamp(360px,24vw,400px);
+    --rail-w:clamp(100px,7vw,160px);
+    --config-w:clamp(440px,28vw,620px);
+    --preview-browse-w:clamp(360px,22vw,480px);
     --dock-h:96px;
-    --header-h:60px;
-    --footer-h:60px;
-    --cap:1920px;
+    --header-h:clamp(56px,4vw,80px);
+    --footer-h:clamp(56px,4vw,80px);
+    --cap:2400px;
     --ease:cubic-bezier(.4,0,.2,1);
   }
   *{box-sizing:border-box}
   html,body{overflow-x:clip}
-  body{margin:0;font:13px/1.45 'Montserrat',-apple-system,sans-serif;color:var(--ink);background:#fff}
+  /* Fluid base font: scales 13→17px across 1280–2560px viewports so
+     everything in the mockup grows proportionally on wide monitors. */
+  body{margin:0;font:clamp(13px,0.9vw,17px)/1.45 'Montserrat',-apple-system,sans-serif;color:var(--ink);background:#fff}
 
   /* ═══════════ SITE STUBS ═══════════ */
   .site-header,.site-footer{height:var(--header-h);display:flex;align-items:center;justify-content:center;background:#f3f4f6;color:#9ca3af;font-size:11px;letter-spacing:.2em}
