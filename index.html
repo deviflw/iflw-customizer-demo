@@ -456,14 +456,17 @@
   .preview-area{
     flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
     position:relative;padding:var(--space-24);
-    /* Cap horizontally so the canvas sits with roughly symmetric padding
-     * on all sides — without this, on wide monitors canvas had tiny
-     * top/bottom padding (24px) vs huge left/right (~395px). Now both
-     * shrink to a similar range as the area centers. */
-    max-width:clamp(700px,55vw,1200px);margin:0 auto;
     /* Smooths the canvas position shift between Configure (padded) and
      * browse modes (no padding) so it doesn't snap into place at the end. */
     transition:padding .45s var(--ease);
+  }
+  /* Configure mode only: cap preview-area width so the canvas sits with
+   * roughly symmetric padding on all sides on wide monitors. (In browse
+   * modes preview-col is intentionally narrow — applying max-width MIN
+   * here would force overflow inside the narrow column and squash the
+   * preview into a tiny block in the corner.) */
+  [data-mode="configure"] .preview-area{
+    max-width:clamp(700px,55vw,1200px);margin:0 auto;
   }
   .preview-canvas{
     height:clamp(500px,65vh,950px);
