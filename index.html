@@ -56,10 +56,16 @@
     --text-4xl: 2rem;                                /* ~28px           */
     --text-5xl: 2.4rem;                              /* ~34px           */
 
-    /* ─── SPACING SCALE (uniform px — layout precision matters) ─── */
-    --space-1: 4px;  --space-2: 8px;  --space-3: 12px;
-    --space-4: 16px; --space-5: 20px; --space-6: 24px;
-    --space-7: 32px; --space-8: 40px;
+    /* ─── SPACING SCALE — pixel-named for direct mapping, no precision loss.
+       Stays in px (not rem) because layout alignment depends on absolute
+       offsets — we don't want padding to scale with font-size. */
+    --space-2:  2px;  --space-3:  3px;  --space-4:  4px;
+    --space-5:  5px;  --space-6:  6px;  --space-7:  7px;
+    --space-8:  8px;  --space-9:  9px;  --space-10:10px;
+    --space-12:12px;  --space-14:14px;  --space-16:16px;
+    --space-18:18px;  --space-19:19px;  --space-20:20px;
+    --space-22:22px;  --space-24:24px;  --space-26:26px;
+    --space-28:28px;  --space-30:30px;  --space-32:32px; --space-40:40px;
 
     /* ─── LETTER-SPACING SCALE ─── */
     --track-tight:  -.01em;
@@ -149,8 +155,8 @@
   }
   .rail-logo svg{width:32px;height:32px;display:block}
   .r-btn{
-    display:flex;flex-direction:column;align-items:center;gap:6px;
-    padding:14px 8px;font-size:var(--text-xs);letter-spacing:var(--track-button);text-transform:uppercase;
+    display:flex;flex-direction:column;align-items:center;gap:var(--space-6);
+    padding:var(--space-14) var(--space-8);font-size:var(--text-xs);letter-spacing:var(--track-button);text-transform:uppercase;
     color:#a8b5b9;cursor:pointer;border:0;background:transparent;
     border-left:3px solid transparent;
     transition:.15s var(--ease);
@@ -184,15 +190,15 @@
   }
   .browse-inner{width:100%;min-width:560px;display:flex;flex-direction:column}
   .browse-head{
-    padding:16px var(--col-gutter);
+    padding:var(--space-16) var(--col-gutter);
     background:var(--paper);
     position:sticky;top:0;z-index:10;
   }
   .browse-head .row-1{
-    display:flex;align-items:center;gap:14px;margin-bottom:12px;
+    display:flex;align-items:center;gap:var(--space-14);margin-bottom:12px;
   }
   .browse-head .row-2{
-    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    display:flex;align-items:center;gap:var(--space-10);flex-wrap:wrap;
     /* Reserve the filter-bar height even on tabs without filters (Custom)
        so the sticky header — and the divider below it — stays at the same
        Y across all tabs. Prevents the header "jumping" on tab switch. */
@@ -202,27 +208,27 @@
   .browse-head .count{font-size:var(--text-sm);color:var(--muted);letter-spacing:var(--track-loose)}
   .browse-head .sp{flex:1}
   .browse-head input[type=search]{
-    padding:9px 12px;border:1px solid var(--line);font-size:var(--text-md);
+    padding:var(--space-9) var(--space-12);border:1px solid var(--line);font-size:var(--text-md);
     min-width:200px;flex:1;background:var(--bg);font:inherit;outline:none;
   }
   .browse-head input[type=search]:focus{border-color:var(--ink);background:#fff}
   .browse-head select{
-    padding:9px 28px 9px 12px;border:1px solid var(--line);font-size:var(--text-sm);
+    padding:var(--space-9) var(--space-28) var(--space-9) var(--space-12);border:1px solid var(--line);font-size:var(--text-sm);
     background:#fff;font:inherit;cursor:pointer;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='none' stroke='%236b7280' stroke-width='1.5' d='M1 1l4 4 4-4'/></svg>");
     background-repeat:no-repeat;background-position:right 10px center;
     -webkit-appearance:none;appearance:none;
   }
   .browse-head .close-btn{
-    padding:9px 14px;border:1px solid var(--ink);background:#fff;
+    padding:var(--space-9) var(--space-14);border:1px solid var(--ink);background:#fff;
     color:var(--ink);font-size:var(--text-xs);letter-spacing:var(--track-caps);cursor:pointer;
     text-transform:uppercase;font-weight:600;
   }
   .browse-head .close-btn:hover{background:var(--ink);color:#fff}
 
   .browse-grid{
-    padding:24px var(--col-gutter);
-    display:grid;gap:20px;
+    padding:var(--space-24) var(--col-gutter);
+    display:grid;gap:var(--space-20);
     grid-template-columns:repeat(3,minmax(0,1fr));
   }
 
@@ -234,6 +240,11 @@
   }
   .pcard:hover{border-color:var(--acc);transform:translateY(-3px);box-shadow:0 14px 30px -14px rgba(0,0,0,.18)}
   .pcard.sel{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+  /* When the build's active "design" is Custom Concept, no ready-design
+   * card should appear selected — the Custom Concept doesn't correspond
+   * to any gallery item, so the previous .sel highlight is misleading. */
+  [data-cc="1"] .pcard.design.sel{border-color:var(--line);box-shadow:none}
+  [data-cc="1"] .pcard.design.sel .sel-badge{display:none}
   .pcard .thumb{
     position:relative;width:100%;padding-top:100%;
     background:linear-gradient(135deg,#e8eaec,#d2d5d8);
@@ -244,20 +255,20 @@
     position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
     color:#888;font-size:var(--text-sm);letter-spacing:var(--track-caps);
   }
-  .pcard .info{padding:14px 14px 16px}
+  .pcard .info{padding:var(--space-14) var(--space-14) var(--space-16)}
   .pcard .brand{font-size:var(--text-2xs);letter-spacing:var(--track-caps);color:var(--muted);text-transform:uppercase;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .pcard .name{font-size:var(--text-lg);font-weight:600;letter-spacing:var(--track-tight);margin:0}
   .pcard .meta{font-size:var(--text-sm);color:var(--muted);margin-top:4px}
   .pcard .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
   .pcard .price-tag{font-size:var(--text-lg);font-weight:700}
   /* dial color dots — preview-before-click */
-  .pcard .dots{display:flex;gap:4px;align-items:center}
+  .pcard .dots{display:flex;gap:var(--space-4);align-items:center}
   .pcard .dots span{
     width:14px;height:14px;border-radius:50%;
     border:1px solid rgba(0,0,0,.15);display:block;
   }
   .pcard .dots .more{
-    width:auto;height:14px;padding:0 5px;border:1px solid var(--line);
+    width:auto;height:14px;padding:0 var(--space-5);border:1px solid var(--line);
     border-radius:7px;font-size:var(--text-2xs);color:var(--muted);background:#fff;
     display:flex;align-items:center;justify-content:center;font-weight:600;
   }
@@ -265,23 +276,23 @@
   /* Custom-concept call-out card (full row) */
   .custom-card{
     grid-column:1/-1;border:2px dashed var(--acc);background:var(--acc-soft);
-    padding:24px;display:flex;align-items:center;justify-content:space-between;
-    gap:24px;cursor:pointer;
+    padding:var(--space-24);display:flex;align-items:center;justify-content:space-between;
+    gap:var(--space-24);cursor:pointer;
   }
   .custom-card .cc-text{max-width:70%}
   .custom-card .cc-eyebrow{font-size:var(--text-xs);letter-spacing:var(--track-caps);color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:6px}
-  .custom-card h3{margin:0 0 8px;font-size:var(--text-3xl);letter-spacing:var(--track-tight)}
+  .custom-card h3{margin:0 0 var(--space-8);font-size:var(--text-3xl);letter-spacing:var(--track-tight)}
   .custom-card p{margin:0;color:var(--muted);font-size:var(--text-md);line-height:1.5}
   .custom-card .pill{
-    padding:14px 22px;background:var(--acc);color:#fff;
+    padding:var(--space-14) var(--space-22);background:var(--acc);color:#fff;
     font-size:var(--text-sm);letter-spacing:var(--track-caps);font-weight:700;border:0;cursor:pointer;
   }
   .custom-card .pill:hover{background:#3aa8aa}
 
   /* Pagination */
   .pagination{
-    display:flex;align-items:center;justify-content:center;gap:6px;
-    padding:24px var(--col-gutter);background:var(--paper);
+    display:flex;align-items:center;justify-content:center;gap:var(--space-6);
+    padding:var(--space-24) var(--col-gutter);background:var(--paper);
   }
 
   /* ═══════════ INSET DIVIDERS (variant 1) ═══════════
@@ -345,8 +356,8 @@
     position:absolute;top:10px;left:10px;z-index:3;
     background:var(--acc);color:#fff;
     font-size:var(--text-2xs);letter-spacing:var(--track-caps);font-weight:700;
-    padding:5px 9px;text-transform:uppercase;
-    display:flex;align-items:center;gap:5px;
+    padding:var(--space-5) var(--space-9);text-transform:uppercase;
+    display:flex;align-items:center;gap:var(--space-5);
     box-shadow:0 2px 8px rgba(64,190,193,.35);
   }
   .pcard .sel-badge::before{content:"✓";font-size:var(--text-sm);line-height:1}
@@ -355,7 +366,7 @@
   .lightbox{
     position:fixed;inset:0;background:rgba(8,24,32,.78);
     display:none;align-items:center;justify-content:center;
-    z-index:50;padding:30px;
+    z-index:50;padding:var(--space-30);
     backdrop-filter:blur(4px);
   }
   .lightbox.open{display:flex;animation:fadeIn .25s ease}
@@ -374,8 +385,8 @@
     color:#888;font-size:var(--text-md);letter-spacing:var(--track-caps);position:relative;
     aspect-ratio:1/1;
   }
-  .lb-image .hint{position:absolute;bottom:16px;left:16px;font-size:var(--text-xs);color:var(--muted);letter-spacing:var(--track-loose);background:#fff;padding:5px 10px;border-radius:20px}
-  .lb-details{padding:26px 28px 22px;display:flex;flex-direction:column;overflow-y:auto}
+  .lb-image .hint{position:absolute;bottom:16px;left:16px;font-size:var(--text-xs);color:var(--muted);letter-spacing:var(--track-loose);background:#fff;padding:var(--space-5) var(--space-10);border-radius:20px}
+  .lb-details{padding:var(--space-26) var(--space-28) var(--space-22);display:flex;flex-direction:column;overflow-y:auto}
   .lb-close{
     position:absolute;top:14px;right:14px;
     width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid var(--line);
@@ -384,24 +395,24 @@
   }
   .lb-close:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
   .lb-brand{font-size:var(--text-xs);letter-spacing:var(--track-wide);color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:4px}
-  .lb-title{margin:0 0 4px;font-size:var(--text-4xl);letter-spacing:var(--track-tight);font-weight:600}
+  .lb-title{margin:0 0 var(--space-4);font-size:var(--text-4xl);letter-spacing:var(--track-tight);font-weight:600}
   .lb-sub{font-size:var(--text-sm);color:var(--muted);letter-spacing:var(--track-loose);margin-bottom:12px}
   .lb-sub strong{color:var(--ink);font-weight:500;letter-spacing:var(--track-normal)}
-  .lb-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
-  .lb-chips .chip{font-size:var(--text-2xs);letter-spacing:var(--track-eyebrow);padding:4px 8px;background:var(--bg);border:1px solid var(--line);color:var(--ink);font-weight:600;text-transform:uppercase}
+  .lb-chips{display:flex;gap:var(--space-5);flex-wrap:wrap;margin-bottom:14px}
+  .lb-chips .chip{font-size:var(--text-2xs);letter-spacing:var(--track-eyebrow);padding:var(--space-4) var(--space-8);background:var(--bg);border:1px solid var(--line);color:var(--ink);font-weight:600;text-transform:uppercase}
   .lb-specs{
     display:grid;grid-template-columns:1fr 1fr;gap:0 16px;
     border-top:1px solid var(--line);padding-top:10px;margin-top:2px;
   }
-  .lb-specs .row{display:flex;justify-content:space-between;font-size:var(--text-sm);padding:3px 0;color:var(--muted);border-bottom:1px dotted #eee;gap:8px}
+  .lb-specs .row{display:flex;justify-content:space-between;font-size:var(--text-sm);padding:var(--space-3) 0;color:var(--muted);border-bottom:1px dotted #eee;gap:var(--space-8)}
   .lb-specs .row:last-child{border-bottom:0}
   .lb-specs .row span:last-child{color:var(--ink);font-weight:500}
   .lb-specs .row.full{grid-column:1/-1}
   .lb-description{grid-column:1/-1;font-size:var(--text-md);line-height:1.55;color:var(--ink)}
-  .lb-description p{margin:0 0 12px}
+  .lb-description p{margin:0 0 var(--space-12)}
   .lb-description p:last-child{margin-bottom:0}
   .lb-swatches{margin-top:18px}
-  .lb-sw-row{display:flex;gap:8px;margin:6px 0 14px}
+  .lb-sw-row{display:flex;gap:var(--space-8);margin:var(--space-6) 0 var(--space-14)}
   .lb-sw-row span{width:28px;height:28px;border-radius:50%;border:1px solid #bbb}
 
   /* What's Included (Packaging + Warranty) — NOT in lightbox.
@@ -414,7 +425,7 @@
   .lb-price{font-size:var(--text-3xl);font-weight:700}
   .lb-price small{display:block;font-size:var(--text-xs);color:var(--muted);letter-spacing:var(--track-button);text-transform:uppercase;margin-bottom:2px;font-weight:500}
   .lb-cta{
-    background:var(--ink);color:#fff;border:0;padding:14px 22px;
+    background:var(--ink);color:#fff;border:0;padding:var(--space-14) var(--space-22);
     letter-spacing:var(--track-caps);font-size:var(--text-sm);cursor:pointer;font-weight:600;
   }
   .lb-cta:hover{background:var(--acc);color:#fff}
@@ -444,13 +455,18 @@
   }
   .preview-area{
     flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
-    position:relative;padding:24px;
+    position:relative;padding:var(--space-24);
+    /* Cap horizontally so the canvas sits with roughly symmetric padding
+     * on all sides — without this, on wide monitors canvas had tiny
+     * top/bottom padding (24px) vs huge left/right (~395px). Now both
+     * shrink to a similar range as the area centers. */
+    max-width:clamp(700px,55vw,1200px);margin:0 auto;
     /* Smooths the canvas position shift between Configure (padded) and
      * browse modes (no padding) so it doesn't snap into place at the end. */
     transition:padding .45s var(--ease);
   }
   .preview-canvas{
-    height:min(82vh,1200px);
+    height:clamp(500px,65vh,950px);
     aspect-ratio:3/4;
     max-width:100%;
     background:linear-gradient(180deg,#ececec,#d6d6d6);
@@ -462,25 +478,25 @@
   }
   .preview-trust{
     position:absolute;bottom:18px;left:0;right:0;
-    display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:0 12px;
+    display:flex;gap:var(--space-6);justify-content:center;flex-wrap:wrap;padding:0 var(--space-12);
   }
   .preview-trust span{
     background:#fff;border:1px solid var(--line);
-    padding:4px 10px;font-size:var(--text-xs);border-radius:20px;
+    padding:var(--space-4) var(--space-10);font-size:var(--text-xs);border-radius:20px;
     color:var(--muted);letter-spacing:var(--track-loose);
   }
 
   /* Swatch hotbar — stays under preview always */
   .hotbar{
     background:#fff;
-    padding:14px 20px;
-    display:flex;gap:22px;align-items:flex-start;justify-content:center;
-    flex-wrap:wrap;row-gap:12px;
+    padding:var(--space-14) var(--space-20);
+    display:flex;gap:var(--space-22);align-items:flex-start;justify-content:center;
+    flex-wrap:wrap;row-gap:var(--space-12);
   }
   .hotbar .hg{flex:0 0 auto}
-  .hg{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+  .hg{display:flex;flex-direction:column;gap:var(--space-6);align-items:flex-start}
   .hg-l{font-size:var(--text-2xs);letter-spacing:var(--track-wide);color:var(--muted);text-transform:uppercase;font-weight:600}
-  .hg-row{display:flex;gap:7px;align-items:center}
+  .hg-row{display:flex;gap:var(--space-7);align-items:center}
   .sw{
     width:30px;height:30px;border-radius:50%;
     background:#ccc;border:1px solid #aaa;cursor:pointer;
@@ -488,9 +504,9 @@
   }
   .sw:hover{transform:scale(1.08)}
   .sw.sel{outline:2px solid var(--ink);outline-offset:2px}
-  .sizes{display:flex;gap:4px}
+  .sizes{display:flex;gap:var(--space-4)}
   .sizes span{
-    padding:7px 12px;border:1px solid var(--line);font-size:var(--text-sm);
+    padding:var(--space-7) var(--space-12);border:1px solid var(--line);font-size:var(--text-sm);
     cursor:pointer;min-width:40px;text-align:center;font-weight:600;
     background:#fff;
   }
@@ -516,7 +532,7 @@
   }
   [data-mode^="browse-"] .preview-trust{display:none}
   [data-mode^="browse-"] .hotbar{
-    padding:12px 14px;gap:12px;flex:none;
+    padding:var(--space-12) var(--space-14);gap:var(--space-12);flex:none;
     display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;
     min-height:140px;align-content:start;
   }
@@ -529,18 +545,18 @@
   [data-mode^="browse-"] .hotbar .vsep{display:none}
   [data-mode^="browse-"] .hg-l{font-size:var(--text-2xs);letter-spacing:var(--track-caps);margin-bottom:6px}
   [data-mode^="browse-"] .sw{width:26px;height:26px}
-  [data-mode^="browse-"] .sizes span{padding:5px 9px;min-width:34px;font-size:var(--text-xs)}
+  [data-mode^="browse-"] .sizes span{padding:var(--space-5) var(--space-9);min-width:34px;font-size:var(--text-xs)}
 
   /* preview-info: compact 3-line spec summary shown under hotbar in browse modes */
   .preview-info{display:none}
   [data-mode^="browse-"] .preview-info{
-    display:flex;flex-direction:column;gap:6px;
+    display:flex;flex-direction:column;gap:var(--space-6);
     background:#fff;
-    padding:12px 16px 20px;
+    padding:var(--space-12) var(--space-16) var(--space-20);
     flex:none;
   }
   .pi-line{
-    display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+    display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-10);
     font-size:var(--text-md);letter-spacing:var(--track-tight);color:var(--ink);
   }
   /* .pi-line's display:flex would otherwise beat the [hidden] UA rule, so the
@@ -548,9 +564,9 @@
   .pi-line[hidden]{display:none}
   .pi-line .pi-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
   .pi-line .pi-price{font-weight:600;font-size:var(--text-md);flex:none}
-  .pi-divider{height:1px;background:var(--line);margin:4px 0 2px}
+  .pi-divider{height:1px;background:var(--line);margin:var(--space-4) 0 var(--space-2)}
   .pi-total{
-    display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+    display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-10);
     font-size:var(--text-md);color:var(--ink);
   }
   .pi-total .pi-total-l{font-size:var(--text-xs);letter-spacing:var(--track-caps);text-transform:uppercase;font-weight:700;color:var(--muted)}
@@ -566,13 +582,13 @@
     min-width:0;
   }
   .config-inner{width:var(--config-w);display:flex;flex-direction:column}
-  .config-scroll{padding:22px 24px}
+  .config-scroll{padding:var(--space-22) var(--space-24)}
   .cfg-foot{position:sticky;bottom:0}
   .cfg-eyebrow{font-size:var(--text-2xs);letter-spacing:var(--track-wide);color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:6px}
   .cfg-header{margin-bottom:22px}
   .cfg-header .cfg-eyebrow{margin-bottom:10px}
   .cfg-header h2{
-    margin:0 0 6px;font-size:var(--text-3xl);font-weight:600;letter-spacing:var(--track-tight);
+    margin:0 0 var(--space-6);font-size:var(--text-3xl);font-weight:600;letter-spacing:var(--track-tight);
     color:var(--ink);
   }
   .cfg-header p{
@@ -584,11 +600,11 @@
      content away from the line. Applied selectively via .cfg-divide. */
   .cfg-section.cfg-divide{padding-top:22px;border-top:1px solid var(--line)}
   .cfg-design-name{margin:0;font-size:var(--text-2xl);letter-spacing:var(--track-tight)}
-  .cfg-design-type{font-size:var(--text-md);color:var(--muted);margin:3px 0 0}
+  .cfg-design-type{font-size:var(--text-md);color:var(--muted);margin:var(--space-3) 0 0}
   .cfg-design-price{font-size:var(--text-md);font-weight:600;margin-top:8px}
   .cfg-pick{
-    display:flex;gap:12px;align-items:center;
-    padding:12px;border:1px solid var(--line);background:#fff;
+    display:flex;gap:var(--space-12);align-items:center;
+    padding:var(--space-12);border:1px solid var(--line);background:#fff;
     cursor:pointer;transition:.15s;
   }
   .cfg-pick:hover{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
@@ -596,13 +612,13 @@
   .cfg-pick .grow{flex:1;min-width:0}
   .cfg-pick strong{display:block;font-size:var(--text-md);font-weight:600}
   .cfg-pick small{color:var(--muted);font-size:var(--text-sm)}
-  .cfg-pick .end{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
+  .cfg-pick .end{display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-6);flex:none}
   .cfg-pick .price{font-size:var(--text-lg);font-weight:700;color:var(--ink);letter-spacing:var(--track-tight)}
   .cfg-pick .act{font-size:var(--text-xs);color:var(--acc);letter-spacing:var(--track-button);text-transform:uppercase;font-weight:700}
 
   .cfg-addon{
     display:flex;justify-content:space-between;align-items:center;
-    padding:10px 0;font-size:var(--text-md);border-bottom:1px dotted #eee;cursor:pointer;
+    padding:var(--space-10) 0;font-size:var(--text-md);border-bottom:1px dotted #eee;cursor:pointer;
   }
   /* display:flex above would beat the [hidden] UA rule, so CC-only add-ons
      (Time-Lapse / Photos) must explicitly collapse when hidden is set. */
@@ -612,10 +628,10 @@
   .cfg-addon-l strong{display:block;font-weight:600}
   .cfg-addon-l small{color:var(--muted);font-size:var(--text-sm);display:block;margin-top:1px}
   .cfg-addon-r{font-size:var(--text-md);font-weight:600;color:var(--muted);margin-left:10px}
-  .cfg-mono-field{padding:14px 0 4px}
+  .cfg-mono-field{padding:var(--space-14) 0 var(--space-4)}
   .cfg-mono-field[hidden]{display:none}
   .cfg-mono-field input{
-    width:100%;padding:13px 14px;border:1px solid var(--line);background:#fff;
+    width:100%;padding:var(--space-13) var(--space-14);border:1px solid var(--line);background:#fff;
     font:inherit;font-size:var(--text-lg);letter-spacing:var(--track-button);text-transform:uppercase;
     color:var(--ink);outline:0;transition:.15s var(--ease);
   }
@@ -636,33 +652,33 @@
   .toggle.on{background:var(--ink)}
   .toggle.on::after{left:19px}
 
-  .cfg-price{padding:14px;background:var(--bg);border:1px solid var(--line)}
-  .cfg-price .pl{display:flex;justify-content:space-between;font-size:var(--text-md);padding:4px 0;color:var(--muted)}
+  .cfg-price{padding:var(--space-14);background:var(--bg);border:1px solid var(--line)}
+  .cfg-price .pl{display:flex;justify-content:space-between;font-size:var(--text-md);padding:var(--space-4) 0;color:var(--muted)}
   .cfg-price .pl.tot{
     font-size:var(--text-xl);font-weight:700;color:var(--ink);
     border-top:1px solid var(--line);padding-top:10px;margin-top:6px;
   }
 
-  .cfg-foot{padding:8px 24px 18px;background:#fff}
-  .cart-row{display:flex;gap:8px;margin-bottom:8px}
+  .cfg-foot{padding:var(--space-8) var(--space-24) var(--space-18);background:#fff}
+  .cart-row{display:flex;gap:var(--space-8);margin-bottom:8px}
   .qty{display:flex;align-items:center;border:1px solid var(--line)}
   .qty button{width:38px;height:48px;border:0;background:#fff;cursor:pointer;font-size:var(--text-xl);color:var(--ink);transition:.12s}
   .qty button:hover{background:var(--bg)}
   .qty input{width:40px;text-align:center;border:0;outline:0;height:48px;font:inherit;font-weight:600}
   .cart-secondary{
     flex:1;background:var(--ink);color:#fff;border:0;
-    padding:14px;letter-spacing:var(--track-caps);font-size:var(--text-sm);cursor:pointer;font-weight:700;
+    padding:var(--space-14);letter-spacing:var(--track-caps);font-size:var(--text-sm);cursor:pointer;font-weight:700;
     transition:.15s var(--ease);
   }
   .cart-secondary:hover{background:#000}
   .cart-primary{
     width:100%;background:var(--acc);color:#fff;border:0;
-    padding:18px;letter-spacing:var(--track-caps);font-size:var(--text-md);cursor:pointer;font-weight:800;
+    padding:var(--space-18);letter-spacing:var(--track-caps);font-size:var(--text-md);cursor:pointer;font-weight:800;
     transition:.15s var(--ease);
   }
   .cart-primary:hover{background:#3aa8aa}
   .save-cmp{
-    width:100%;padding:11px;border:1px solid var(--line);background:#fff;
+    width:100%;padding:var(--space-11);border:1px solid var(--line);background:#fff;
     font-size:var(--text-xs);letter-spacing:var(--track-caps);cursor:pointer;color:var(--ink);font-weight:600;
   }
   .save-cmp:hover{border-color:var(--ink);background:var(--bg)}
@@ -675,7 +691,7 @@
   .cfg-accordion .acc-item:last-child{border-bottom:0}
   .cfg-accordion summary{
     list-style:none;cursor:pointer;
-    padding:14px 0;font-size:var(--text-md);font-weight:600;color:var(--ink);
+    padding:var(--space-14) 0;font-size:var(--text-md);font-weight:600;color:var(--ink);
     letter-spacing:var(--track-normal);
     display:flex;align-items:center;justify-content:space-between;
   }
@@ -686,7 +702,7 @@
   }
   .cfg-accordion .acc-item[open] summary::after{content:"−"}
   .cfg-accordion .acc-content{
-    padding:0 0 14px;font-size:var(--text-sm);line-height:1.55;color:var(--muted);
+    padding:0 0 var(--space-14);font-size:var(--text-sm);line-height:1.55;color:var(--muted);
   }
   .cfg-accordion .acc-content strong{color:var(--ink);font-weight:600}
 
@@ -694,21 +710,21 @@
      Desktop: icon-on-left + left-aligned text, no border, generous gap.
      Mobile: icon-on-top + centered text (compact / scannable). */
   .cfg-badges{
-    display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px;
+    display:grid;grid-template-columns:1fr 1fr;gap:var(--space-10);margin-top:22px;
   }
   .cfg-badges .b{
-    background:var(--bg);padding:14px;border:0;
-    display:flex;flex-direction:row;align-items:center;gap:12px;
+    background:var(--bg);padding:var(--space-14);border:0;
+    display:flex;flex-direction:row;align-items:center;gap:var(--space-12);
     text-align:left;
   }
   .cfg-badges .b svg{flex:none;width:24px;height:24px;color:var(--acc);stroke:currentColor;fill:none;stroke-width:1.5}
-  .cfg-badges .b-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .cfg-badges .b-text{display:flex;flex-direction:column;gap:var(--space-2);min-width:0}
   .cfg-badges .b strong{display:block;font-size:var(--text-sm);font-weight:700;letter-spacing:var(--track-loose);color:var(--ink)}
   .cfg-badges .b small{color:var(--muted);font-size:var(--text-xs);line-height:1.25}
 
   @media (max-width: 768px){
     .cfg-badges .b{
-      flex-direction:column;align-items:center;gap:4px;text-align:center;
+      flex-direction:column;align-items:center;gap:var(--space-4);text-align:center;
     }
   }
 
@@ -746,10 +762,10 @@
   .cmp-tops{border-bottom:1px solid var(--line)}
   .cmp-strip{
     display:flex;align-items:center;justify-content:space-between;
-    padding:12px 22px;background:#fafafa;border-bottom:1px solid var(--line);
+    padding:var(--space-12) var(--space-22);background:#fafafa;border-bottom:1px solid var(--line);
   }
   .cmp-count{font-size:var(--text-sm);letter-spacing:var(--track-button);text-transform:uppercase;color:var(--muted);font-weight:600}
-  .cmp-diff-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:var(--text-md);color:var(--ink);user-select:none}
+  .cmp-diff-toggle{display:flex;align-items:center;gap:var(--space-8);cursor:pointer;font-size:var(--text-md);color:var(--ink);user-select:none}
   .cmp-diff-toggle input{margin:0;cursor:pointer;accent-color:var(--acc)}
   /* Column dividers: subtle right border on every column except the last */
   .cmp-tops > *, .cmp-bottoms > *{border-right:1px solid var(--line)}
@@ -758,7 +774,7 @@
   .ccol-section-h{
     font-size:var(--text-2xs);letter-spacing:var(--track-caps);text-transform:uppercase;
     color:var(--muted);font-weight:700;
-    padding:14px 18px 6px;border-top:1px solid var(--line);
+    padding:var(--space-14) var(--space-18) var(--space-6);border-top:1px solid var(--line);
     background:#fafafa;
   }
   /* Design subtitle under watch name in the head */
@@ -774,52 +790,52 @@
   /* Split: ccol-top (head + preview) lives in cmp-tops; ccol-bot (specs +
      prices + foot) lives in cmp-bottoms. Both keep the white column bg. */
   .ccol-top, .ccol-bot{background:#fff;display:flex;flex-direction:column}
-  .ccol-bot-empty{justify-content:flex-start;padding:18px}
+  .ccol-bot-empty{justify-content:flex-start;padding:var(--space-18)}
   .ccol-head{
-    padding:12px 18px;
-    display:flex;align-items:center;gap:10px;flex-shrink:0;
+    padding:var(--space-12) var(--space-18);
+    display:flex;align-items:center;gap:var(--space-10);flex-shrink:0;
   }
-  .ccol-head-text{flex:1;display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-width:0}
+  .ccol-head-text{flex:1;display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-10);min-width:0}
   .ccol-head h3{margin:0;font-size:var(--text-lg)}
   .ccol-head small{color:var(--muted);font-size:var(--text-2xs);letter-spacing:var(--track-caps);text-transform:uppercase}
   .ccol-prev{
-    margin:14px 18px 10px;border:1px solid #b8b8b8;flex-shrink:0;
+    margin:var(--space-14) var(--space-18) var(--space-10);border:1px solid #b8b8b8;flex-shrink:0;
     aspect-ratio:3/4;
     background:linear-gradient(180deg,#ebebeb,#d6d6d6);
     display:flex;align-items:center;justify-content:center;
     color:#888;font-size:var(--text-sm);letter-spacing:var(--track-caps);
   }
   .ccol-prices{
-    margin:14px 18px 8px;padding:10px 0;border-top:1px solid var(--line);
+    margin:var(--space-14) var(--space-18) var(--space-8);padding:var(--space-10) 0;border-top:1px solid var(--line);
   }
-  .ccol-prices .pl{display:flex;justify-content:space-between;font-size:var(--text-sm);padding:3px 0;color:var(--muted)}
+  .ccol-prices .pl{display:flex;justify-content:space-between;font-size:var(--text-sm);padding:var(--space-3) 0;color:var(--muted)}
   .ccol-prices .pl strong{color:var(--ink);font-weight:600}
   .ccol-prices .pl.tot{
     font-size:var(--text-lg);font-weight:700;color:var(--ink);
     border-top:1px solid var(--line);padding-top:8px;margin-top:6px;
   }
   .ccol-prices .pl.tot span:last-child{font-size:var(--text-xl)}
-  .ccol-body{padding:18px 18px 8px}
+  .ccol-body{padding:var(--space-18) var(--space-18) var(--space-8)}
   .ccol-row{
     display:flex;justify-content:space-between;font-size:var(--text-sm);
-    padding:5px 0;border-bottom:1px dotted #eee;color:var(--muted);
+    padding:var(--space-5) 0;border-bottom:1px dotted #eee;color:var(--muted);
   }
   .ccol-row:last-child{border-bottom:0}
   .ccol-row span:last-child{color:var(--ink);font-weight:500}
   .ccol-foot{
-    border-top:1px solid var(--line);padding:14px 18px;
-    display:flex;justify-content:flex-end;align-items:center;gap:8px;background:var(--bg);
+    border-top:1px solid var(--line);padding:var(--space-14) var(--space-18);
+    display:flex;justify-content:flex-end;align-items:center;gap:var(--space-8);background:var(--bg);
   }
   .ccol-price{font-weight:700;font-size:var(--text-xl)}
   .ccol-rm-btn{
     background:#fff;color:var(--ink);border:1px solid var(--line);
-    padding:10px 14px;font-size:var(--text-xs);letter-spacing:var(--track-caps);cursor:pointer;font-weight:600;
+    padding:var(--space-10) var(--space-14);font-size:var(--text-xs);letter-spacing:var(--track-caps);cursor:pointer;font-weight:600;
     transition:.15s var(--ease);
   }
   .ccol-rm-btn:hover{border-color:var(--ink);background:var(--bg)}
   .ccol-edit-btn{
     background:var(--ink);color:#fff;border:0;
-    padding:10px 14px;font-size:var(--text-xs);letter-spacing:var(--track-caps);cursor:pointer;font-weight:600;
+    padding:var(--space-10) var(--space-14);font-size:var(--text-xs);letter-spacing:var(--track-caps);cursor:pointer;font-weight:600;
     transition:.15s var(--ease);
   }
   .ccol-edit-btn:hover{background:var(--acc)}
@@ -834,11 +850,11 @@
   .ccol-prev-empty .big{font-size:var(--text-5xl);color:#cfd2d4;line-height:1;margin-bottom:10px}
   .ccol-prev-empty small{font-size:var(--text-xs);line-height:1.5;letter-spacing:var(--track-loose)}
   .ccol-empty-foot{
-    padding:14px 18px;display:flex;justify-content:center;
+    padding:var(--space-14) var(--space-18);display:flex;justify-content:center;
   }
   .ccol-empty-foot button{
     background:#fff;color:var(--ink);border:1px solid var(--line);
-    padding:10px 16px;font-size:var(--text-xs);letter-spacing:var(--track-caps);cursor:pointer;font-weight:600;
+    padding:var(--space-10) var(--space-16);font-size:var(--text-xs);letter-spacing:var(--track-caps);cursor:pointer;font-weight:600;
   }
   .ccol-empty-foot button:hover{border-color:var(--ink)}
 
@@ -847,7 +863,7 @@
      (because the browse column itself is collapsed to 0 width in other modes). */
   .dock{
     background:var(--paper);
-    padding:20px var(--col-gutter);display:flex;gap:14px;align-items:center;
+    padding:var(--space-20) var(--col-gutter);display:flex;gap:var(--space-14);align-items:center;
     transition:transform .35s var(--ease);
     min-width:0;
   }
@@ -861,10 +877,10 @@
     text-transform:uppercase;width:100px;line-height:1.4;font-weight:600;flex-shrink:0;
   }
   .dock-label small{color:#aaa;display:block;font-size:var(--text-2xs);margin-top:2px;font-weight:500;letter-spacing:var(--track-caps)}
-  .slots{display:flex;gap:10px;flex:1;min-width:0}
+  .slots{display:flex;gap:var(--space-10);flex:1;min-width:0}
   .slot{
     flex:1;min-width:0;height:72px;border:1px dashed var(--line-d);background:var(--bg);
-    display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;
+    display:flex;align-items:center;gap:var(--space-10);padding:var(--space-8) var(--space-12);cursor:pointer;
     position:relative;transition:.15s;
   }
   .slot:hover{border-color:var(--ink);background:#fff}
@@ -878,9 +894,9 @@
   .slot .x{position:absolute;top:4px;right:6px;color:#bbb;font-size:var(--text-lg);line-height:1;cursor:pointer;width:16px;height:16px;display:flex;align-items:center;justify-content:center}
   .slot .x:hover{color:var(--ink)}
   .save-btn{
-    padding:0 18px;height:72px;background:var(--ink);color:#fff;border:0;
+    padding:0 var(--space-18);height:72px;background:var(--ink);color:#fff;border:0;
     font-size:var(--text-xs);letter-spacing:var(--track-caps);cursor:pointer;font-weight:600;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-4);
     flex-shrink:0;
   }
   .save-btn:hover{background:#000}
@@ -920,17 +936,17 @@
      bottom (margin-top:auto), cards stretch to fill, so there's no phantom
      empty space below short content forcing a page scroll. */
   [data-mode="browse-custom"] .browse-content-custom{flex:1}
-  .cu-body{display:flex;flex-direction:column;gap:16px;flex:1;padding-bottom:14px}
+  .cu-body{display:flex;flex-direction:column;gap:var(--space-16);flex:1;padding-bottom:14px}
   .cu-intro{max-width:600px}
-  .cu-title{font-size:var(--text-3xl);letter-spacing:var(--track-tight);margin:0 0 8px;font-weight:600;line-height:1.15;color:var(--ink)}
+  .cu-title{font-size:var(--text-3xl);letter-spacing:var(--track-tight);margin:0 0 var(--space-8);font-weight:600;line-height:1.15;color:var(--ink)}
   .cu-lead{font-size:var(--text-md);line-height:1.55;color:var(--muted);margin:0}
 
   /* 4 process cards — uniform, elongated (portrait), stretch to fill.
      Informational only — no hover/cursor (not selectable). */
-  .cu-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;flex:1;min-height:240px}
+  .cu-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-14);flex:1;min-height:240px}
   .cu-card{
     background:var(--bg);border:1px solid var(--line);
-    padding:26px 22px;display:flex;flex-direction:column;
+    padding:var(--space-26) var(--space-22);display:flex;flex-direction:column;
   }
   .cu-num{
     width:32px;height:32px;border-radius:50%;
@@ -938,7 +954,7 @@
     display:flex;align-items:center;justify-content:center;
     font-size:var(--text-md);font-weight:700;margin-bottom:20px;
   }
-  .cu-card h4{margin:0 0 8px;font-size:var(--text-lg);font-weight:600;letter-spacing:var(--track-tight);color:var(--ink)}
+  .cu-card h4{margin:0 0 var(--space-8);font-size:var(--text-lg);font-weight:600;letter-spacing:var(--track-tight);color:var(--ink)}
   .cu-card p{margin:0;font-size:var(--text-md);line-height:1.55;color:var(--muted)}
 
   /* TWO separate banners at the bottom, stacked. cu-bottom anchors the pair
@@ -946,17 +962,17 @@
   /* Desktop: two columns — LEFT commission banner, RIGHT optional extras
      (equal height). CTA is its own full-width row BELOW both columns.
      No duplicate total (sidebar preview panel is the single Total source). */
-  .cu-bottom{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch}
+  .cu-bottom{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:var(--space-14);align-items:stretch}
 
   /* Optional extras (no outer border per Mila); two add-ons side by side */
   .cu-extras-banner{
     border:0;background:transparent;padding:0;
   }
   .cu-extras-h{font-size:var(--text-xs);letter-spacing:var(--track-caps);color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:12px}
-  .cu-extras-grid{display:flex;flex-direction:column;gap:10px}
+  .cu-extras-grid{display:flex;flex-direction:column;gap:var(--space-10)}
   .cu-extra{
-    display:flex;align-items:center;gap:12px;
-    background:var(--bg);border:1px solid var(--line);padding:12px 14px;cursor:pointer;
+    display:flex;align-items:center;gap:var(--space-12);
+    background:var(--bg);border:1px solid var(--line);padding:var(--space-12) var(--space-14);cursor:pointer;
   }
   .cu-extra-l{flex:1;min-width:0}
   .cu-extra-l strong{display:block;font-weight:600;font-size:var(--text-md)}
@@ -966,7 +982,7 @@
   /* Commission banner (teal dashed) — info only: price + base watch */
   .cu-commit-banner{
     border:2px dashed var(--acc);background:var(--acc-soft);
-    padding:20px 26px;display:flex;flex-direction:column;justify-content:center;
+    padding:var(--space-20) var(--space-26);display:flex;flex-direction:column;justify-content:center;
   }
   .cu-banner-eyebrow{font-size:var(--text-xs);letter-spacing:var(--track-caps);color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:8px}
   .cu-banner-price{font-size:var(--text-lg);color:var(--muted)}
@@ -975,7 +991,7 @@
   /* CTA — its own full-width row below both columns */
   .cu-cta{
     background:var(--acc);color:#fff;border:0;width:100%;
-    padding:17px 28px;letter-spacing:var(--track-caps);font-size:var(--text-md);cursor:pointer;font-weight:700;
+    padding:var(--space-17) var(--space-28);letter-spacing:var(--track-caps);font-size:var(--text-md);cursor:pointer;font-weight:700;
     transition:.15s var(--ease);
   }
   .cu-cta:hover{background:#3aa8aa}
@@ -999,7 +1015,6 @@
      queries bump the most visible text + preview canvas at common big-screen
      breakpoints so the mockup feels proportional on 2560+ monitors. */
   @media (min-width:1900px){
-    .preview-canvas{height:min(82vh,1400px)}
     .lb-specs .row{font-size:var(--text-md)}
     .lb-sub{font-size:var(--text-md)}
     .lb-brand{font-size:var(--text-sm)}
@@ -1029,7 +1044,6 @@
     .cfg-addon small{font-size:var(--text-md)}
   }
   @media (min-width:2400px){
-    .preview-canvas{height:min(82vh,1700px)}
     .lb-specs .row{font-size:var(--text-lg)}
     .lb-sub{font-size:var(--text-lg)}
     .lb-title{font-size:var(--text-5xl)}
@@ -1713,6 +1727,10 @@
   function recalc(){
     refreshCCAddons();
     const cc = (typeof isCustomConcept !== 'undefined') && isCustomConcept;
+    // Mark the customizer with a data-cc flag so CSS can hide the design
+    // gallery's "Selected" highlight when Custom Concept is the active build
+    // (the selected design is no longer "your build").
+    if(typeof cz !== 'undefined') cz.setAttribute('data-cc', cc ? '1' : '');
     let addons = 0;
     Object.keys(ADDON_LINE).forEach(key => {
       const on = !!st[key];
