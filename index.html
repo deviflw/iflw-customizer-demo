@@ -42,7 +42,7 @@
   html,body{overflow-x:clip}
   /* Fluid base font: scales 13→17px across 1280–2560px viewports so
      everything in the mockup grows proportionally on wide monitors. */
-  body{margin:0;font:clamp(13px,0.9vw,17px)/1.45 'Montserrat',-apple-system,sans-serif;color:var(--ink);background:#fff}
+  body{margin:0;font:clamp(13px,1vw,19px)/1.45 'Montserrat',-apple-system,sans-serif;color:var(--ink);background:#fff}
 
   /* ═══════════ SITE STUBS ═══════════ */
   .site-header,.site-footer{height:var(--header-h);display:flex;align-items:center;justify-content:center;background:#f3f4f6;color:#9ca3af;font-size:11px;letter-spacing:.2em}
@@ -320,7 +320,7 @@
   .lightbox.open{display:flex;animation:fadeIn .25s ease}
   @keyframes fadeIn{from{opacity:0}to{opacity:1}}
   .lb-card{
-    background:#fff;width:min(1100px,96vw);max-height:calc(100vh - 60px);
+    background:#fff;width:clamp(900px,75vw,1700px);max-height:calc(100vh - 60px);
     display:grid;grid-template-columns:1fr 1fr;overflow:hidden;
     box-shadow:0 40px 100px -20px rgba(0,0,0,.4);
     animation:zoomIn .3s var(--ease);
@@ -409,7 +409,7 @@
     transition:padding .45s var(--ease);
   }
   .preview-canvas{
-    height:min(82vh,820px);
+    height:min(82vh,1200px);
     aspect-ratio:3/4;
     max-width:100%;
     background:linear-gradient(180deg,#ececec,#d6d6d6);
