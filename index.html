@@ -811,6 +811,11 @@
   .ccol-prev{
     margin:var(--space-14) var(--space-18) var(--space-10);border:1px solid #b8b8b8;flex-shrink:0;
     aspect-ratio:3/4;
+    /* Safari/WebKit in a flex-column with aspect-ratio + margin computes
+     * width = parent width and overflows past the right margin (left
+     * margin honored, right margin ignored). Explicit max-width caps it
+     * so 18px margins land on both sides as intended. */
+    max-width:calc(100% - var(--space-18) * 2);
     background:linear-gradient(180deg,#ebebeb,#d6d6d6);
     display:flex;align-items:center;justify-content:center;
     color:#888;font-size:var(--text-sm);letter-spacing:var(--track-caps);
