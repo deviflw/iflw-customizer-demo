@@ -469,7 +469,12 @@
     max-width:clamp(700px,55vw,1200px);margin:0 auto;
   }
   .preview-canvas{
-    height:clamp(500px,65vh,950px);
+    /* Safari/WebKit has a known bug where aspect-ratio + flex-centered
+     * parent + max-width:100% computes width as ~2px. Workaround: derive
+     * width explicitly from the same height value via calc(). */
+    --canvas-h:clamp(500px,65vh,950px);
+    height:var(--canvas-h);
+    width:calc(var(--canvas-h) * 3 / 4);
     aspect-ratio:3/4;
     max-width:100%;
     background:linear-gradient(180deg,#ececec,#d6d6d6);
