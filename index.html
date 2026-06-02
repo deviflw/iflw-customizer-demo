@@ -289,6 +289,46 @@
   }
   .custom-card .pill:hover{background:#3aa8aa}
 
+  /* Bespoke request modal — reuses the .lightbox overlay (centered, backdrop).
+     In production the form body is rendered by Shopify Forms (lifted embed
+     pattern from theme-blocks/slide_panel_button.liquid); submissions land in
+     the Shopify Forms admin log. This mockup shows the customer-facing flow. */
+  .bespoke-card{
+    background:#fff;width:clamp(360px,42vw,560px);max-height:calc(100vh - 60px);
+    overflow-y:auto;position:relative;
+    padding:var(--space-32) var(--space-32) var(--space-30);
+    box-shadow:0 40px 100px -20px rgba(0,0,0,.4);
+    animation:zoomIn .3s var(--ease);
+  }
+  .bespoke-eyebrow{font-size:var(--text-xs);letter-spacing:var(--track-caps);color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:var(--space-8)}
+  .bespoke-title{margin:0 0 var(--space-8);font-size:var(--text-3xl);letter-spacing:var(--track-tight);font-weight:600}
+  .bespoke-lead{margin:0 0 var(--space-24);color:var(--muted);font-size:var(--text-md);line-height:1.5}
+  .bespoke-form{display:flex;flex-direction:column;gap:var(--space-16)}
+  .bespoke-form label{display:flex;flex-direction:column;gap:var(--space-6);font-size:var(--text-sm);font-weight:600;letter-spacing:var(--track-loose);color:var(--ink)}
+  .bespoke-form .opt{color:var(--muted);font-weight:400;text-transform:none;letter-spacing:var(--track-normal)}
+  .bespoke-form input,.bespoke-form textarea{
+    font:inherit;font-size:var(--text-md);font-weight:400;
+    padding:var(--space-11) var(--space-13);border:1px solid var(--line);
+    background:var(--bg);color:var(--ink);border-radius:var(--radius-sm);
+    width:100%;box-sizing:border-box;
+  }
+  .bespoke-form input:focus,.bespoke-form textarea:focus{outline:none;border-color:var(--acc);background:#fff}
+  .bespoke-form textarea{resize:vertical;line-height:1.5}
+  .bespoke-submit{
+    margin-top:var(--space-6);padding:var(--space-14) var(--space-22);
+    background:var(--acc);color:#fff;border:0;cursor:pointer;
+    font-size:var(--text-sm);letter-spacing:var(--track-caps);font-weight:700;
+  }
+  .bespoke-submit:hover{background:#3aa8aa}
+  .bespoke-success{text-align:center;padding:var(--space-20) 0}
+  .bespoke-success-icon{
+    width:56px;height:56px;border-radius:50%;background:var(--acc-soft);color:var(--acc);
+    display:flex;align-items:center;justify-content:center;font-size:var(--text-4xl);
+    margin:0 auto var(--space-16);font-weight:700;
+  }
+  .bespoke-success h3{margin:0 0 var(--space-8);font-size:var(--text-2xl);letter-spacing:var(--track-tight)}
+  .bespoke-success p{margin:0;color:var(--muted);font-size:var(--text-md);line-height:1.5}
+
   /* Pagination */
   .pagination{
     display:flex;align-items:center;justify-content:center;gap:var(--space-6);
@@ -1513,6 +1553,39 @@
   </div>
 </div>
 
+<!-- ═══════════ BESPOKE REQUEST MODAL ═══════════ -->
+<!-- Opened from the "Don't see your dream watch?" banner at the bottom of the
+     Watches tab. Production: form body = Shopify Forms embed (Form ID), log in
+     Shopify Forms admin. Mockup: static form → success state on submit. -->
+<div class="lightbox" id="bespokeModal">
+  <div class="bespoke-card">
+    <button class="lb-close" id="bespokeClose">✕</button>
+    <div class="bespoke-eyebrow">Bespoke requests</div>
+    <h2 class="bespoke-title">Don't see your dream watch?</h2>
+    <p class="bespoke-lead">Send us a note — tell us what you're looking for and our team will reach out personally.</p>
+    <form class="bespoke-form" id="bespokeForm">
+      <label>Name
+        <input type="text" name="name" required placeholder="Your name" />
+      </label>
+      <label>Email
+        <input type="email" name="email" required placeholder="you@example.com" />
+      </label>
+      <label>Phone <span class="opt">(optional)</span>
+        <input type="tel" name="phone" placeholder="+1 …" />
+      </label>
+      <label>What are you looking for?
+        <textarea name="message" rows="4" required placeholder="Brand, model, reference, budget — anything that helps us track it down."></textarea>
+      </label>
+      <button type="submit" class="bespoke-submit">SEND REQUEST →</button>
+    </form>
+    <div class="bespoke-success" id="bespokeSuccess" hidden>
+      <div class="bespoke-success-icon">✓</div>
+      <h3>Thank you — message received.</h3>
+      <p>Our team will get back to you within 1–2 business days.</p>
+    </div>
+  </div>
+</div>
+
 <footer class="site-footer">SITE FOOTER · iflwatches.com</footer>
 
 <script>
@@ -1611,6 +1684,18 @@
   // ────── RENDER GRIDS ──────
   function renderWatches(){
     const grid = document.getElementById('watchGrid');
+    // Bottom banner — same visual pattern as the Designs "Don't see your idea?"
+    // card, but opens the bespoke request form modal instead of switching mode.
+    const bespokeBanner = `
+      <div class="custom-card" data-bespoke="open">
+        <div class="cc-text">
+          <div class="cc-eyebrow">Bespoke requests</div>
+          <h3>Don't see your dream watch?</h3>
+          <p>Send us a note — tell us what you're looking for and our team will reach out personally.</p>
+        </div>
+        <button class="pill" data-bespoke="open">GET IN TOUCH →</button>
+      </div>
+    `;
     grid.innerHTML = watches.map(w => `
       <div class="pcard ${w.sel?'sel':''}" data-watch="${w.name}">
         ${w.sel?'<span class="sel-badge">Selected</span>':''}
@@ -1633,7 +1718,7 @@
           </div>
         </div>
       </div>
-    `).join('');
+    `).join('') + bespokeBanner;
   }
 
   function renderDesigns(){
@@ -2297,6 +2382,31 @@
   lb.addEventListener('click', e => { if(e.target === lb) closeLightbox(); });
   document.addEventListener('keydown', e => { if(e.key === 'Escape' && lb.classList.contains('open')) closeLightbox(); });
   document.getElementById('lbSelect').addEventListener('click', closeLightbox);
+
+  // ────── BESPOKE REQUEST MODAL ──────
+  const bespokeModal = document.getElementById('bespokeModal');
+  const bespokeForm = document.getElementById('bespokeForm');
+  const bespokeSuccess = document.getElementById('bespokeSuccess');
+  function openBespoke(){
+    bespokeForm.hidden = false; bespokeSuccess.hidden = true; bespokeForm.reset();
+    bespokeModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeBespoke(){
+    bespokeModal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('bespokeClose').addEventListener('click', closeBespoke);
+  bespokeModal.addEventListener('click', e => { if(e.target === bespokeModal) closeBespoke(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && bespokeModal.classList.contains('open')) closeBespoke(); });
+  bespokeForm.addEventListener('submit', e => {
+    e.preventDefault();
+    bespokeForm.hidden = true;
+    bespokeSuccess.hidden = false;
+  });
+  document.addEventListener('click', e => {
+    if(e.target.closest('[data-bespoke="open"]')){ e.stopPropagation(); openBespoke(); }
+  });
 
   document.addEventListener('click', e => {
     const qvW = e.target.closest('[data-qv-watch]');
