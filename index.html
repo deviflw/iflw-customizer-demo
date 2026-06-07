@@ -2017,11 +2017,12 @@
     e.stopPropagation();
     openBandModal();
   });
-  // Tapping the slot's image also opens the picker when 2+ bands fit (easier
-  // touch target than the small Change link). With a single band it falls
-  // through to the row toggle (add/remove).
+  // Tapping the slot's image opens the picker whenever a band exists (a bigger,
+  // easier touch target than the small "Change" link, and it lets you view the
+  // band larger). The rest of the row still toggles add/remove; "Change" stays
+  // as the explicit swap affordance when 2+ bands fit.
   document.getElementById('bandSwatch').addEventListener('click', e => {
-    if(compatBands().length > 1){ e.stopPropagation(); openBandModal(); }
+    if(compatBands().length){ e.stopPropagation(); openBandModal(); }
   });
   document.getElementById('bandModalClose').addEventListener('click', closeBandModal);
   bandModal.addEventListener('click', e => { if(e.target === bandModal) closeBandModal(); });
