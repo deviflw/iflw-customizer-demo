@@ -377,6 +377,16 @@
   .band-opt-name{display:block;font-weight:600;font-size:var(--text-md);color:var(--ink)}
   .band-opt-meta{display:block;margin-top:2px;color:var(--muted);font-size:var(--text-sm)}
   .band-opt-price{flex:0 0 auto;font-weight:600;font-size:var(--text-md);color:var(--ink)}
+  /* Mobile safeguard (the full responsive pass for the customizer is still
+     pending). Let the strap modal fill the narrow screen so it never overflows,
+     and KEEP the photo large (112px) — deliberately NOT shrinking the thumb the
+     way the PDP Band Upsell block does on mobile, per Mila's "don't lose the
+     large photo". Smaller overlay padding gives the card more room. */
+  @media (max-width:560px){
+    .lightbox{padding:var(--space-12)}
+    .band-card-modal{width:100%;padding:var(--space-22) var(--space-18) var(--space-20)}
+    .band-opt-img{width:112px;height:112px}
+  }
 
   /* Pagination */
   .pagination{
