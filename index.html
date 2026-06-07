@@ -373,6 +373,8 @@
     width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;
     display:flex;align-items:center;justify-content:center;font-size:var(--text-xs);font-weight:700;
   }
+  /* body = info + price. Desktop: a row (name/meta fill, price at the right). */
+  .band-opt-body{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:var(--space-14)}
   .band-opt-info{flex:1 1 0;min-width:0}
   .band-opt-name{display:block;font-weight:600;font-size:var(--text-md);color:var(--ink)}
   .band-opt-meta{display:block;margin-top:2px;color:var(--muted);font-size:var(--text-sm)}
@@ -381,11 +383,14 @@
      pending). Let the strap modal fill the narrow screen so it never overflows,
      and KEEP the photo large (112px) — deliberately NOT shrinking the thumb the
      way the PDP Band Upsell block does on mobile, per Mila's "don't lose the
-     large photo". Smaller overlay padding gives the card more room. */
+     large photo". The body stacks to a COLUMN so the name uses the full width
+     and the price drops below it (no cramped middle). */
   @media (max-width:560px){
     .lightbox{padding:var(--space-12)}
     .band-card-modal{width:100%;padding:var(--space-22) var(--space-18) var(--space-20)}
     .band-opt-img{width:112px;height:112px}
+    .band-opt-body{flex-direction:column;align-items:flex-start;gap:var(--space-6)}
+    .band-opt-price{margin-top:var(--space-2)}
   }
 
   /* Pagination */
@@ -2005,11 +2010,13 @@
     document.getElementById('bandList').innerHTML = list.map((b,i) => `
       <button type="button" class="band-opt ${i===selBandIdx?'is-selected':''}" data-band-idx="${i}">
         <span class="band-opt-img" style="background:${b.grad}"></span>
-        <span class="band-opt-info">
-          <span class="band-opt-name">${b.name}</span>
-          <span class="band-opt-meta">${b.material} · ${b.lug}mm</span>
+        <span class="band-opt-body">
+          <span class="band-opt-info">
+            <span class="band-opt-name">${b.name}</span>
+            <span class="band-opt-meta">${b.material} · ${b.lug}mm</span>
+          </span>
+          <span class="band-opt-price">+$${b.price.toLocaleString()}</span>
         </span>
-        <span class="band-opt-price">+$${b.price.toLocaleString()}</span>
       </button>
     `).join('');
   }
