@@ -329,6 +329,44 @@
   .bespoke-success h3{margin:0 0 var(--space-8);font-size:var(--text-2xl);letter-spacing:var(--track-tight)}
   .bespoke-success p{margin:0;color:var(--muted);font-size:var(--text-md);line-height:1.5}
 
+  /* ── Band (extra strap) slot in Add-Ons ── */
+  .cfg-band-row{align-items:center}
+  .cfg-band-swatch{
+    flex:0 0 auto;width:38px;height:38px;border-radius:var(--radius-sm);
+    border:1px solid var(--line);background:var(--bg);margin-right:var(--space-12);
+  }
+  .cfg-band-change{
+    display:inline-block;margin-top:var(--space-4);padding:0;border:0;background:none;
+    color:var(--acc);font-size:var(--text-sm);font-weight:600;letter-spacing:var(--track-loose);
+    cursor:pointer;
+  }
+  .cfg-band-change:hover{text-decoration:underline}
+
+  /* ── Band picker modal (reuses .lightbox overlay) ── */
+  .band-card-modal{
+    background:#fff;width:clamp(360px,40vw,520px);max-height:calc(100vh - 60px);
+    overflow-y:auto;position:relative;
+    padding:var(--space-30) var(--space-30) var(--space-26);
+    box-shadow:0 40px 100px -20px rgba(0,0,0,.4);animation:zoomIn .3s var(--ease);
+  }
+  .band-modal-title{margin:0 0 var(--space-4);font-size:var(--text-3xl);letter-spacing:var(--track-tight);font-weight:600}
+  .band-modal-sub{margin:0 0 var(--space-20);color:var(--muted);font-size:var(--text-sm);letter-spacing:var(--track-loose)}
+  .band-list{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--radius-md);overflow:hidden}
+  .band-opt{
+    display:flex;align-items:center;gap:var(--space-12);width:100%;
+    padding:var(--space-12) var(--space-14);background:#fff;border:0;
+    border-bottom:1px solid var(--line);cursor:pointer;text-align:left;
+    transition:background .15s var(--ease);
+  }
+  .band-opt:last-child{border-bottom:0}
+  .band-opt:hover{background:var(--bg)}
+  .band-opt.is-selected{background:var(--acc-soft)}
+  .band-opt-media{flex:0 0 auto;width:46px;height:46px;border-radius:var(--radius-sm);border:1px solid var(--line)}
+  .band-opt-body{flex:1 1 0;min-width:0}
+  .band-opt-name{display:block;font-weight:600;font-size:var(--text-md);color:var(--ink)}
+  .band-opt-meta{display:block;margin-top:1px;color:var(--muted);font-size:var(--text-sm)}
+  .band-opt-price{flex:0 0 auto;font-weight:600;font-size:var(--text-md);color:var(--ink)}
+
   /* Pagination */
   .pagination{
     display:flex;align-items:center;justify-content:center;gap:var(--space-6);
@@ -1417,12 +1455,17 @@
                 <span><span id="monoCount">0</span> / 4 characters</span>
               </div>
             </div>
-            <div class="cfg-addon" data-toggle data-addon="strap">
+            <!-- Extra band slot — filled by renderBandRow() from the watch's
+                 compatible bands (lug match). Hidden when none fit. "Change"
+                 appears only when 2+ bands fit → opens the picker modal. -->
+            <div class="cfg-addon cfg-band-row" data-toggle data-addon="strap" id="bandRow" hidden>
+              <span class="cfg-band-swatch" id="bandSwatch"></span>
               <div class="cfg-addon-l">
-                <strong>Extra Strap</strong>
-                <small>A second band in any compatible style</small>
+                <strong id="bandName">—</strong>
+                <small id="bandMeta">—</small>
+                <button type="button" class="cfg-band-change" id="bandChange" hidden>Change ›</button>
               </div>
-              <span class="cfg-addon-r">+$95</span>
+              <span class="cfg-addon-r" id="bandPrice">+$0</span>
               <div class="toggle"></div>
             </div>
             <div class="cfg-addon cfg-addon-cc" data-toggle data-addon="timelapse" hidden>
@@ -1583,6 +1626,18 @@
       <h3>Thank you — message received.</h3>
       <p>Our team will get back to you within 1–2 business days.</p>
     </div>
+  </div>
+</div>
+
+<!-- ═══════════ BAND PICKER MODAL ═══════════ -->
+<!-- Opened from the strap slot's "Change" button when 2+ bands fit the watch.
+     Cards-only, single-select — pick one to fill the slot. Reuses .lightbox. -->
+<div class="lightbox" id="bandModal">
+  <div class="band-card-modal">
+    <button class="lb-close" id="bandModalClose">✕</button>
+    <h2 class="band-modal-title">Choose a band</h2>
+    <p class="band-modal-sub">Compatible with your watch · sold separately</p>
+    <div class="band-list" id="bandList" role="list"></div>
   </div>
 </div>
 
@@ -1801,6 +1856,28 @@
   // Which Price-Summary line (data-line) each add-on key drives
   const ADDON_LINE = {mono:'monogram', strap:'strap', timelapse:'timelapse', photos:'photos'};
 
+  // ────── BANDS (extra straps) ──────
+  // Mirrors the live "Band Upsell" model (assistant-kb/ref/bands.md):
+  // a pool of bands, each compatible with a lug width. A watch shows only the
+  // bands whose lug matches its lug_width — exactly the production lug-matching
+  // (DRY, no per-watch lists). In the customizer the strap is ONE slot: it shows
+  // the chosen compatible band + a toggle to add it; if 2+ bands fit, a "Change"
+  // button opens the picker modal to swap which band fills the slot.
+  // (In production these come from the watch's specs.upsell_straps metafield.)
+  const BANDS = [
+    {name:'Tropic Rubber',   material:'FKM rubber',      lug:20, price:95,  grad:'linear-gradient(135deg,#1a1a1a,#3a3a3a)'},
+    {name:'Sailcloth Strap', material:'Water-resistant', lug:20, price:120, grad:'linear-gradient(135deg,#2a2018,#5a4a38)'},
+    {name:'Milanese Mesh',   material:'Stainless steel', lug:20, price:140, grad:'linear-gradient(135deg,#8a8a8a,#dadada)'},
+    {name:'Classic Leather', material:'Full-grain calf', lug:18, price:110, grad:'linear-gradient(135deg,#3a2818,#6a4828)'},
+    {name:'Dive Bracelet',   material:'Stainless steel', lug:22, price:160, grad:'linear-gradient(135deg,#909090,#c8c8c8)'},
+  ];
+  // Compatible bands for a watch = lug-width match. lugW 0 (integrated bracelet,
+  // e.g. PRX) → no bands, like the block hides when nothing matches.
+  function bandsFor(w){ return (w && w.lugW) ? BANDS.filter(b => b.lug === w.lugW) : []; }
+  let selBandIdx = 0;   // which compatible band fills the single strap slot
+  function compatBands(){ return bandsFor(selWatch); }
+  function chosenBand(){ const l = compatBands(); return l[selBandIdx] || l[0] || null; }
+
   // Time-Lapse Video + High-Resolution Photos are Custom-Concept-only.
   // The same two extras appear BOTH in the configurator Add-Ons AND on the
   // Custom Concept info page — all driven by one `st` object so a pre-pick
@@ -1826,6 +1903,7 @@
 
   function recalc(){
     refreshCCAddons();
+    renderBandRow();   // keep the strap slot in sync with the current watch
     const cc = (typeof isCustomConcept !== 'undefined') && isCustomConcept;
     // Mark the customizer with a data-cc flag so CSS can hide the design
     // gallery's "Selected" highlight when Custom Concept is the active build
@@ -1840,7 +1918,8 @@
       const activeForPrice = on && (!ccOnly || cc);
       const line = document.querySelector(`[data-line="${ADDON_LINE[key]}"]`);
       if(line) line.style.display = activeForPrice ? 'flex' : 'none';
-      if(activeForPrice) addons += prices[key];
+      // strap price = the chosen band's price (not a fixed value)
+      if(activeForPrice) addons += (key === 'strap' ? (chosenBand() ? chosenBand().price : 0) : prices[key]);
     });
     syncToggles();
     const svc = (typeof currentDesign === 'function') ? currentDesign().price : prices.design;
@@ -1867,6 +1946,78 @@
       monoCount.textContent = monoInput.value.length;
     });
   }
+
+  // ────── BAND (strap) SLOT + PICKER MODAL ──────
+  // One slot in the Add-Ons list. Fills with the chosen compatible band; the
+  // toggle (whole row, data-addon="strap") adds/removes it. "Change" shows only
+  // when 2+ bands fit → opens the picker modal (cards-only, single-select).
+  function renderBandRow(){
+    const row = document.getElementById('bandRow');
+    if(!row) return;
+    const list = compatBands();
+    if(list.length === 0){
+      row.hidden = true;
+      st.strap = false;          // a band that no longer fits can't stay selected
+      return;
+    }
+    if(selBandIdx >= list.length) selBandIdx = 0;
+    const b = list[selBandIdx];
+    row.hidden = false;
+    document.getElementById('bandSwatch').style.background = b.grad;
+    document.getElementById('bandName').textContent = b.name;
+    document.getElementById('bandMeta').textContent = `${b.material} · ${b.lug}mm`;
+    document.getElementById('bandPrice').textContent = `+$${b.price.toLocaleString()}`;
+    document.getElementById('bandChange').hidden = list.length < 2;
+    // mirror name + price into the Price-Summary strap line
+    const sLine = document.querySelector('[data-line="strap"]');
+    if(sLine){
+      const spans = sLine.querySelectorAll('span');
+      if(spans[0]) spans[0].textContent = b.name;
+      if(spans[1]) spans[1].textContent = `$${b.price.toLocaleString()}`;
+    }
+  }
+
+  // Picker modal — reuses the same centered .lightbox shell used elsewhere.
+  const bandModal = document.getElementById('bandModal');
+  function renderBandList(){
+    const list = compatBands();
+    document.getElementById('bandList').innerHTML = list.map((b,i) => `
+      <button type="button" class="band-opt ${i===selBandIdx?'is-selected':''}" data-band-idx="${i}">
+        <span class="band-opt-media" style="background:${b.grad}"></span>
+        <span class="band-opt-body">
+          <span class="band-opt-name">${b.name}</span>
+          <span class="band-opt-meta">${b.material} · ${b.lug}mm</span>
+        </span>
+        <span class="band-opt-price">+$${b.price.toLocaleString()}</span>
+      </button>
+    `).join('');
+  }
+  function openBandModal(){
+    renderBandList();
+    bandModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeBandModal(){
+    bandModal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  // "Change" button on the slot — open picker (don't let the click toggle the row)
+  document.getElementById('bandChange').addEventListener('click', e => {
+    e.stopPropagation();
+    openBandModal();
+  });
+  document.getElementById('bandModalClose').addEventListener('click', closeBandModal);
+  bandModal.addEventListener('click', e => { if(e.target === bandModal) closeBandModal(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && bandModal.classList.contains('open')) closeBandModal(); });
+  // Pick a band → fill the slot, mark strap selected, close
+  document.getElementById('bandList').addEventListener('click', e => {
+    const opt = e.target.closest('[data-band-idx]');
+    if(!opt) return;
+    selBandIdx = parseInt(opt.dataset.bandIdx, 10) || 0;
+    st.strap = true;            // choosing a band in the picker also adds it
+    closeBandModal();
+    recalc();
+  });
 
   // ────── QUANTITY ──────
   // +/- buttons step the quantity input (clamped 1..99). Manual typing
@@ -1947,7 +2098,10 @@
     let addons = 0, count = 0;
     ['mono','strap','timelapse','photos'].forEach(k => {
       const ccOnly = (k === 'timelapse' || k === 'photos');
-      if(st[k] && (!ccOnly || cc)){ addons += prices[k]; count++; }
+      if(st[k] && (!ccOnly || cc)){
+        addons += (k === 'strap' ? (chosenBand() ? chosenBand().price : 0) : prices[k]);
+        count++;
+      }
     });
     const aLine = document.getElementById('piAddonsLine');
     if(aLine){
@@ -1987,6 +2141,7 @@
     selDialIdx = 0;
     selCaseIdx = 0;
     selSizeIdx = 0;
+    selBandIdx = 0;   // new watch → reset the band slot to its first compatible band
 
     // replace dial swatches in hotbar to reflect this watch's options
     const dialBox = document.getElementById('hotbarDial');
@@ -2002,7 +2157,7 @@
     refreshCfgPickMeta();
 
     updateBuildHeader();
-    updateSummary();
+    recalc();   // recompute totals + refresh the band slot for this watch
   }
 
   // Hotbar swatch / size click → update state + cfg-pick meta line
@@ -2066,7 +2221,9 @@
       dialIdx:    selDialIdx,
       caseIdx:    selCaseIdx,
       sizeIdx:    selSizeIdx,
-      addons:     {mono:!!st.mono, strap:!!st.strap, timelapse:!!st.timelapse, photos:!!st.photos},
+      addons:     {mono:!!st.mono, strap:!!st.strap, timelapse:!!st.timelapse, photos:!!st.photos,
+                   bandPrice:(st.strap && chosenBand()) ? chosenBand().price : 0,
+                   bandName:(st.strap && chosenBand()) ? chosenBand().name : null},
       savedAt:    Date.now(),
     };
   }
@@ -2088,7 +2245,7 @@
   function buildPrices(b){
     const svc = b.isCustom ? CUSTOM_CONCEPT_PRICE : prices.design;
     const a = b.addons || {};
-    const addOns = (a.mono?prices.mono:0) + (a.strap?prices.strap:0)
+    const addOns = (a.mono?prices.mono:0) + (a.strap?(a.bandPrice||0):0)
                  + (a.timelapse?prices.timelapse:0) + (a.photos?prices.photos:0);
     return {watch:b.watch.price, service:svc, addons:addOns, total:b.watch.price + svc + addOns};
   }
