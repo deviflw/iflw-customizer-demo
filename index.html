@@ -569,14 +569,17 @@
    * here would force overflow inside the narrow column and squash the
    * preview into a tiny block in the corner.) */
   [data-mode="configure"] .preview-area{
-    max-width:clamp(700px,55vw,1200px);margin:0 auto;
+    max-width:clamp(700px,60vw,1340px);margin:0 auto;
   }
   .preview-canvas{
     /* Configure: SQUARE canvas — matches the square watch photo so it shows in
      * full with no letterbox. Sized by the smaller of 70vh / 50vw so it always
      * fits the centered preview-area on any screen. width & height are both
      * explicit (equal) → also sidesteps the Safari aspect-ratio+flex width bug. */
-    --canvas-sz:clamp(340px, min(70vh, 50vw), 1000px);
+    /* Grow with viewport HEIGHT: (100vh − fixed chrome) instead of a flat 70vh
+       fraction. So on a short MacBook screen it stays ~the same, but on a tall
+       external monitor it grows to fill the space below the preview. */
+    --canvas-sz:clamp(340px, min(calc(100vh - 240px), 52vw), 1300px);
     width:var(--canvas-sz);
     height:var(--canvas-sz);
     aspect-ratio:1/1;
