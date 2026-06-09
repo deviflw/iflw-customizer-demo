@@ -542,14 +542,13 @@
     grid-area:preview;
     min-width:0;
     position:relative;
-    /* Matches preview-unit's gradient end (#ebedef) so any preview-col
-       area visible below the sticky preview-unit reads as a seamless
-       continuation, not a distinct grey plate. */
-    background:#ebedef;
+    /* White field (was #ebedef grey) so any area below/around the preview reads
+       as clean whitespace on scroll, not a grey plate. (Mila: "цвет был проблемой".) */
+    background:#fff;
   }
   .preview-unit{
     display:flex;flex-direction:column;
-    background:linear-gradient(180deg,#fff,#ebedef);
+    background:#fff;
     min-width:0;
     position:sticky;top:0;
     /* Natural content height — no max-height, no overflow. With
@@ -615,6 +614,8 @@
     flex-wrap:wrap;row-gap:var(--space-12);
   }
   .hotbar .hg{flex:0 0 auto}
+  /* Taller swatch panel in Configure (Mila) */
+  [data-mode="configure"] .hotbar{padding-top:var(--space-32);padding-bottom:var(--space-32);align-items:center}
   .hg{display:flex;flex-direction:column;gap:var(--space-6);align-items:flex-start}
   .hg-l{font-size:var(--text-2xs);letter-spacing:var(--track-wide);color:var(--muted);text-transform:uppercase;font-weight:600}
   .hg-row{display:flex;gap:var(--space-7);align-items:center}
