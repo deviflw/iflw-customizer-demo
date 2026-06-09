@@ -117,22 +117,7 @@
     --col-browse:0;
     --col-preview:minmax(0,1fr);
     --col-config:var(--config-w);
-    /* Configure gets its OWN self-contained height (a share of the viewport), NOT
-       "100vh − header − footer". So it is immune to the theme's header/footer
-       sizes — the theme footer simply sits below this section in page flow, any
-       size. Inside: preview fills its side (hotbar anchored), the config column
-       scrolls within itself → no grey leftover. Scoped to Configure only;
-       browse/compare keep the normal page-scroll shell. */
-    --cfg-h: clamp(600px, 86vh, 1080px);
-    min-height: 0;
-    overflow: hidden;
   }
-  /* Cap ONLY the preview + config columns at the section height (NOT the whole
-     grid row via grid-template-rows — that stretched the rail's active button).
-     The rail-col still auto-stretches to the row like before, buttons unaffected.
-     preview fills its column (hotbar anchored); config scrolls inside itself. */
-  [data-mode="configure"] .preview-col{height:var(--cfg-h);overflow:hidden}
-  [data-mode="configure"] .config{height:var(--cfg-h)}
   [data-mode^="browse-"]{
     --col-browse:minmax(0,1fr);
     --col-preview:var(--preview-browse-w);
@@ -572,9 +557,6 @@
        fits inside one viewport on standard 16:9 screens, so no internal
        scrollbar can appear. */
   }
-  /* Configure only: fill the section height so preview-area (flex:1) centres the
-     canvas and the hotbar anchors to the bottom — no grey leftover. */
-  [data-mode="configure"] .preview-unit{height:100%;position:static}
   .preview-area{
     flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
     position:relative;padding:var(--space-24);
@@ -595,7 +577,7 @@
      * full with no letterbox. Sized by the smaller of 70vh / 50vw so it always
      * fits the centered preview-area on any screen. width & height are both
      * explicit (equal) → also sidesteps the Safari aspect-ratio+flex width bug. */
-    --canvas-sz:clamp(300px, min(calc(var(--cfg-h, 86vh) - 150px), 50vw), 1000px);
+    --canvas-sz:clamp(340px, min(70vh, 50vw), 1000px);
     width:var(--canvas-sz);
     height:var(--canvas-sz);
     aspect-ratio:1/1;
@@ -723,12 +705,6 @@
   .config-inner{width:var(--config-w);display:flex;flex-direction:column}
   .config-scroll{padding:var(--space-22) var(--space-24)}
   .cfg-foot{position:sticky;bottom:0}
-  /* Configure only: the config column has a fixed height (= the section), so its
-     content scrolls INSIDE itself with the cart pinned at the bottom. (config is
-     height:0 in browse/compare, so this only affects Configure.) */
-  [data-mode="configure"] .config-inner{height:100%}
-  [data-mode="configure"] .config-scroll{flex:1 1 auto;overflow-y:auto;min-height:0}
-  [data-mode="configure"] .cfg-foot{position:static;flex:0 0 auto;border-top:1px solid var(--line)}
   .cfg-eyebrow{font-size:var(--text-2xs);letter-spacing:var(--track-wide);color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:6px}
   .cfg-header{margin-bottom:22px}
   .cfg-header .cfg-eyebrow{margin-bottom:10px}
@@ -1555,6 +1531,18 @@
             </div>
           </div>
 
+        </div>
+
+        <div class="cfg-foot">
+          <div class="cart-row">
+            <div class="qty" id="cartQty">
+              <button data-qty="-1" aria-label="Decrease">−</button>
+              <input value="1" id="cartQtyInput" inputmode="numeric" />
+              <button data-qty="+1" aria-label="Increase">+</button>
+            </div>
+            <button class="cart-secondary">ADD TO CART</button>
+          </div>
+          <button class="cart-primary">CHECKOUT</button>
           <div class="cfg-badges">
             <div class="b">
               <svg viewBox="0 0 24 24"><path d="M3 21l3-3"/><path d="M14 4l6 6-9 9H5v-6l9-9z"/><path d="M14 4l3-3 3 3-3 3"/></svg>
@@ -1597,19 +1585,6 @@
               </div>
             </details>
           </div>
-
-        </div>
-
-        <div class="cfg-foot">
-          <div class="cart-row">
-            <div class="qty" id="cartQty">
-              <button data-qty="-1" aria-label="Decrease">−</button>
-              <input value="1" id="cartQtyInput" inputmode="numeric" />
-              <button data-qty="+1" aria-label="Increase">+</button>
-            </div>
-            <button class="cart-secondary">ADD TO CART</button>
-          </div>
-          <button class="cart-primary">CHECKOUT</button>
         </div>
       </div>
     </aside>
