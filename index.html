@@ -86,14 +86,10 @@
    * across 1280–2560px viewports, so EVERY font-size that uses var(--text-*)
    * grows proportionally without touching individual rules. */
   html{font-size:clamp(14px,1vw,19px)}
-  /* App-frame: header + customizer + footer fill exactly one viewport; nothing
-     scrolls the PAGE — panes scroll internally. So header/footer are fixed chrome
-     and never scroll away to leave gaps. (Production: the customizer becomes an
-     island of height 100dvh − theme-header; internal behavior is identical.) */
-  body{margin:0;font-family:'Montserrat',-apple-system,sans-serif;font-size:var(--text-md);line-height:1.45;color:var(--ink);background:#fff;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+  body{margin:0;font-family:'Montserrat',-apple-system,sans-serif;font-size:var(--text-md);line-height:1.45;color:var(--ink);background:#fff}
 
   /* ═══════════ SITE STUBS ═══════════ */
-  .site-header,.site-footer{flex:0 0 auto;height:var(--header-h);display:flex;align-items:center;justify-content:center;background:#f3f4f6;color:#9ca3af;font-size:var(--text-sm);letter-spacing:var(--track-caps)}
+  .site-header,.site-footer{height:var(--header-h);display:flex;align-items:center;justify-content:center;background:#f3f4f6;color:#9ca3af;font-size:var(--text-sm);letter-spacing:var(--track-caps)}
 
   /* ═══════════ CUSTOMIZER SHELL ═══════════
      Normal page flow — grows with content. Rail and preview-unit are
@@ -107,9 +103,7 @@
       var(--col-preview,1fr)
       var(--col-config,0);
     grid-template-areas: "rail browse preview config";
-    flex:1 1 auto;
-    min-height:0;
-    overflow:hidden;
+    min-height:calc(100vh - var(--header-h) - var(--footer-h));
     /* No max-width cap — customizer fills the entire viewport so big
        monitors don't show empty side margins. The column clamps + media
        queries below keep proportions sane at any width. */
@@ -153,7 +147,7 @@
     background:var(--ink);color:#a8b5b9;
     display:flex;flex-direction:column;
     border-right:1px solid var(--ink);
-    height:100%;
+    position:sticky;top:0;
   }
   .rail-logo{
     height:96px;display:flex;align-items:center;justify-content:center;
@@ -189,7 +183,7 @@
     grid-area:browse;
     background:var(--paper);
     border-right:1px solid var(--line);
-    overflow-y:auto;overflow-x:clip;
+    overflow:clip;
     display:flex;flex-direction:column;
     min-width:0;
     --col-gutter:30px;
@@ -557,17 +551,12 @@
     display:flex;flex-direction:column;
     background:linear-gradient(180deg,#fff,#ebedef);
     min-width:0;
-    height:100%;
+    position:sticky;top:0;
     /* Natural content height — no max-height, no overflow. With
        preview-col upper-clamp at 400px the canvas+hotbar+summary stack
        fits inside one viewport on standard 16:9 screens, so no internal
        scrollbar can appear. */
   }
-  /* Configure: fill the viewport height so the hotbar (dial/case/size) anchors
-     to the BOTTOM instead of floating under the canvas with empty space below.
-     preview-area is flex:1, so the canvas sits centered in the slack and the
-     hotbar is pushed to the bottom edge. Sticky top:0 keeps it pinned if the
-     config column makes the page taller. Mirrors the grid's own min-height. */
   .preview-area{
     flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
     position:relative;padding:var(--space-24);
@@ -581,14 +570,14 @@
    * here would force overflow inside the narrow column and squash the
    * preview into a tiny block in the corner.) */
   [data-mode="configure"] .preview-area{
-    max-width:clamp(700px,64vw,1400px);margin:0 auto;
+    max-width:clamp(700px,55vw,1200px);margin:0 auto;
   }
   .preview-canvas{
     /* Configure: SQUARE canvas — matches the square watch photo so it shows in
      * full with no letterbox. Sized by the smaller of 70vh / 50vw so it always
      * fits the centered preview-area on any screen. width & height are both
      * explicit (equal) → also sidesteps the Safari aspect-ratio+flex width bug. */
-    --canvas-sz:clamp(320px, min(calc(100dvh - var(--header-h) - var(--footer-h) - 130px), 56vw), 1100px);
+    --canvas-sz:clamp(340px, min(70vh, 50vw), 1000px);
     width:var(--canvas-sz);
     height:var(--canvas-sz);
     aspect-ratio:1/1;
@@ -713,9 +702,9 @@
     position:relative;
     min-width:0;
   }
-  .config-inner{width:var(--config-w);display:flex;flex-direction:column;height:100%}
-  .config-scroll{padding:var(--space-22) var(--space-24);flex:1 1 auto;overflow-y:auto;min-height:0}
-  .cfg-foot{flex:0 0 auto}
+  .config-inner{width:var(--config-w);display:flex;flex-direction:column}
+  .config-scroll{padding:var(--space-22) var(--space-24)}
+  .cfg-foot{position:sticky;bottom:0}
   .cfg-eyebrow{font-size:var(--text-2xs);letter-spacing:var(--track-wide);color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:6px}
   .cfg-header{margin-bottom:22px}
   .cfg-header .cfg-eyebrow{margin-bottom:10px}
@@ -791,7 +780,7 @@
     border-top:1px solid var(--line);padding-top:10px;margin-top:6px;
   }
 
-  .cfg-foot{padding:var(--space-8) var(--space-24) var(--space-18);background:#fff;border-top:1px solid var(--line)}
+  .cfg-foot{padding:var(--space-8) var(--space-24) var(--space-18);background:#fff}
   .cart-row{display:flex;gap:var(--space-8);margin-bottom:8px}
   .qty{display:flex;align-items:center;border:1px solid var(--line)}
   .qty button{width:38px;height:48px;border:0;background:#fff;cursor:pointer;font-size:var(--text-xl);color:var(--ink);transition:.12s}
@@ -1542,6 +1531,18 @@
             </div>
           </div>
 
+        </div>
+
+        <div class="cfg-foot">
+          <div class="cart-row">
+            <div class="qty" id="cartQty">
+              <button data-qty="-1" aria-label="Decrease">−</button>
+              <input value="1" id="cartQtyInput" inputmode="numeric" />
+              <button data-qty="+1" aria-label="Increase">+</button>
+            </div>
+            <button class="cart-secondary">ADD TO CART</button>
+          </div>
+          <button class="cart-primary">CHECKOUT</button>
           <div class="cfg-badges">
             <div class="b">
               <svg viewBox="0 0 24 24"><path d="M3 21l3-3"/><path d="M14 4l6 6-9 9H5v-6l9-9z"/><path d="M14 4l3-3 3 3-3 3"/></svg>
@@ -1584,19 +1585,6 @@
               </div>
             </details>
           </div>
-
-        </div>
-
-        <div class="cfg-foot">
-          <div class="cart-row">
-            <div class="qty" id="cartQty">
-              <button data-qty="-1" aria-label="Decrease">−</button>
-              <input value="1" id="cartQtyInput" inputmode="numeric" />
-              <button data-qty="+1" aria-label="Increase">+</button>
-            </div>
-            <button class="cart-secondary">ADD TO CART</button>
-          </div>
-          <button class="cart-primary">CHECKOUT</button>
         </div>
       </div>
     </aside>
@@ -1861,10 +1849,6 @@
     document.querySelectorAll('.r-btn').forEach(b => {
       b.classList.toggle('on', b.dataset.mode === mode);
     });
-    // Each pane scrolls internally now (app-frame). Reset the scroll containers
-    // to the top on every tab switch so a new tab always opens from the top
-    // (e.g. Watches scrolled to bottom → Designs must not inherit that position).
-    document.querySelectorAll('.browse, .config-scroll').forEach(el => { el.scrollTop = 0; });
     // Entering the Custom Concept tab puts the build into Custom Concept
     // state so the preview panel + summary reflect the $1,490 commission.
     if(mode === 'browse-custom' && typeof isCustomConcept !== 'undefined'){
