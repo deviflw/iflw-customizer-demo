@@ -563,7 +563,10 @@
      hotbar is pushed to the bottom edge. Sticky top:0 keeps it pinned if the
      config column makes the page taller. Mirrors the grid's own min-height. */
   [data-mode="configure"] .preview-unit{
-    min-height:calc(100vh - var(--header-h) - var(--footer-h));
+    /* Subtract ONLY the header, NOT the footer — reserving footer height left a
+       grey strip under the hotbar (footer is below the fold until you scroll).
+       Now the hotbar reaches the true bottom of the viewport. */
+    min-height:calc(100vh - var(--header-h));
   }
   .preview-area{
     flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
@@ -578,14 +581,14 @@
    * here would force overflow inside the narrow column and squash the
    * preview into a tiny block in the corner.) */
   [data-mode="configure"] .preview-area{
-    max-width:clamp(700px,55vw,1200px);margin:0 auto;
+    max-width:clamp(700px,64vw,1400px);margin:0 auto;
   }
   .preview-canvas{
     /* Configure: SQUARE canvas — matches the square watch photo so it shows in
      * full with no letterbox. Sized by the smaller of 70vh / 50vw so it always
      * fits the centered preview-area on any screen. width & height are both
      * explicit (equal) → also sidesteps the Safari aspect-ratio+flex width bug. */
-    --canvas-sz:clamp(340px, min(70vh, 50vw), 1000px);
+    --canvas-sz:clamp(320px, min(calc(100vh - var(--header-h) - 160px), 56vw), 1100px);
     width:var(--canvas-sz);
     height:var(--canvas-sz);
     aspect-ratio:1/1;
