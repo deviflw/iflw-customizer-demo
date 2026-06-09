@@ -557,6 +557,14 @@
        fits inside one viewport on standard 16:9 screens, so no internal
        scrollbar can appear. */
   }
+  /* Configure: fill the viewport height so the hotbar (dial/case/size) anchors
+     to the BOTTOM instead of floating under the canvas with empty space below.
+     preview-area is flex:1, so the canvas sits centered in the slack and the
+     hotbar is pushed to the bottom edge. Sticky top:0 keeps it pinned if the
+     config column makes the page taller. Mirrors the grid's own min-height. */
+  [data-mode="configure"] .preview-unit{
+    min-height:calc(100vh - var(--header-h) - var(--footer-h));
+  }
   .preview-area{
     flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
     position:relative;padding:var(--space-24);
