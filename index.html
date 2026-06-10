@@ -586,7 +586,10 @@
     /* Grow with viewport HEIGHT: (100vh − fixed chrome) instead of a flat 70vh
        fraction. So on a short MacBook screen it stays ~the same, but on a tall
        external monitor it grows to fill the space below the preview. */
-    --canvas-sz:clamp(340px, min(calc(100vh - 240px), 52vw), 1300px);
+    /* Also cap by the ACTUAL preview-column width (100vw − rail − side panel −
+       padding) so the canvas never spills past its column / clips on narrow
+       windows. Big screens are still limited by height (100vh−240) / 52vw. */
+    --canvas-sz:clamp(300px, min(calc(100vh - 240px), calc(100vw - var(--rail-w) - var(--config-w) - 56px), 52vw), 1300px);
     width:var(--canvas-sz);
     height:var(--canvas-sz);
     aspect-ratio:1/1;
@@ -1129,7 +1132,9 @@
     transition:.15s var(--ease);
   }
   .cu-cta:hover{background:#3aa8aa}
-  @media (max-width:900px){
+  /* Custom process cards: 4 -> 2 columns well before they get cramped (Mila
+     wanted this much earlier than the old 900px). 2 -> 1 at the mobile width. */
+  @media (max-width:1500px){
     .cu-cards{grid-template-columns:1fr 1fr}
   }
   @media (max-width:768px){
