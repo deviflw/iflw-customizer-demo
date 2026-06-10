@@ -1072,6 +1072,12 @@
   /* Custom page fills the browse column height — banner anchored at the
      bottom (margin-top:auto), cards stretch to fill, so there's no phantom
      empty space below short content forcing a page scroll. */
+  /* Custom only: make the inner column fill the section height so the flex chain
+     (content-custom -> cu-body -> cu-cards, all flex:1) can STRETCH the process
+     cards to fill the tall area on big screens (they read as elongated portrait
+     cards, not short landscape ones). Scoped to Custom so Watches/Designs (grid +
+     pagination) keep their natural top-aligned layout. */
+  [data-mode="browse-custom"] .browse-inner{flex:1}
   [data-mode="browse-custom"] .browse-content-custom{flex:1}
   .cu-body{display:flex;flex-direction:column;gap:var(--space-16);flex:1;padding-bottom:14px}
   .cu-intro{max-width:600px}
