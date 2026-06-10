@@ -1080,7 +1080,7 @@
 
   /* 4 process cards — uniform, elongated (portrait), stretch to fill.
      Informational only — no hover/cursor (not selectable). */
-  .cu-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-14);flex:1;min-height:240px}
+  .cu-cards{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:var(--space-14);flex:1;min-height:240px}
   .cu-card{
     background:var(--bg);border:1px solid var(--line);
     padding:var(--space-26) var(--space-22);display:flex;flex-direction:column;
@@ -1132,9 +1132,7 @@
     transition:.15s var(--ease);
   }
   .cu-cta:hover{background:#3aa8aa}
-  /* Custom process cards: 4 -> 2 columns well before they get cramped (Mila
-     wanted this much earlier than the old 900px). 2 -> 1 at the mobile width. */
-  @media (max-width:1500px){
+  @media (max-width:900px){
     .cu-cards{grid-template-columns:1fr 1fr}
   }
   @media (max-width:768px){
