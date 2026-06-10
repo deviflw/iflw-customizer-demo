@@ -34,7 +34,7 @@
 
     /* ─── LAYOUT ─── */
     --rail-w:clamp(100px,7vw,200px);
-    --config-w:clamp(440px,30vw,950px);
+    --config-w:clamp(360px,25vw,950px);
     --preview-browse-w:clamp(360px,24vw,700px);
     --dock-h:96px;
     --header-h:clamp(56px,4vw,80px);
@@ -120,7 +120,9 @@
   }
   [data-mode^="browse-"]{
     --col-browse:minmax(0,1fr);
-    --col-preview:var(--preview-browse-w);
+    /* Right column = SAME width as the Configure sidebar (--config-w): the side
+       panel occupies identical space on every page, whichever panel it is. */
+    --col-preview:var(--config-w);
     --col-config:0;
   }
   [data-mode="compare"]{
