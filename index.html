@@ -1135,7 +1135,9 @@
   .slot .info{min-width:0;overflow:hidden;font-size:var(--text-sm)}
   .slot .info strong{display:block;font-size:var(--text-md);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
   .slot .info small{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;font-size:var(--text-xs)}
-  .slot .price{margin-left:auto;font-weight:700;font-size:var(--text-md);flex:none}
+  /* Price drops to the SECOND line (flex-end), clear of the ✕ pinned at the
+     top-right corner — centered it sat right under the ✕ and they merged. */
+  .slot .price{margin-left:auto;font-weight:700;font-size:var(--text-md);flex:none;align-self:flex-end;margin-bottom:var(--space-8)}
   .slot .x{position:absolute;top:4px;right:6px;color:#bbb;font-size:var(--text-lg);line-height:1;cursor:pointer;width:16px;height:16px;display:flex;align-items:center;justify-content:center}
   .slot .x:hover{color:var(--ink)}
   .save-btn{
@@ -1410,8 +1412,9 @@
        under it, config sections below; one page scroll. — */
     .preview-unit{position:static}
     /* Full-bleed canvas (Mila): no side fields — the preview takes the whole
-       width, side borders dropped (the image edge IS the edge). */
-    [data-mode="configure"] .preview-area{max-width:none;padding:var(--space-12) 0}
+       width, side borders dropped (the image edge IS the edge) — and no top
+       field either: the image starts right at the top edge. */
+    [data-mode="configure"] .preview-area{max-width:none;padding:0 0 var(--space-12)}
     [data-mode="configure"] .preview-canvas{border-left:0;border-right:0}
     .preview-canvas{
       --canvas-sz:min(calc(100vw - 32px), calc(100dvh - 320px));
@@ -1444,7 +1447,12 @@
     /* — Browse: header stacks (title / full-width search / filter row),
        cards 2-up, eye always visible (no hover on touch) — */
     .browse{--col-gutter:16px}
-    .browse-head{position:static}
+    /* relative, NOT static: kills the desktop sticky, but KEEPS the head as
+       the positioning context for its ::after divider. With static the
+       absolute ::after fell back to the initial containing block and painted
+       a 1px var(--line) hairline across the page at exactly one viewport-
+       height down — THE wandering "полоска" on Watches/Designs/Custom. */
+    .browse-head{position:relative}
     .browse-head input[type=search]{min-width:0;flex:1 1 100%;order:5}
     .browse-head .sp{display:none}
     .browse-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-12)}
@@ -1493,18 +1501,19 @@
        filters can't squeeze beside it and wrap to their own row), search last
        at full width. Controls sized down — desktop sizes read huge on a phone. */
     .browse-head h2{font-size:var(--text-lg)}
-    .browse-head .count{flex:1 1 auto}
     .browse-head .row-2{row-gap:var(--space-8)}
+    /* ONE header rhythm on every tab (Mila: consistency over fit — Designs'
+       two filters DID fit beside the title, but then the layout jumped
+       between tabs): title row / filters row / search row. The count's 60%
+       basis fills the title row so no select can squeeze in beside it;
+       selects share their own row in equal parts (thirds on Watches,
+       halves on Designs). */
+    .browse-head .count{flex:1 0 60%}
     .browse-head select{
+      flex:1 1 30%;min-width:0;
       padding:var(--space-6) var(--space-22) var(--space-6) var(--space-10);
       font-size:var(--text-xs);
     }
-    /* Watches only: THREE filters don't fit beside the title — force them to
-       their OWN row as equal thirds. Designs' two filters still sit fine on
-       the title row (Mila: leave those). The count's 45% basis fills the
-       title row so the first select can't squeeze in. */
-    .browse-content-watches .browse-head .count{flex:1 0 60%}
-    .browse-content-watches .browse-head select{flex:1 1 30%;min-width:0}
     .browse-head input[type=search]{padding:var(--space-7) var(--space-10);font-size:var(--text-sm)}
     /* Cards: roomier row rhythm — the tight 12px gap made the bordered card
        bottoms read as a grey double-stripe band between rows. */
@@ -1543,6 +1552,9 @@
     .slot .thumb{width:44px;height:44px}
     .save-btn{width:100%;height:46px;flex-direction:row;gap:var(--space-8);white-space:nowrap}
     .save-btn br{display:none}
+    /* In the row layout the oversized ＋ glyph's line box pushed it below the
+       text baseline — pin its line height so it centers with the label. */
+    .save-btn .plus{font-size:var(--text-xl);line-height:1}
     /* Theme footer: spacer below so its content scrolls fully clear of the
        fixed tab bar (prod question recorded — same trick is portable). */
     .site-footer{margin-bottom:calc(72px + env(safe-area-inset-bottom))}
@@ -1613,7 +1625,7 @@
           <div class="browse-head">
             <div class="row-2">
               <h2>Watches</h2>
-              <span class="count">· 8 in catalog</span>
+              <span class="count">· 9 in catalog</span>
               <span class="sp"></span>
               <input type="search" placeholder="Search watches…" />
               <select><option>All Brands</option><option>Seiko</option><option>Hamilton</option><option>Tissot</option></select>
@@ -1628,7 +1640,7 @@
             <button class="pg-num">2</button>
             <button class="pg-num">3</button>
             <button class="pg-btn">›</button>
-            <span class="pg-info">1–8 of 18</span>
+            <span class="pg-info">1–9 of 18</span>
           </div>
         </div>
 
@@ -1733,7 +1745,7 @@
         <div class="dock" id="dock">
           <div class="dock-label">COMPARE DOCK<small>up to 3 builds</small></div>
           <div class="slots" id="dockSlots"></div>
-          <button class="save-btn" id="saveBtn"><span class="plus">＋</span>SAVE<br>CURRENT</button>
+          <button class="save-btn" id="saveBtn"><span class="plus">＋</span>SAVE <br>CURRENT</button>
         </div>
 
       </div>
@@ -1820,7 +1832,7 @@
                 <small id="cfgPickMeta">Black / Steel / 37mm</small>
               </div>
               <div class="end">
-                <span class="price">$320</span>
+                <span class="price" id="cfgPickPrice">$320</span>
                 <span class="act">Change →</span>
               </div>
             </div>
@@ -2113,6 +2125,15 @@
      features:['Domed sapphire','Unidirectional bezel','Super-LumiNova','Date'],
      ref:'01 733', dials:['#1a3a5a','#2b3a2f','#5a3a2a'],
      dialNames:['Navy','Olive','Bronze']},
+    // Single-variant model (Mila): exactly ONE dial / ONE case / ONE size —
+    // exercises the configurator UI when there is nothing left to choose.
+    {brand:'Junghans', name:'Max Bill',      price:595,  sizes:[38],          style:'Bauhaus dress · Minimal',
+     mvmt:'Quartz',    cal:'J645.33',       jewels:7,  freq:'32,768 Hz',           power:'~2 years (battery)',
+     thickness:7.9, l2l:40, lugW:20, crystal:'Acrylic (domed)', wr:'3 bar (30m)',
+     wrist:'14–20cm (5.5–7.9in)', material:'Stainless steel', display:'Analog', weight:'35 g',
+     features:['Domed acrylic crystal','Ultra-thin case','Bauhaus dial'],
+     ref:'041/4817.04', dials:['#f5f2ea'], dialNames:['Matte Silver'],
+     cases:[{hex:'#d4d4d4', name:'Steel'}]},
   ];
 
   function fmtSizes(arr){
@@ -2658,7 +2679,8 @@
   function getWatchMetaString(){
     const w = selWatch;
     const dialName = (w.dialNames && w.dialNames[selDialIdx]) || '—';
-    const caseName = (CASES[selCaseIdx] && CASES[selCaseIdx].name) || '—';
+    const cs = watchCases(w);
+    const caseName = (cs[selCaseIdx] && cs[selCaseIdx].name) || '—';
     const size = w.sizes[selSizeIdx] || w.sizes[0];
     return `${dialName} / ${caseName} / ${size}mm`;
   }
@@ -2715,6 +2737,9 @@
     {hex:'#2b2b2b', name:'PVD'},
     {hex:'#b87333', name:'Bronze'},
   ];
+  // A watch may carry its OWN case palette (e.g. the single-variant Max Bill);
+  // everything that reads case options goes through this, never CASES directly.
+  const watchCases = w => w.cases || CASES;
 
   // Selected indices for current watch's swatch picks (reset on watch swap)
   let selDialIdx = 0;
@@ -2738,13 +2763,19 @@
     const dialBox = document.getElementById('hotbarDial');
     dialBox.innerHTML = w.dials.map((c,i)=>`<span class="sw${i===0?' sel':''}" style="background:${c}"></span>`).join('');
 
+    // replace case swatches — per-watch palette (shared CASES for most models)
+    const caseBox = document.querySelector('[data-swatch-group="case"]');
+    caseBox.innerHTML = watchCases(w).map((c,i)=>`<span class="sw${i===0?' sel':''}" style="background:${c.hex}"></span>`).join('');
+
     // replace size pills in hotbar
     const sizeBox = document.getElementById('hotbarSize');
     sizeBox.innerHTML = w.sizes.map((s,i)=>`<span${i===0?' class="sel"':''}>${s}</span>`).join('');
 
-    // mirror selected watch into the cfg-pick card on the right (title only)
+    // mirror selected watch into the cfg-pick card on the right
     const cfgName = document.getElementById('cfgPickName');
     if(cfgName) cfgName.textContent = `${w.brand} ${w.name}`;
+    const cfgPrice = document.getElementById('cfgPickPrice');
+    if(cfgPrice) cfgPrice.textContent = `$${w.price.toLocaleString()}`;
     refreshCfgPickMeta();
 
     updateBuildHeader();
@@ -2830,7 +2861,8 @@
     const w = watches.find(x => x.name === snap.watchName) || watches[0];
     const d = snap.isCustom ? null : (designs.find(x => x.name === snap.designName) || designs[0]);
     const dialName = (w.dialNames && w.dialNames[snap.dialIdx]) || (w.dialNames && w.dialNames[0]) || '—';
-    const caseName = (CASES[snap.caseIdx] && CASES[snap.caseIdx].name) || CASES[0].name;
+    const cs = watchCases(w);
+    const caseName = (cs[snap.caseIdx] && cs[snap.caseIdx].name) || cs[0].name;
     const size = (w.sizes[snap.sizeIdx] != null ? w.sizes[snap.sizeIdx] : w.sizes[0]);
     return {watch:w, design:d, isCustom:snap.isCustom, addons:snap.addons,
             dial:dialName, case_:caseName, size:size,
