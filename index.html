@@ -510,6 +510,9 @@
   /* Green flavour: the same notice slot announcing ready pieces (vs the teal
      Custom-Concept bridge for incompatible designs). */
   .lb-fit-note.ready{background:#f0faf5;border-left-color:#2e9e6b}
+  /* The note is inline text (not a flex row) — the dot needs real spacing here,
+     2px reads as stuck to the text (Mila). */
+  .lb-fit-note .ms-dot{margin-right:var(--space-7)}
 
   /* Lightbox modal */
   .lightbox{
@@ -889,6 +892,7 @@
     color:var(--acc);cursor:pointer;text-align:left;
   }
   .ms-switch:hover{text-decoration:underline}
+  .ms-l3{color:var(--muted)}
   /* Finalize button under the mini-summary total (browse modes): the path back
      to Configure, where the panel being manipulated actually is. */
   .pi-finalize{
@@ -2123,24 +2127,41 @@
     return {r, w, label:`${r.watch} · ${w.sizes[r.size]}mm · ${(w.dialNames||[])[r.dial] || ''}`};
   }
   function renderMatchStatus(m){
-    // Two lines: status / shipping (constant height between states for the same
-    // design). MTO with a ready piece elsewhere adds ONE contextual switch link
-    // (Phase 2.1) — .has-alt reserves that third line for BOTH states of such a
-    // design, so dial/size clicks never shift the cart block.
+    // Two lines: status / shipping, plus a third "ready alternatives" line that
+    // MIRRORS the lightbox capability (Mila: equal functionality in both places):
+    // - MTO, one ready model  → detailed "Ready now: {model · size · dial} — switch →"
+    // - MTO, several models   → "Ready now on: {model} → · {model} →" (like the eye)
+    // - IN-STOCK with OTHER ready models → "Also ready on: {model} →"
+    // .has-alt reserves that line for every state of such a design — no jumps.
     const mono = st.mono ? ' · + ~3 days for monogram' : '';
     const alt = readyAlt();
-    const altLink = (m.state !== 'in_stock' && alt)
-      ? `<button type="button" class="ms-switch" data-ready-switch>Ready now: ${alt.label} — switch →</button>` : '';
+    const models = (typeof isCustomConcept !== 'undefined' && isCustomConcept) ? []
+                 : [...new Set((selDesign.ready || []).map(r => r.watch))];
+    const linkTo = name => `<button type="button" class="ms-switch" data-ready-switch data-watch="${name}">${name} →</button>`;
+    let altLine = '', miniAlt = '';
+    if(m.state === 'in_stock'){
+      const others = models.filter(x => x !== selWatch.name);
+      if(others.length){
+        altLine = `<span class="ms-l3">Also ready on: ${others.map(linkTo).join(' · ')}</span>`;
+        miniAlt = ` · ${linkTo(others[0])}`;
+      }
+    } else if(models.length > 1){
+      altLine = `<span class="ms-l3">Ready now on: ${models.map(linkTo).join(' · ')}</span>`;
+      miniAlt = ' · <button type="button" class="ms-switch" data-ready-switch>switch to ready →</button>';
+    } else if(alt){
+      altLine = `<button type="button" class="ms-switch" data-ready-switch>Ready now: ${alt.label} — switch →</button>`;
+      miniAlt = ' · <button type="button" class="ms-switch" data-ready-switch>switch to ready →</button>';
+    }
     const full = document.getElementById('matchStatus');
-    full.classList.toggle('has-alt', !!alt);
-    setMatchEl(full, m.state === 'in_stock'
+    full.classList.toggle('has-alt', models.length > 0);
+    setMatchEl(full, (m.state === 'in_stock'
       ? '<span class="ms-l1"><span class="ms-dot"></span>Available now — this exact piece is ready</span>'
         + '<span class="ms-l2">Ships in 2–3 days' + mono + '</span>'
       : '<span class="ms-l1">⏱ Hand-painted to order for you</span>'
-        + '<span class="ms-l2">Ships in ~4 weeks' + mono + '</span>' + altLink);
+        + '<span class="ms-l2">Ships in ~4 weeks' + mono + '</span>') + altLine);
     setMatchEl(document.getElementById('piMatch'), m.state === 'in_stock'
-      ? '<span class="ms-dot"></span>Ready now'
-      : '⏱ Made to order' + (altLink ? ' · <button type="button" class="ms-switch" data-ready-switch>switch to ready →</button>' : ''));
+      ? '<span class="ms-dot"></span>Ready now' + miniAlt
+      : '⏱ Made to order' + miniAlt);
   }
   // Adopt a ready piece: select its design + the exact donor variant
   // (watch + dial + case + size) → the match flips to in-stock. One click, no
