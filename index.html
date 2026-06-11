@@ -477,21 +477,19 @@
   .pcard .sel-badge::before{content:"✓";font-size:var(--text-sm);line-height:1}
 
   /* ── Matching Phase 2 (docs/MATCHING-UX-DECISION.md) ──
-     ready-pill: on a WATCH card when the chosen design has a finished piece on
-     that model. fit-pill + .incompat: a design that doesn't suit the current
-     watch is FADED (white veil), never hidden — still viewable; the lightbox
-     routes it to Custom Concept. Pills share the thumb's bottom-left slot
-     (mutually exclusive) and sit ABOVE the veil. */
-  .pcard .ready-pill,.pcard .fit-pill{
+     fit-pill + .incompat: a design that doesn't suit the current watch is FADED
+     (white veil), never hidden — still viewable; the lightbox routes it to
+     Custom Concept. The pill sits ABOVE the veil. (No ready-markers on WATCH
+     cards — one model carries many designs; the ready signal lives on the
+     design cards + the status line.) */
+  .pcard .fit-pill{
     position:absolute;left:10px;bottom:10px;z-index:2;
     display:flex;align-items:center;gap:var(--space-5);
     background:#fff;border:1px solid var(--line);border-radius:20px;
     padding:var(--space-4) var(--space-10);
     font-size:var(--text-2xs);letter-spacing:var(--track-eyebrow);
-    font-weight:700;text-transform:uppercase;color:var(--ink);
+    font-weight:700;text-transform:uppercase;color:var(--muted);
   }
-  .pcard .ready-pill::before{content:"";width:7px;height:7px;border-radius:50%;background:#2e9e6b;flex:none}
-  .pcard .fit-pill{color:var(--muted)}
   .pcard.incompat::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.62);pointer-events:none;z-index:1;transition:background .18s var(--ease)}
   .pcard.incompat:hover::after{background:rgba(255,255,255,.42)}
   /* Design-card nudge: gentle inline "Ready now on {model}" line (NOTE §5b). */
@@ -1893,13 +1891,9 @@
         <button class="pill" data-bespoke="open">GET IN TOUCH →</button>
       </div>
     `;
-    // "Ready now" marker: the CHOSEN design has a finished piece on this model
-    // (derived from the same ready[] read as the match — Phase 2). Not shown
-    // while Custom Concept is the active build (no design record → no matching).
-    // safeSel: selection state is `let`-declared LATER in this script — the very
-    // first paint runs inside its TDZ where even typeof throws. Markers are
-    // re-painted right after init, so first-paint null is fine.
-    const dsgn = safeSel(() => isCustomConcept ? null : selDesign);
+    // NOTE: no "Ready now" markers on WATCH cards (Mila 2026-06-11): one model
+    // carries many designs, so a model-level pill is misleading. The ready
+    // signal lives on the DESIGN cards (with model + size) + the status line.
     grid.innerHTML = watches.map(w => `
       <div class="pcard ${w.sel?'sel':''}" data-watch="${w.name}">
         ${w.sel?'<span class="sel-badge">Selected</span>':''}
@@ -1908,7 +1902,6 @@
         </button>
         <div class="thumb">
           <span class="thumb-label">WATCH IMAGE</span>
-          ${dsgn && (dsgn.ready||[]).some(r => r.watch === w.name) ? '<span class="ready-pill">Ready now</span>' : ''}
         </div>
         <div class="info">
           <div class="brand">${w.brand}</div>
@@ -1943,7 +1936,18 @@
       // Incompatible with the current watch (demo compatible_collection): fade,
       // don't hide. Ready-now nudge (NOTE §5b) only on compatible cards.
       const incompat = !!(d.fits && curWatch && !d.fits.includes(curWatch.name));
-      const readyOn = !incompat && d.ready && d.ready.length ? d.ready[0].watch : null;
+      // Nudge carries model + the exact size(s) the finished piece exists in —
+      // matching is per VARIANT, so a model-only nudge would overpromise when
+      // the piece is ready in 37mm but the customer wants 42mm. The status line
+      // above ATC stays the per-variant source of truth after selection.
+      let readyOn = null;
+      if(!incompat && d.ready && d.ready.length){
+        const r0 = d.ready[0];
+        const w = watches.find(x => x.name === r0.watch);
+        const sizes = [...new Set(d.ready.filter(r => r.watch === r0.watch)
+          .map(r => w ? w.sizes[r.size] : null).filter(Boolean))];
+        readyOn = r0.watch + (sizes.length ? ` · ${sizes.join('/')}mm` : '');
+      }
       return `
       <div class="pcard design ${d.sel?'sel':''} ${incompat?'incompat':''}" data-design="${d.name}">
         ${d.sel?'<span class="sel-badge">Selected</span>':''}
@@ -2003,7 +2007,6 @@
       isCustomConcept = true;
       setMode('configure');
       if(typeof updateBuildHeader === 'function') updateBuildHeader();
-      if(typeof renderWatches === 'function') renderWatches();   // CC build → no ready markers
       if(typeof recalc === 'function') recalc();
     });
   }
@@ -2414,7 +2417,6 @@
     selDesign = d;
     isCustomConcept = false;   // picking a ready design exits Custom Concept
     updateBuildHeader();
-    renderWatches();   // "Ready now" markers in the watch picker follow the design
     if(typeof recalc === 'function') recalc(); else updateSummary();
   }
 
@@ -2429,7 +2431,6 @@
 
   // initialize preview-info with selected watch + design
   updateSelectedWatch(selWatch);
-  renderWatches();   // first render ran before selDesign existed — paint ready markers
 
   // ══════════════════════════════════════════════════════════════════════
   //  COMPARE — dock + side-by-side view, persisted to localStorage so
