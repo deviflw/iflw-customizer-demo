@@ -1813,10 +1813,10 @@
        price = the finished variant's own price. Default load (SNK807 / dial 0 /
        size 0 / Northern Lights) matches → "Available now"; any other dial → MTO. */
     {name:'Northern Lights', theme:'Space',  style:'Fine Art',     price:1200, sel:true, grad:'linear-gradient(135deg,#0a1628,#1e4a6d 40%,#40bec1 100%)',
-     ready:[{watch:'SNK807', dial:0, size:0, price:1450}],
+     ready:[{watch:'SNK807', dial:0, caseIdx:0, size:0, price:1450}],
      description:'Inspired by the aurora borealis dancing over the Arctic — gradients of teal and indigo flow across the dial in soft, painterly waves.\n\nEach piece is hand-painted, slightly unique by nature. The light shifts as you turn your wrist.'},
     {name:'Coral Reef',      theme:'Ocean',  style:'Illustration', price:1200, grad:'linear-gradient(135deg,#0e3a4d,#2a8a8e 50%,#f4a261)',
-     ready:[{watch:'SKX007', dial:0, size:0, price:1690}],
+     ready:[{watch:'SKX007', dial:0, caseIdx:0, size:0, price:1690}],
      description:'A miniature world of branching corals, drifting fish, and warm tropical light captured in fine illustration.\n\nA piece for collectors drawn to the slow rhythm of the sea.'},
     {name:'Tokyo Rain',      theme:'Urban',  style:'Abstract',     price:1200, grad:'linear-gradient(135deg,#1a1a2e,#3a4a5e 60%,#a8b8c8)',
      description:'Neon reflections on wet pavement. Smudged silhouettes under umbrellas. The quiet drama of a city after dark, abstracted into mood and movement.'},
@@ -1998,15 +1998,18 @@
   }
 
   // ────── MATCHING (in-stock vs made-to-order) — docs/MATCHING-UX-DECISION.md ──────
-  // Demo stand-in for matchConcept(): a design's `ready` list = its finished
-  // pieces; watch+dial+size key the exact base variant. One source of truth —
+  // Demo stand-in for matchConcept(). DO NOT port this key to production: there
+  // the match is by the EXACT base-variant GID from the design's ready_made list
+  // (every option — case included — is part of the variant automatically). The
+  // mockup approximates that with watch+dial+case+size. One source of truth —
   // the match drives the status line, the Price Summary composition AND the
   // displayed total, always together. Recomputed on every design/watch/dial/
   // case/size change. Custom Concept never matches (no design record).
   function currentMatch(){
     if(typeof isCustomConcept !== 'undefined' && isCustomConcept) return {state:'mto'};
     const r = (selDesign.ready || []).find(x =>
-      x.watch === selWatch.name && x.dial === selDialIdx && x.size === selSizeIdx);
+      x.watch === selWatch.name && x.dial === selDialIdx &&
+      x.caseIdx === selCaseIdx && x.size === selSizeIdx);
     return r ? {state:'in_stock', price:r.price} : {state:'mto'};
   }
   // Cross-fade an element's content only when it actually changes — the line
