@@ -1398,6 +1398,53 @@
     /* — Compare: the 3-column sheet scrolls horizontally (240px+/column) — */
     .compare-view{overflow-x:auto}
     .cmp-tops,.cmp-bottoms{min-width:720px}
+
+    /* — Mila's mobile pass #1 (iter 136) — */
+    /* Custom: the four process cards go 2×2, not a long single column. */
+    .cu-cards{grid-template-columns:1fr 1fr}
+    .cu-card{padding:var(--space-16) var(--space-14)}
+    /* Browse head: title gets its OWN line (count stretches to fill it, so the
+       filters can't squeeze beside it and wrap to their own row), search last
+       at full width. Controls sized down — desktop sizes read huge on a phone. */
+    .browse-head h2{font-size:var(--text-lg)}
+    .browse-head .count{flex:1 1 auto}
+    .browse-head .row-2{row-gap:var(--space-8)}
+    .browse-head select{
+      padding:var(--space-6) var(--space-22) var(--space-6) var(--space-10);
+      font-size:var(--text-xs);
+    }
+    .browse-head input[type=search]{padding:var(--space-7) var(--space-10);font-size:var(--text-sm)}
+    /* Cards: roomier row rhythm — the tight 12px gap made the bordered card
+       bottoms read as a grey double-stripe band between rows. */
+    .browse-grid{gap:var(--space-18) var(--space-12)}
+    /* Preview: NOT square on a phone — 3:4 portrait (the watch is vertical;
+       crop the empty sides, gain height). Height capped by the viewport. */
+    .preview-canvas{
+      --canvas-sz:min(calc(100vw - 32px), calc((100dvh - 300px) * 3 / 4));
+      height:calc(var(--canvas-sz) * 4 / 3);
+      aspect-ratio:3/4;
+    }
+    /* Tab bar: let the labels breathe at the bottom edge. */
+    .r-btn{padding-bottom:var(--space-14)}
+    .customizer{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+    /* Bottom banners (Watches bespoke + Designs custom) stack: text above,
+       full-width button below — the side-by-side button looked thrown in. */
+    .custom-card{flex-direction:column;align-items:stretch;gap:var(--space-14);padding:var(--space-18)}
+    .custom-card .cc-text{max-width:none}
+    .custom-card h3{font-size:var(--text-xl)}
+    .custom-card .pill{width:100%;text-align:center}
+    /* Compare dock: label row on top, three THUMB-ONLY slots (no room for
+       name+price text), full-width save button below. */
+    .dock{flex-wrap:wrap;gap:var(--space-10)}
+    .dock-label{width:100%}
+    .slots{flex:1 1 100%}
+    .slot{height:60px;padding:var(--space-6) var(--space-8);justify-content:center}
+    .slot .info,.slot .price{display:none}
+    .slot .thumb{width:44px;height:44px}
+    .save-btn{width:100%;height:46px;flex-direction:row;gap:var(--space-8);white-space:nowrap}
+    /* Theme footer: spacer below so its content scrolls fully clear of the
+       fixed tab bar (prod question recorded — same trick is portable). */
+    .site-footer{margin-bottom:calc(72px + env(safe-area-inset-bottom))}
   }
 </style>
 </head>
