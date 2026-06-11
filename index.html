@@ -194,7 +194,9 @@
   }
   .browse-inner{width:100%;display:flex;flex-direction:column}
   .browse-head{
-    padding:var(--space-16) var(--col-gutter);
+    /* A touch more vertical air since the back-button row was removed (the
+       single-row header read too dense on desktop). */
+    padding:var(--space-22) var(--col-gutter) var(--space-20);
     background:var(--paper);
     position:sticky;top:0;z-index:10;
   }
@@ -1866,7 +1868,11 @@
        price = the finished variant's own price. Default load (SNK807 / dial 0 /
        size 0 / Northern Lights) matches → "Available now"; any other dial → MTO. */
     {name:'Northern Lights', theme:'Space',  style:'Fine Art',     price:1200, sel:true, grad:'linear-gradient(135deg,#0a1628,#1e4a6d 40%,#40bec1 100%)',
-     ready:[{watch:'SNK807', dial:0, caseIdx:0, size:0, price:1450}],
+     ready:[{watch:'SNK807', dial:0, caseIdx:0, size:0, price:1450},
+            {watch:'Khaki Field', dial:1, caseIdx:0, size:0, price:1790}],
+     /* ^ two models → card nudge reads "Ready now on 2 models"; the switch link
+        still offers ONE piece (the matcher's pick = first entry). The Khaki one
+        is reachable manually: Khaki Field + Black dial + steel + 38mm. */
      description:'Inspired by the aurora borealis dancing over the Arctic — gradients of teal and indigo flow across the dial in soft, painterly waves.\n\nEach piece is hand-painted, slightly unique by nature. The light shifts as you turn your wrist.'},
     {name:'Coral Reef',      theme:'Ocean',  style:'Illustration', price:1200, grad:'linear-gradient(135deg,#0e3a4d,#2a8a8e 50%,#f4a261)',
      ready:[{watch:'SKX007', dial:0, caseIdx:0, size:0, price:1690}],
