@@ -753,12 +753,16 @@
 
   .cfg-addon{
     display:flex;justify-content:space-between;align-items:center;
-    padding:var(--space-10) 0;font-size:var(--text-md);border-bottom:1px dotted #eee;cursor:pointer;
+    /* Separator on TOP (not bottom): the literal last child is often a hidden
+       CC-only row, so :last-child couldn't strip the bottom border off the last
+       VISIBLE row — leaving a dotted line right above the Price Summary's solid
+       divider (double line). Top borders need no "last" logic at all. */
+    padding:var(--space-10) 0;font-size:var(--text-md);border-top:1px dotted #eee;cursor:pointer;
   }
+  .cfg-eyebrow + .cfg-addon{border-top:0}
   /* display:flex above would beat the [hidden] UA rule, so CC-only add-ons
      (Time-Lapse / Photos) must explicitly collapse when hidden is set. */
   .cfg-addon[hidden]{display:none}
-  .cfg-addon:last-child{border-bottom:0}
   .cfg-addon-l{flex:1}
   .cfg-addon-l strong{display:block;font-weight:600}
   .cfg-addon-l small{color:var(--muted);font-size:var(--text-sm);display:block;margin-top:1px}
@@ -794,7 +798,7 @@
     border-top:1px solid var(--line);padding-top:10px;margin-top:6px;
   }
 
-  .cfg-foot{padding:var(--space-8) var(--space-24) var(--space-18);background:#fff}
+  .cfg-foot{padding:0 var(--space-24) var(--space-18);background:#fff}
   .cart-row{display:flex;gap:var(--space-8);margin-bottom:8px}
   .qty{display:flex;align-items:center;border:1px solid var(--line)}
   .qty button{width:38px;height:48px;border:0;background:#fff;cursor:pointer;font-size:var(--text-xl);color:var(--ink);transition:.12s}
@@ -821,7 +825,9 @@
     /* Always two lines (status / shipping) — constant height in both states, so
        no reserved emptiness and no jump on swap. Tight to the block above. */
     display:flex;flex-direction:column;align-items:flex-start;gap:2px;
-    margin:0 0 var(--space-8);
+    /* ~Centered between the Price Summary above (22px scroll-pad) and the cart
+       row below (18px) — cfg-foot's own top padding is 0 for this balance. */
+    margin:0 0 var(--space-18);
     font-size:var(--text-sm);color:var(--ink);
     transition:opacity .2s var(--ease);
   }
