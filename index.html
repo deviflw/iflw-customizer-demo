@@ -507,6 +507,9 @@
     font-size:var(--text-sm);line-height:1.5;color:var(--ink);
   }
   .lb-fit-note[hidden]{display:none}
+  /* Green flavour: the same notice slot announcing ready pieces (vs the teal
+     Custom-Concept bridge for incompatible designs). */
+  .lb-fit-note.ready{background:#f0faf5;border-left-color:#2e9e6b}
 
   /* Lightbox modal */
   .lightbox{
@@ -870,7 +873,9 @@
   }
   .ms-l1{display:flex;align-items:center;gap:var(--space-6);font-weight:600}
   .ms-l2{color:var(--muted)}
-  .ms-dot{width:8px;height:8px;border-radius:50%;background:#2e9e6b;flex:none;margin-right:2px}
+  /* inline-block so the dot also renders outside flex rows (e.g. the lightbox
+     ready-note); inside flex it's blockified to a flex item anyway. */
+  .ms-dot{display:inline-block;vertical-align:middle;width:8px;height:8px;border-radius:50%;background:#2e9e6b;flex:none;margin-right:2px}
   /* Phase 2.1 switch link (status line = the one place variant language lives).
      has-alt reserves the link's line for BOTH states of a design that has a
      ready piece, so flipping in-stock ↔ MTO via swatches never jumps the cart. */
@@ -2137,22 +2142,35 @@
       ? '<span class="ms-dot"></span>Ready now'
       : '⏱ Made to order' + (altLink ? ' · <button type="button" class="ms-switch" data-ready-switch>switch to ready →</button>' : ''));
   }
-  // Adopt the donor variant of the chosen design's ready piece: that exact
-  // watch + dial + case + size → the match flips to in-stock. One click, no
+  // Adopt a ready piece: select its design + the exact donor variant
+  // (watch + dial + case + size) → the match flips to in-stock. One click, no
   // mode change — feedback lands in the status line + summary immediately.
-  function selectReadyVariant(){
-    const alt = readyAlt();
-    if(!alt) return;
-    watches.forEach(x => x.sel = x.name === alt.w.name);
+  // designName defaults to the chosen design (status-line link); watchName picks
+  // among multi-model ready pieces (lightbox model links), default = matcher's
+  // pick (first entry).
+  function adoptReadyPiece(designName, watchName){
+    const d = designs.find(x => x.name === designName) || safeSel(() => selDesign);
+    if(!d || !d.ready || !d.ready.length) return;
+    const r = watchName ? d.ready.find(x => x.watch === watchName) : d.ready[0];
+    if(!r) return;
+    const w = watches.find(x => x.name === r.watch);
+    if(!w) return;
+    watches.forEach(x => x.sel = x.name === w.name);
     renderWatches();
-    updateSelectedWatch(alt.w);        // resets indices, re-renders designs, recalcs
-    selDialIdx = alt.r.dial; selCaseIdx = alt.r.caseIdx; selSizeIdx = alt.r.size;
+    updateSelectedWatch(w);            // resets indices, re-renders designs, recalcs
+    selDialIdx = r.dial; selCaseIdx = r.caseIdx; selSizeIdx = r.size;
     syncHotbarSelection();
     refreshCfgPickMeta();
-    recalc();                          // now matches → "Available now"
+    designs.forEach(x => x.sel = x.name === d.name);
+    renderDesigns();
+    updateSelectedDesign(d);           // recalc inside → "Available now"
   }
   document.addEventListener('click', e => {
-    if(e.target.closest('[data-ready-switch]')){ e.stopPropagation(); selectReadyVariant(); }
+    const t = e.target.closest('[data-ready-switch]');
+    if(!t) return;
+    e.stopPropagation();
+    adoptReadyPiece(t.dataset.design || (safeSel(() => selDesign) || {}).name, t.dataset.watch);
+    if(lb.classList.contains('open')) closeLightbox();
   });
 
   function recalc(){
@@ -2829,11 +2847,21 @@
     // Incompatible design × current watch: explain, keep it desirable, and
     // bridge to Custom Concept (spec NOTE §3) instead of a dead "Select".
     const note = document.getElementById('lbFitNote');
-    note.hidden = !incompat;
+    const readyModels = (!incompat && d.ready) ? [...new Set(d.ready.map(r => r.watch))] : [];
+    note.hidden = !incompat && !readyModels.length;
+    note.classList.toggle('ready', !incompat && readyModels.length > 0);
     if(incompat){
       note.innerHTML = `Not a standard fit for <strong>${selWatch.brand} ${selWatch.name}</strong>. `
         + `Available on: <strong>${(d.fits||[]).join(', ')}</strong> — or have it adapted `
         + `to any watch as a <strong>Custom Concept</strong>.`;
+    } else if(readyModels.length){
+      // The detail view is where "on 2 models" gets answered: list the models,
+      // each a one-tap adopt of that ready piece (models = fact language; the
+      // exact size/dial surfaces in the status line after adoption).
+      note.innerHTML = '<span class="ms-dot"></span>Ready now on: '
+        + readyModels.map(m =>
+            `<button type="button" class="ms-switch" data-ready-switch data-design="${d.name}" data-watch="${m}">${m} →</button>`
+          ).join(' · ');
     }
     lb.dataset.ccRoute = incompat ? '1' : '';
     document.getElementById('lbSelect').textContent = incompat ? 'ORDER AS CUSTOM CONCEPT →' : 'SELECT THIS DESIGN →';
