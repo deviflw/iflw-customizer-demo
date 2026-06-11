@@ -813,6 +813,26 @@
   }
   .cart-primary:hover{background:#3aa8aa}
 
+  /* ── Match status (in-stock vs made-to-order) — docs/MATCHING-UX-DECISION.md.
+     Both lines are ALWAYS in the layout (reserved space, min-height) — only the
+     content cross-fades. In-stock = green dot; MTO = neutral ink (never warning
+     colours, the word "stock" never appears in the MTO state). ── */
+  .match-status{
+    display:flex;align-items:center;gap:var(--space-6);
+    /* Reserve TWO lines (the in-stock copy wraps on narrow panels, MTO doesn't)
+       so swapping states never shifts the cart block. em → scales with font. */
+    min-height:2.9em;margin:var(--space-4) 0 var(--space-6);
+    font-size:var(--text-sm);color:var(--ink);
+    transition:opacity .2s var(--ease);
+  }
+  .ms-dot{width:8px;height:8px;border-radius:50%;background:#2e9e6b;flex:none;margin-right:2px}
+  .pi-match{
+    display:flex;align-items:center;gap:var(--space-6);
+    min-height:18px;margin-top:2px;
+    font-size:var(--text-sm);color:var(--ink);
+    transition:opacity .2s var(--ease);
+  }
+
   /* Accordion section — supplementary info (description, shipping &
      returns, warranty, how it works). Native <details>/<summary>,
      no JS needed. Each summary row gets a chevron via ::after. */
@@ -1441,9 +1461,13 @@
       </div>
 
       <div class="preview-info" id="previewInfo">
-        <div class="pi-line"><span class="pi-name" id="piWatchName">Seiko SNK807</span><span class="pi-price" id="piWatchPrice">$320</span></div>
-        <div class="pi-line"><span class="pi-name" id="piDesignName">Northern Lights</span><span class="pi-price" id="piDesignPrice">$1,200</span></div>
+        <div class="pi-line" id="piWatchLine"><span class="pi-name" id="piWatchName">Seiko SNK807</span><span class="pi-price" id="piWatchPrice">$320</span></div>
+        <div class="pi-line" id="piDesignLine"><span class="pi-name" id="piDesignName">Northern Lights</span><span class="pi-price" id="piDesignPrice">$1,200</span></div>
+        <div class="pi-line" id="piFinishedLine" hidden><span class="pi-name" id="piFinishedName">Finished piece</span><span class="pi-price" id="piFinishedPrice">$0</span></div>
         <div class="pi-line" id="piAddonsLine" hidden><span class="pi-name" id="piAddonsName">Add-ons</span><span class="pi-price" id="piAddonsPrice">$0</span></div>
+        <!-- Compact match status — browse modes are where swatch clicks change the
+             match while the config panel is collapsed. Space always reserved. -->
+        <div class="pi-match" id="piMatch"></div>
         <div class="pi-divider"></div>
         <div class="pi-total"><span class="pi-total-l">Total</span><span class="pi-total-v" id="piTotal">$1,520</span></div>
       </div>
@@ -1542,8 +1566,11 @@
           <div class="cfg-section cfg-divide">
             <div class="cfg-eyebrow">Price Summary</div>
             <div class="cfg-price">
-              <div class="pl"><span>Base watch</span><span id="plWatchPrice">$320</span></div>
-              <div class="pl"><span id="plServiceLabel">Customization service</span><span id="plServicePrice">$1,200</span></div>
+              <div class="pl" id="plBaseLine"><span>Base watch</span><span id="plWatchPrice">$320</span></div>
+              <div class="pl" id="plServiceLine"><span id="plServiceLabel">Customization service</span><span id="plServicePrice">$1,200</span></div>
+              <!-- In-stock match sells a DIFFERENT product (the finished piece) at
+                   its own price → ONE line replaces the watch+service breakdown. -->
+              <div class="pl" data-line="finished" style="display:none"><span id="plFinishedName">Finished piece</span><span id="plFinishedPrice">$0</span></div>
               <div class="pl" data-line="monogram" style="display:none"><span>Hand-Painted Monogram</span><span>$150</span></div>
               <div class="pl" data-line="strap" style="display:none"><span>Extra strap</span><span>$95</span></div>
               <div class="pl" data-line="timelapse" style="display:none"><span>Time-Lapse Video</span><span>$120</span></div>
@@ -1555,6 +1582,10 @@
         </div>
 
         <div class="cfg-foot">
+          <!-- Match status, full line (docs/MATCHING-UX-DECISION.md): space is
+               ALWAYS reserved — content swaps with a soft fade, never appears/
+               disappears, so the cart block never jumps. -->
+          <div class="match-status" id="matchStatus"></div>
           <div class="cart-row">
             <div class="qty" id="cartQty">
               <button data-qty="-1" aria-label="Decrease">−</button>
@@ -1769,9 +1800,15 @@
   }
 
   const designs = [
+    /* `ready` = demo stand-in for the design's ready_made finished pieces
+       (docs/MATCHING-UX-DECISION.md): watch+dial+size key the exact base variant,
+       price = the finished variant's own price. Default load (SNK807 / dial 0 /
+       size 0 / Northern Lights) matches → "Available now"; any other dial → MTO. */
     {name:'Northern Lights', theme:'Space',  style:'Fine Art',     price:1200, sel:true, grad:'linear-gradient(135deg,#0a1628,#1e4a6d 40%,#40bec1 100%)',
+     ready:[{watch:'SNK807', dial:0, size:0, price:1450}],
      description:'Inspired by the aurora borealis dancing over the Arctic — gradients of teal and indigo flow across the dial in soft, painterly waves.\n\nEach piece is hand-painted, slightly unique by nature. The light shifts as you turn your wrist.'},
     {name:'Coral Reef',      theme:'Ocean',  style:'Illustration', price:1200, grad:'linear-gradient(135deg,#0e3a4d,#2a8a8e 50%,#f4a261)',
+     ready:[{watch:'SKX007', dial:0, size:0, price:1690}],
      description:'A miniature world of branching corals, drifting fish, and warm tropical light captured in fine illustration.\n\nA piece for collectors drawn to the slow rhythm of the sea.'},
     {name:'Tokyo Rain',      theme:'Urban',  style:'Abstract',     price:1200, grad:'linear-gradient(135deg,#1a1a2e,#3a4a5e 60%,#a8b8c8)',
      description:'Neon reflections on wet pavement. Smudged silhouettes under umbrellas. The quiet drama of a city after dark, abstracted into mood and movement.'},
@@ -1952,6 +1989,36 @@
     });
   }
 
+  // ────── MATCHING (in-stock vs made-to-order) — docs/MATCHING-UX-DECISION.md ──────
+  // Demo stand-in for matchConcept(): a design's `ready` list = its finished
+  // pieces; watch+dial+size key the exact base variant. One source of truth —
+  // the match drives the status line, the Price Summary composition AND the
+  // displayed total, always together. Recomputed on every design/watch/dial/
+  // case/size change. Custom Concept never matches (no design record).
+  function currentMatch(){
+    if(typeof isCustomConcept !== 'undefined' && isCustomConcept) return {state:'mto'};
+    const r = (selDesign.ready || []).find(x =>
+      x.watch === selWatch.name && x.dial === selDialIdx && x.size === selSizeIdx);
+    return r ? {state:'in_stock', price:r.price} : {state:'mto'};
+  }
+  // Cross-fade an element's content only when it actually changes — the line
+  // itself never appears/disappears (space stays reserved, no layout jump).
+  function setMatchEl(el, html){
+    if(!el || el.dataset.cur === html) return;
+    el.dataset.cur = html;
+    el.style.opacity = 0;
+    setTimeout(() => { el.innerHTML = html; el.style.opacity = 1; }, 150);
+  }
+  function renderMatchStatus(m){
+    const mono = st.mono ? ' · + ~3 days for monogram' : '';
+    setMatchEl(document.getElementById('matchStatus'), m.state === 'in_stock'
+      ? '<span class="ms-dot"></span>Available now — this exact piece is ready · ships in 2–3 days' + mono
+      : '⏱ Hand-painted to order for you · ships in ~4 weeks' + mono);
+    setMatchEl(document.getElementById('piMatch'), m.state === 'in_stock'
+      ? '<span class="ms-dot"></span>Ready now'
+      : '⏱ Made to order');
+  }
+
   function recalc(){
     refreshCCAddons();
     renderBandRow();   // keep the strap slot in sync with the current watch
@@ -1975,7 +2042,22 @@
     syncToggles();
     const svc = (typeof currentDesign === 'function') ? currentDesign().price : prices.design;
     const watch = (typeof selWatch !== 'undefined') ? selWatch.price : prices.watch;
-    document.getElementById('totalPrice').textContent = '$' + (svc + watch + addons).toLocaleString();
+    // Price Summary composition follows the match: MTO = watch + service
+    // breakdown; in-stock = ONE line at the finished variant's real price (a
+    // different product is sold — the summary must equal what ATC adds).
+    const m = currentMatch();
+    const inStock = m.state === 'in_stock';
+    document.getElementById('plBaseLine').style.display = inStock ? 'none' : 'flex';
+    document.getElementById('plServiceLine').style.display = inStock ? 'none' : 'flex';
+    const finLine = document.querySelector('[data-line="finished"]');
+    finLine.style.display = inStock ? 'flex' : 'none';
+    if(inStock){
+      document.getElementById('plFinishedName').textContent = `${selDesign.name} on ${selWatch.name} — finished piece`;
+      document.getElementById('plFinishedPrice').textContent = `$${m.price.toLocaleString()}`;
+    }
+    renderMatchStatus(m);
+    const base = inStock ? m.price : (svc + watch);
+    document.getElementById('totalPrice').textContent = '$' + (base + addons).toLocaleString();
     if(typeof updateSummary === 'function') updateSummary();
   }
   const monoField = document.getElementById('monoField');
@@ -2169,7 +2251,20 @@
       document.getElementById('piAddonsName').textContent  = count > 1 ? `Add-ons (${count})` : 'Add-on';
       document.getElementById('piAddonsPrice').textContent = `$${addons.toLocaleString()}`;
     }
-    const total = selWatch.price + d.price + addons;
+    // Mini-summary composition mirrors the config Price Summary (one source of
+    // truth): in-stock collapses watch+design into one finished-piece line at
+    // the matched variant's real price.
+    const m = currentMatch();
+    const inStock = m.state === 'in_stock';
+    document.getElementById('piWatchLine').hidden = inStock;
+    document.getElementById('piDesignLine').hidden = inStock;
+    const fLine = document.getElementById('piFinishedLine');
+    fLine.hidden = !inStock;
+    if(inStock){
+      document.getElementById('piFinishedName').textContent = `${d.name} on ${selWatch.name}`;
+      document.getElementById('piFinishedPrice').textContent = `$${m.price.toLocaleString()}`;
+    }
+    const total = (inStock ? m.price : selWatch.price + d.price) + addons;
     const totalStr = `$${total.toLocaleString()}`;
     document.getElementById('piTotal').textContent = totalStr;
     // Custom page: pricing there is the static "$1,490 + base watch" banner —
@@ -2232,6 +2327,9 @@
     else if(grp.dataset.swatchGroup === 'case') selCaseIdx = idx;
     else if(grp.id === 'hotbarSize') selSizeIdx = idx;
     refreshCfgPickMeta();
+    // The match keys off the exact base variant — dial/case/size clicks must
+    // recompute status + summary composition (docs/MATCHING-UX-DECISION.md).
+    if(typeof recalc === 'function') recalc();
   });
 
   function updateSelectedDesign(d){
