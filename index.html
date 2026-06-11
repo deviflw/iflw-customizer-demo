@@ -1310,6 +1310,95 @@
     .browse-head h2{font-size:var(--text-3xl)}
     .cfg-pick strong{font-size:var(--text-lg)}
   }
+
+  /* ═══════════════════ MOBILE LAYOUT (<800px) ═══════════════════
+     The desktop grid owns ≥800px (decision 2026-06-11). Below it this is a
+     SEPARATE stacked layout, not a patched grid: bottom tab bar (the rail
+     restyled — same buttons, same handlers), one column per mode, page
+     scroll. Touch-first: nothing depends on hover. */
+  @media (max-width:799px){
+    /* — frame: stacked column + room for the fixed tab bar — */
+    .customizer{
+      display:flex;flex-direction:column;
+      padding-bottom:calc(64px + env(safe-area-inset-bottom));
+    }
+    /* — rail → fixed bottom tab bar — */
+    .rail-col{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:40}
+    .rail{
+      position:static;flex-direction:row;border-right:0;
+      border-top:1px solid var(--ink-2);
+      padding-bottom:env(safe-area-inset-bottom);
+    }
+    .rail-logo,.rail-spacer{display:none}
+    .r-btn{
+      flex:1;min-width:0;gap:var(--space-4);
+      padding:var(--space-8) var(--space-2) var(--space-9);
+      border-left:0;border-top:3px solid transparent;
+      font-size:var(--text-2xs);
+    }
+    .r-btn.on{border-left-color:transparent;border-top-color:var(--acc)}
+    .r-btn .ic{width:30px;height:30px}
+
+    /* — columns become full-width blocks; the MODE picks which block shows.
+       (The desktop grid collapses columns via width 0; a flex stack needs
+       display, so each mode hides the others explicitly.) — */
+    .browse,.preview-col,.config{
+      width:100%;border-left:0;border-right:0;
+    }
+    [data-mode="configure"] .browse{display:none}
+    [data-mode^="browse-"] .preview-col{display:none}
+    [data-mode^="browse-"] .config{display:none}
+    [data-mode="compare"] .browse{display:none}
+    [data-mode="compare"] .preview-col{display:none}
+    [data-mode="compare"] .config{display:none}
+
+    /* — Configure: preview on top (square canvas ~full width), swatches
+       under it, config sections below; one page scroll. — */
+    .preview-unit{position:static}
+    [data-mode="configure"] .preview-area{max-width:none;padding:var(--space-16)}
+    .preview-canvas{
+      --canvas-sz:min(calc(100vw - 32px), calc(100dvh - 320px));
+    }
+    /* touch targets ≥44px-ish; the vertical separator reads as noise when
+       the hotbar wraps — drop it */
+    .sw{width:38px;height:38px}
+    .sizes span{padding:var(--space-10) var(--space-14);min-width:44px}
+    .vsep{display:none}
+    [data-mode="configure"] .hotbar{
+      padding-top:var(--space-16);padding-bottom:var(--space-16);
+      gap:var(--space-18);
+    }
+    .config{overflow:visible}
+    /* The desktop sticky foot (status + cart + badges) is too tall to pin on a
+       phone — it covered the config sections and CHECKOUT hid behind the tab
+       bar. Static: the cart is reached by the natural scroll. */
+    .cfg-foot{position:static}
+    /* Desktop-only affordance: the side panel expand handle (nothing to expand
+       in the stacked layout). Needs the data-mode selector to outweigh the
+       desktop [data-mode^="browse-"] display:flex rule. */
+    [data-mode] .config-handle{display:none}
+
+    /* — Browse: header stacks (title / full-width search / filter row),
+       cards 2-up, eye always visible (no hover on touch) — */
+    .browse{--col-gutter:16px}
+    .browse-head{position:static}
+    .browse-head input[type=search]{min-width:0;flex:1 1 100%;order:5}
+    .browse-head .sp{display:none}
+    .browse-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-12)}
+    .pcard .quickview{opacity:1;transform:none}
+
+    /* — Lightbox: image on top, details below, one internal scroll — */
+    .lightbox{padding:var(--space-10)}
+    .lb-card{
+      width:100%;grid-template-columns:1fr;
+      max-height:calc(100dvh - 20px);overflow-y:auto;
+    }
+    .lb-details{overflow-y:visible}
+
+    /* — Compare: the 3-column sheet scrolls horizontally (240px+/column) — */
+    .compare-view{overflow-x:auto}
+    .cmp-tops,.cmp-bottoms{min-width:720px}
+  }
 </style>
 </head>
 <body>
