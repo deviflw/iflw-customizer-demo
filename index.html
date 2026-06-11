@@ -992,16 +992,49 @@
     z-index:4;
     min-height:0;
   }
-  /* Compare flows naturally — page scrolls when content is taller than the
-     viewport. Preview keeps its 3:4 aspect (watches are vertical). */
-  .cmp-tops, .cmp-bottoms{
-    display:grid;grid-template-columns:repeat(3,1fr);
+  /* MATRIX (iter 145, Mila): attribute label ONCE in a left gutter rail;
+     the three values stay exactly under their pictures; section headers in
+     the rail; differing values get a quiet teal bar. Our visual language
+     (white columns, SLOT chips, prices/foot) kept — only duplication gone. */
+  .compare-view{--cmp-gutter:180px}
+  .cmp-tops, .cmp-matrix, .cmp-footgrid{
+    display:grid;grid-template-columns:var(--cmp-gutter) repeat(3,minmax(0,1fr));
     /* gap+bg technique for the column divider: the 1px grid gap shows the
      * grid's background (the line color) through, perfectly centered
      * between cells in both Chrome and Safari. */
     background:var(--line);gap:1px;
   }
   .cmp-tops{border-bottom:1px solid var(--line)}
+  .cmp-footgrid{border-top:1px solid var(--line)}
+  /* Gutter cell beside the pictures — a DESIGNED surface, not a hole:
+     dial-circle motif + the diff-bar legend live here. Spans both rows
+     (head row + picture row). */
+  .cmp-gutterhead{
+    grid-row:1/3;position:relative;overflow:hidden;background:var(--bg);
+    display:flex;flex-direction:column;justify-content:flex-end;gap:var(--space-8);
+    padding:var(--space-18);
+  }
+  .cmp-gutterhead::before, .cmp-gutterhead::after{
+    content:"";position:absolute;border-radius:50%;border:1px solid var(--line);
+  }
+  .cmp-gutterhead::before{width:220px;height:220px;right:-90px;top:-70px}
+  .cmp-gutterhead::after{width:140px;height:140px;right:-30px;top:120px;border-color:#eceef0}
+  .cmp-gutterhead .eyebrow{
+    font-size:var(--text-2xs);letter-spacing:var(--track-caps);text-transform:uppercase;
+    color:var(--muted);font-weight:700;position:relative;
+  }
+  .cmp-gutterhead .legend{font-size:var(--text-xs);color:var(--muted);line-height:1.5;position:relative}
+  .cmp-gutterhead .legend .bar{
+    display:inline-block;width:3px;height:11px;background:var(--acc);
+    margin-right:6px;vertical-align:-1px;
+  }
+  /* Build heads: own grid ROW (the row sizes to the tallest head, so a
+     two-line name never pushes its picture out of line with the others). */
+  .cmx-head{background:#fff;padding:var(--space-12) var(--space-18);display:flex;align-items:flex-end}
+  .cmx-head-text{flex:1;display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-10);min-width:0}
+  .cmx-head h3{margin:0;font-size:var(--text-lg)}
+  .cmx-head small{color:var(--muted);font-size:var(--text-2xs);letter-spacing:var(--track-caps);text-transform:uppercase;white-space:nowrap}
+  .cmx-prevcell{background:#fff}
   .cmp-strip{
     display:flex;align-items:center;justify-content:space-between;
     padding:var(--space-12) var(--space-22);background:#fafafa;border-bottom:1px solid var(--line);
@@ -1009,35 +1042,36 @@
   .cmp-count{font-size:var(--text-sm);letter-spacing:var(--track-button);text-transform:uppercase;color:var(--muted);font-weight:600}
   .cmp-diff-toggle{display:flex;align-items:center;gap:var(--space-8);cursor:pointer;font-size:var(--text-md);color:var(--ink);user-select:none}
   .cmp-diff-toggle input{margin:0;cursor:pointer;accent-color:var(--acc)}
-  /* (Column dividers handled via .cmp-tops/.cmp-bottoms gap+bg above.) */
-  /* Visual section break before the Features rows */
-  .ccol-section-h{
-    font-size:var(--text-2xs);letter-spacing:var(--track-caps);text-transform:uppercase;
-    color:var(--muted);font-weight:700;
-    padding:var(--space-14) var(--space-18) var(--space-6);border-top:1px solid var(--line);
-    background:#fafafa;
-  }
   /* Design subtitle under watch name in the head */
   .ccol-head-design{font-size:var(--text-sm);color:var(--muted);margin-top:2px;letter-spacing:0}
-  /* Rows identical across all filled slots are hidden when the toggle is on */
-  .compare-view.cmp-diff .ccol-row[data-same="1"]{display:none}
-  /* The Features section-header row also hides when there are no visible
-     feature rows to label (handled by JS via a data attribute). */
-  .compare-view.cmp-diff .ccol-section-h[data-same="1"]{display:none}
-  .ccol{
-    background:#fff;display:flex;flex-direction:column;min-height:0;
+  /* ── matrix body: rows are display:contents wrappers — the CELLS are the
+     grid items (label rail + 3 value cells per row) ── */
+  .cmx-sect-row, .cmx-row{display:contents}
+  .cmx-sect{
+    background:var(--bg);color:var(--muted);font-size:var(--text-2xs);
+    letter-spacing:var(--track-caps);text-transform:uppercase;font-weight:700;
+    padding:var(--space-14) var(--space-18) var(--space-6);
   }
-  /* Split: ccol-top (head + preview) lives in cmp-tops; ccol-bot (specs +
-     prices + foot) lives in cmp-bottoms. Both keep the white column bg. */
-  .ccol-top, .ccol-bot{background:#fff;display:flex;flex-direction:column}
-  .ccol-bot-empty{justify-content:flex-start;padding:var(--space-18)}
-  .ccol-head{
-    padding:var(--space-12) var(--space-18);
-    display:flex;align-items:center;gap:var(--space-10);flex-shrink:0;
+  .cmx-sect-fill{background:var(--bg)}
+  .cmx-label{
+    background:var(--bg);color:var(--muted);font-size:var(--text-sm);font-weight:500;
+    padding:var(--space-7) var(--space-18);
   }
-  .ccol-head-text{flex:1;display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-10);min-width:0}
-  .ccol-head h3{margin:0;font-size:var(--text-lg)}
-  .ccol-head small{color:var(--muted);font-size:var(--text-2xs);letter-spacing:var(--track-caps);text-transform:uppercase}
+  .cmx-val{
+    background:#fff;color:var(--ink);font-size:var(--text-sm);font-weight:500;
+    padding:var(--space-7) var(--space-18);
+  }
+  .cmx-val-empty{color:#ccc}
+  /* Differing values: a quiet 3px accent bar + stronger ink. NO bg fill —
+     with most rows differing a tint floods the table; the bar marks
+     without shouting. */
+  .cmx-row[data-diff="1"] .cmx-val:not(.cmx-val-empty){
+    box-shadow:inset 3px 0 0 var(--acc);font-weight:600;
+  }
+  /* Rows identical across all filled slots hide when the toggle is on;
+     a section whose rows are ALL same hides its header too. */
+  .compare-view.cmp-diff .cmx-row[data-same="1"]{display:none}
+  .compare-view.cmp-diff .cmx-sect-row[data-same="1"]{display:none}
   .ccol-prev{
     margin:var(--space-18);border:1px solid #b8b8b8;flex-shrink:0;
     aspect-ratio:3/4;
@@ -1060,18 +1094,20 @@
     border-top:1px solid var(--line);padding-top:8px;margin-top:6px;
   }
   .ccol-prices .pl.tot span:last-child{font-size:var(--text-xl)}
-  .ccol-body{padding:var(--space-18) var(--space-18) var(--space-8)}
-  .ccol-row{
-    display:flex;justify-content:space-between;font-size:var(--text-sm);
-    padding:var(--space-5) 0;border-bottom:1px dotted #eee;color:var(--muted);
+  /* ── footer grid: prices + actions per column, gutter rail empty ── */
+  .cmx-foot-gut{background:var(--bg)}
+  .cmx-foot{background:#fff;display:flex;flex-direction:column}
+  .cmx-foot .ccol-prices{margin-top:auto}
+  .cmx-foot-empty{align-items:center;justify-content:center;padding:var(--space-24)}
+  .cmx-foot-empty button{
+    background:#fff;color:var(--ink);border:1px solid var(--line);
+    padding:var(--space-10) var(--space-16);font-size:var(--text-xs);letter-spacing:var(--track-caps);cursor:pointer;font-weight:600;
   }
-  .ccol-row:last-child{border-bottom:0}
-  .ccol-row span:last-child{color:var(--ink);font-weight:500}
+  .cmx-foot-empty button:hover{border-color:var(--ink)}
   .ccol-foot{
     border-top:1px solid var(--line);padding:var(--space-14) var(--space-18);
     display:flex;justify-content:flex-end;align-items:center;gap:var(--space-8);background:var(--bg);
   }
-  .ccol-price{font-weight:700;font-size:var(--text-xl)}
   .ccol-rm-btn{
     background:#fff;color:var(--ink);border:1px solid var(--line);
     padding:var(--space-10) var(--space-14);font-size:var(--text-xs);letter-spacing:var(--track-caps);cursor:pointer;font-weight:600;
@@ -1094,14 +1130,6 @@
   }
   .ccol-prev-empty .big{font-size:var(--text-5xl);color:#cfd2d4;line-height:1;margin-bottom:10px}
   .ccol-prev-empty small{font-size:var(--text-xs);line-height:1.5;letter-spacing:var(--track-loose)}
-  .ccol-empty-foot{
-    padding:var(--space-14) var(--space-18);display:flex;justify-content:center;
-  }
-  .ccol-empty-foot button{
-    background:#fff;color:var(--ink);border:1px solid var(--line);
-    padding:var(--space-10) var(--space-16);font-size:var(--text-xs);letter-spacing:var(--track-caps);cursor:pointer;font-weight:600;
-  }
-  .ccol-empty-foot button:hover{border-color:var(--ink)}
 
   /* ═══════════ COMPARE DOCK ═══════════
      Lives inside browse-inner, after pagination. Only renders inside browse modes
@@ -1335,9 +1363,9 @@
     .cfg-price .pl{font-size:var(--text-md)}
     .cfg-price .pl.tot{font-size:var(--text-xl)}
     .cart-cta,.cart-secondary,.cart-primary{font-size:var(--text-md)}
-    .ccol-row{font-size:var(--text-md)}
+    .cmx-label,.cmx-val{font-size:var(--text-md)}
     .ccol-prices .pl{font-size:var(--text-md)}
-    .ccol-head h3{font-size:var(--text-xl)}
+    .cmx-head h3{font-size:var(--text-xl)}
     .ccol-head-design{font-size:var(--text-md)}
     .browse-head h2{font-size:var(--text-2xl)}
     .browse-head .count{font-size:var(--text-md)}
@@ -1361,8 +1389,8 @@
     .cfg-price .pl{font-size:var(--text-lg)}
     .cfg-price .pl.tot{font-size:var(--text-2xl)}
     .cart-cta,.cart-secondary,.cart-primary{font-size:var(--text-lg)}
-    .ccol-row{font-size:var(--text-lg)}
-    .ccol-head h3{font-size:var(--text-2xl)}
+    .cmx-label,.cmx-val{font-size:var(--text-lg)}
+    .cmx-head h3{font-size:var(--text-2xl)}
     .browse-head h2{font-size:var(--text-3xl)}
     .cfg-pick strong{font-size:var(--text-lg)}
   }
@@ -1465,10 +1493,44 @@
       max-height:calc(100dvh - 20px);overflow-y:auto;
     }
     .lb-details{overflow-y:visible}
+    /* Specs: ONE column on a phone — two squeezed columns wrapped labels and
+       values at random points, nothing lined up. */
+    .lb-specs{grid-template-columns:1fr}
+    /* Price + CTA stack: price line full-width (label left, amount right),
+       button below at full width — side-by-side they collided on designs
+       with extra text (the incompatible-dial note). */
+    .lb-price-row{flex-direction:column;align-items:stretch;gap:var(--space-12)}
+    .lb-price{display:flex;align-items:baseline;justify-content:space-between;font-size:var(--text-2xl)}
+    .lb-price small{margin-bottom:0}
+    .lb-cta{width:100%}
 
-    /* — Compare: the 3-column sheet scrolls horizontally (240px+/column) — */
-    .compare-view{overflow-x:auto}
-    .cmp-tops,.cmp-bottoms{min-width:720px}
+    /* — Compare: the matrix scrolls horizontally as ONE unit; the label
+       rail is STICKY on the left (never leaves the screen); the next column
+       peeks at the edge = swipe affordance. — */
+    .compare-view{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .cmp-tops,.cmp-matrix,.cmp-footgrid{
+      grid-template-columns:96px 42vw 42vw 42vw;width:max-content;min-width:100%;
+    }
+    .cmp-strip{position:sticky;left:0}
+    .cmp-gutterhead,.cmx-sect,.cmx-label{
+      position:sticky;left:0;z-index:2;box-shadow:2px 0 5px rgba(8,24,32,.07);
+    }
+    .cmp-gutterhead{padding:var(--space-12) var(--space-10)}
+    .cmx-sect{padding:var(--space-14) var(--space-10) var(--space-6)}
+    .cmx-label{padding:var(--space-7) var(--space-10);font-size:var(--text-xs)}
+    .cmx-val{padding:var(--space-7) var(--space-12);font-size:var(--text-xs)}
+    /* SLOT chip moves to its OWN line above the name — a long name wraps to
+       two lines without colliding with the chip; the heads row sizes to the
+       tallest head, so the pictures below stay aligned. */
+    .cmx-head{padding:var(--space-10) var(--space-12)}
+    .cmx-head-text{flex-direction:column-reverse;align-items:flex-start;gap:2px}
+    .cmx-head h3{font-size:var(--text-md)}
+    .ccol-prev{margin:var(--space-10) var(--space-12) var(--space-12);max-width:calc(100% - var(--space-12) * 2)}
+    .ccol-prices{margin:var(--space-12) var(--space-12) var(--space-6)}
+    .ccol-foot{padding:var(--space-10) var(--space-12);justify-content:space-between}
+    .ccol-rm-btn,.ccol-edit-btn{
+      padding:var(--space-8) var(--space-10);font-size:var(--text-2xs);white-space:nowrap;
+    }
 
     /* — Mila's mobile pass #1 (iter 136) — */
     /* Custom: the four process cards go 2×2, not a long single column.
@@ -1978,7 +2040,8 @@
     <!-- ─── CONFIG HANDLE (shown only in browse modes) ─── -->
     <button class="config-handle" id="cfgHandle" title="Show details" data-mode="configure">‹</button>
 
-    <!-- ─── COMPARE VIEW ─── -->
+    <!-- ─── COMPARE VIEW — label-gutter matrix (label once, values under
+         their pictures; sections + diff bars in the gutter rail) ─── -->
     <section class="compare-view" id="compareView">
       <div class="cmp-tops" id="cmpTops"></div>
       <div class="cmp-strip">
@@ -1988,7 +2051,8 @@
           <span>Show only differences</span>
         </label>
       </div>
-      <div class="cmp-bottoms" id="cmpBottoms"></div>
+      <div class="cmp-matrix" id="cmpMatrix"></div>
+      <div class="cmp-footgrid" id="cmpFoot"></div>
     </section>
 
 </div>
@@ -2993,16 +3057,28 @@
     ]);
   }
 
-  // ─────── Compare-view render ───────
+  // ─────── Compare-view render — label-gutter MATRIX ───────
+  // Sections live in the gutter rail; one label per row; the three values
+  // sit in the build columns under their pictures. Differing rows get
+  // data-diff (teal bar) / identical rows data-same (hidden by the toggle).
+  const COMPARE_SECTIONS = [
+    ['Build',    ['Reference','Dial','Case','Size']],
+    ['Movement', ['Movement','Caliber','Jewels','Frequency','Power Reserve']],
+    ['Case',     ['Thickness','Lug to Lug','Lug Width','Crystal','Water Resistance','Material','Display','Weight','Wrist Size']],
+  ];
   function renderCompareView(){
     const tops = document.getElementById('cmpTops');
-    const bottoms = document.getElementById('cmpBottoms');
+    const matrix = document.getElementById('cmpMatrix');
+    const foot = document.getElementById('cmpFoot');
     const count = document.getElementById('cmpCount');
-    if(!tops || !bottoms) return;
+    if(!tops || !matrix || !foot) return;
     const builds = [0,1,2].map(i => hydrate(compareBuilds[i]));
     if(count) count.textContent = `${compareBuilds.length} of ${CMP_MAX} build${compareBuilds.length===1?'':'s'}`;
 
     const featureRows = buildFeatureRows(builds);
+    const rowByLabel = {};
+    COMPARE_ROWS.concat(featureRows).forEach(r => rowByLabel[r[0]] = r);
+
     // Compute "all same" across FILLED builds (≥2 needed)
     const filled = builds.filter(Boolean);
     const sameMap = {};
@@ -3017,66 +3093,80 @@
     const designLabel = b => b.isCustom ? 'Custom Concept'
       : (b.design ? `${b.design.name} · ${b.design.style}` : '—');
 
-    // Tops (head + preview image)
-    tops.innerHTML = builds.map((b, i) => {
-      if(b){
-        return `<div class="ccol-top" data-cmp-slot="${i}">
-                  <div class="ccol-head">
-                    <div class="ccol-head-text">
-                      <div><h3>${b.watch.brand} ${b.watch.name}</h3>
-                        <div class="ccol-head-design">${designLabel(b)}</div></div>
-                      <small>SLOT ${i+1}</small>
-                    </div>
-                  </div>
-                  <div class="ccol-prev"${b.design && b.design.grad ? ` style="background:${b.design.grad}"` : ''}>PREVIEW ${String.fromCharCode(65+i)}</div>
-                </div>`;
-      }
-      return `<div class="ccol-top" data-cmp-slot="${i}">
-                <div class="ccol-head">
-                  <div class="ccol-head-text">
-                    <div><h3>Empty</h3>
-                      <div class="ccol-head-design">&nbsp;</div></div>
-                    <small>SLOT ${i+1}</small>
-                  </div>
-                </div>
-                <div class="ccol-prev ccol-prev-empty">
-                  <div class="big">＋</div>
-                  <small>Save another build<br>to compare side-by-side</small>
-                </div>
-              </div>`;
-    }).join('');
+    // Tops: gutter design cell (spans head+picture rows), then the heads
+    // ROW, then the pictures ROW — grid rows keep the pictures aligned even
+    // when one name wraps to two lines.
+    const gutterhead = `<div class="cmp-gutterhead">
+        <span class="eyebrow">Compare</span>
+        <span class="legend"><span class="bar"></span>marks a difference</span>
+      </div>`;
+    const heads = builds.map((b, i) => `<div class="cmx-head" data-cmp-slot="${i}">
+        <div class="cmx-head-text">
+          <div><h3>${b ? `${b.watch.brand} ${b.watch.name}` : 'Empty'}</h3>
+            <div class="ccol-head-design">${b ? designLabel(b) : '&nbsp;'}</div></div>
+          <small>SLOT ${i+1}</small>
+        </div>
+      </div>`).join('');
+    const prevs = builds.map((b, i) => b
+      ? `<div class="cmx-prevcell" data-cmp-slot="${i}">
+           <div class="ccol-prev"${b.design && b.design.grad ? ` style="background:${b.design.grad}"` : ''}>PREVIEW ${String.fromCharCode(65+i)}</div>
+         </div>`
+      : `<div class="cmx-prevcell" data-cmp-slot="${i}">
+           <div class="ccol-prev ccol-prev-empty">
+             <div class="big">＋</div>
+             <small>Save another build<br>to compare side-by-side</small>
+           </div>
+         </div>`).join('');
+    tops.innerHTML = gutterhead + heads + prevs;
 
-    // Bottoms (specs + features + prices + foot)
-    bottoms.innerHTML = builds.map((b, i) => {
+    // Matrix body — only when there is something to read
+    const sectionHtml = (title, labels) => {
+      const rows = labels.map(l => rowByLabel[l]).filter(Boolean);
+      if(!rows.length) return '';
+      const rowsHtml = rows.map(([label, fn]) => {
+        const same = sameMap[label] === true;
+        const diff = sameMap[label] === false;
+        const cells = builds.map(b => b
+          ? `<div class="cmx-val">${fn(b)}</div>`
+          : '<div class="cmx-val cmx-val-empty">—</div>').join('');
+        return `<div class="cmx-row"${same?' data-same="1"':''}${diff?' data-diff="1"':''}>
+            <div class="cmx-label">${label}</div>${cells}
+          </div>`;
+      }).join('');
+      const allSame = rows.every(([label]) => sameMap[label] === true);
+      return `<div class="cmx-sect-row"${allSame?' data-same="1"':''}>
+          <div class="cmx-sect">${title}</div>
+          <div class="cmx-sect-fill"></div><div class="cmx-sect-fill"></div><div class="cmx-sect-fill"></div>
+        </div>${rowsHtml}`;
+    };
+    matrix.innerHTML = filled.length
+      ? COMPARE_SECTIONS.map(([t, ls]) => sectionHtml(t, ls)).join('')
+        + sectionHtml('Features', featureRows.map(r => r[0]))
+      : '';
+
+    // Footer grid: prices + actions per column (bottom-aligned across
+    // columns), BUILD in empty ones, gutter rail cell first.
+    foot.innerHTML = '<div class="cmx-foot-gut"></div>' + builds.map((b, i) => {
       if(b){
         const p = buildPrices(b);
-        const specRowsHtml = COMPARE_ROWS.map(([label, fn]) => {
-          const same = sameMap[label] ? ' data-same="1"' : '';
-          return `<div class="ccol-row"${same}><span>${label}</span><span>${fn(b)}</span></div>`;
-        }).join('');
-        const featureRowsHtml = featureRows.map(([label, fn]) => {
-          const same = sameMap[label] ? ' data-same="1"' : '';
-          return `<div class="ccol-row"${same}><span>${label}</span><span>${fn(b)}</span></div>`;
-        }).join('');
         const addonsLine = p.addons > 0
           ? `<div class="pl"><span>Add-ons</span><strong>$${p.addons.toLocaleString()}</strong></div>` : '';
-        return `<div class="ccol-bot" data-cmp-slot="${i}">
-                  <div class="ccol-body">${specRowsHtml}${featureRowsHtml}</div>
-                  <div class="ccol-prices">
-                    <div class="pl"><span>Base watch</span><strong>$${p.watch.toLocaleString()}</strong></div>
-                    <div class="pl"><span>Customization service</span><strong>$${p.service.toLocaleString()}</strong></div>
-                    ${addonsLine}
-                    <div class="pl tot"><span>Total</span><span>$${p.total.toLocaleString()}</span></div>
-                  </div>
-                  <div class="ccol-foot">
-                    <button class="ccol-rm-btn" data-cmp-rm="${i}">REMOVE</button>
-                    <button class="ccol-edit-btn" data-cmp-edit="${i}">EDIT →</button>
-                  </div>
-                </div>`;
+        return `<div class="cmx-foot" data-cmp-slot="${i}">
+            <div class="ccol-prices">
+              <div class="pl"><span>Base watch</span><strong>$${p.watch.toLocaleString()}</strong></div>
+              <div class="pl"><span>Customization service</span><strong>$${p.service.toLocaleString()}</strong></div>
+              ${addonsLine}
+              <div class="pl tot"><span>Total</span><span>$${p.total.toLocaleString()}</span></div>
+            </div>
+            <div class="ccol-foot">
+              <button class="ccol-rm-btn" data-cmp-rm="${i}">REMOVE</button>
+              <button class="ccol-edit-btn" data-cmp-edit="${i}">EDIT →</button>
+            </div>
+          </div>`;
       }
-      return `<div class="ccol-bot ccol-bot-empty" data-cmp-slot="${i}">
-                <div class="ccol-empty-foot"><button data-mode="configure">BUILD</button></div>
-              </div>`;
+      return `<div class="cmx-foot cmx-foot-empty" data-cmp-slot="${i}">
+          <button data-mode="configure">BUILD</button>
+        </div>`;
     }).join('');
   }
 
