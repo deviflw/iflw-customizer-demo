@@ -1023,11 +1023,6 @@
     font-size:var(--text-2xs);letter-spacing:var(--track-caps);text-transform:uppercase;
     color:var(--muted);font-weight:700;position:relative;
   }
-  .cmp-gutterhead .legend{font-size:var(--text-xs);color:var(--muted);line-height:1.5;position:relative}
-  .cmp-gutterhead .legend .bar{
-    display:inline-block;width:3px;height:11px;background:var(--acc);
-    margin-right:6px;vertical-align:-1px;
-  }
   /* Build heads: own grid ROW (the row sizes to the tallest head, so a
      two-line name never pushes its picture out of line with the others). */
   .cmx-head{background:#fff;padding:var(--space-12) var(--space-18);display:flex;align-items:flex-end}
@@ -1048,7 +1043,7 @@
      grid items (label rail + 3 value cells per row) ── */
   .cmx-sect-row, .cmx-row{display:contents}
   .cmx-sect{
-    background:var(--bg);color:var(--muted);font-size:var(--text-2xs);
+    background:var(--bg);color:var(--ink);font-size:var(--text-2xs);
     letter-spacing:var(--track-caps);text-transform:uppercase;font-weight:700;
     padding:var(--space-14) var(--space-18) var(--space-6);
   }
@@ -1106,7 +1101,7 @@
   .cmx-foot-empty button:hover{border-color:var(--ink)}
   .ccol-foot{
     border-top:1px solid var(--line);padding:var(--space-14) var(--space-18);
-    display:flex;justify-content:flex-end;align-items:center;gap:var(--space-8);background:var(--bg);
+    display:flex;justify-content:flex-end;align-items:center;gap:var(--space-8);background:#fff;
   }
   .ccol-rm-btn{
     background:#fff;color:var(--ink);border:1px solid var(--line);
@@ -1467,6 +1462,10 @@
        phone — it covered the config sections and CHECKOUT hid behind the tab
        bar. Static: the cart is reached by the natural scroll. */
     .cfg-foot{position:static}
+    /* Centered build header (Mila experiment): canvas and swatches are
+       centered — the left-flushed title block right under them looked like a
+       jump; the full-width config sections below stay as they are. */
+    .cfg-header{text-align:center}
     /* Desktop-only affordance: the side panel expand handle (nothing to expand
        in the stacked layout). Needs the data-mode selector to outweigh the
        desktop [data-mode^="browse-"] display:flex rule. */
@@ -1511,7 +1510,11 @@
     .cmp-tops,.cmp-matrix,.cmp-footgrid{
       grid-template-columns:96px 42vw 42vw 42vw;width:max-content;min-width:100%;
     }
-    .cmp-strip{position:sticky;left:0}
+    /* Count/toggle line starts at the same edge as the rail text below it */
+    .cmp-strip{position:sticky;left:0;padding-left:var(--space-10);padding-right:var(--space-12)}
+    /* The dial-circle motif read as stray HAIRS on a phone — off. (The
+       gutterhead surface itself stays; its design TBD with Mila.) */
+    .cmp-gutterhead::before,.cmp-gutterhead::after{display:none}
     .cmp-gutterhead,.cmx-sect,.cmx-label{
       position:sticky;left:0;z-index:2;box-shadow:2px 0 5px rgba(8,24,32,.07);
     }
@@ -1537,7 +1540,10 @@
        WHITE card fill on mobile: the grey #fafafa pair at equal heights read
        as a grey STRIPE across the white page (the "полоска" on Custom). */
     .cu-cards{grid-template-columns:1fr 1fr}
-    .cu-card{padding:var(--space-16) var(--space-14);background:#fff}
+    /* Top-align card content: on a phone the four texts have different line
+       counts — centered blocks started at different heights and the first
+       card read "taller". Desktop keeps its centered look (equal lines). */
+    .cu-card{padding:var(--space-16) var(--space-14);background:#fff;justify-content:flex-start}
     /* Same stripe mechanism on Designs row 3: the white veil over the two
        incompatible cards washed them into one pale band — keep the fade
        feature but lighter, so the artwork's color survives. */
@@ -3098,7 +3104,6 @@
     // when one name wraps to two lines.
     const gutterhead = `<div class="cmp-gutterhead">
         <span class="eyebrow">Compare</span>
-        <span class="legend"><span class="bar"></span>marks a difference</span>
       </div>`;
     const heads = builds.map((b, i) => `<div class="cmx-head" data-cmp-slot="${i}">
         <div class="cmx-head-text">
