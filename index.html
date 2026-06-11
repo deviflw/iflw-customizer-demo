@@ -1193,7 +1193,7 @@
      a dial, macro; one frame, two crops — see docs/BANNER-BRIEF-CUSTOM-TAB.md).
      The hero (not the process cards) now absorbs the tall-screen height. */
   .cu-hero{
-    position:relative;min-height:280px;
+    position:relative;min-height:420px;
     display:flex;flex-direction:column;justify-content:flex-end;
     padding:var(--space-28) var(--space-30) var(--space-26);overflow:hidden;
     background:
@@ -1216,6 +1216,19 @@
     color:rgba(255,255,255,.75);font-size:var(--text-2xs);letter-spacing:var(--track-eyebrow);
     text-transform:uppercase;font-weight:600;padding:4px 9px;
   }
+  /* REAL banner (Mila's art, 2026-06-11) on desktop — watercolor watch,
+     light top / dark mass bottom-left where the text sits; a soft bottom
+     scrim secures the white text. Mobile keeps the gradient placeholder
+     until the ~4:5 mobile crop arrives. Asset: mockup/assets/. */
+  @media (min-width:800px){
+    .cu-hero{
+      background:
+        linear-gradient(180deg, rgba(8,24,32,0) 38%, rgba(8,24,32,.52) 88%),
+        url('assets/custom-hero-desktop.png') center/cover no-repeat #fff;
+    }
+    .cu-hero::before,.cu-hero::after{display:none}
+    .cu-hero-tag{display:none}
+  }
   .cu-hero-eyebrow{font-size:var(--text-xs);letter-spacing:var(--track-caps);text-transform:uppercase;
                    font-weight:700;color:var(--acc);margin:0 0 10px}
   .cu-title{font-size:var(--text-3xl);letter-spacing:var(--track-tight);margin:0 0 var(--space-8);font-weight:600;line-height:1.2;color:#fff;max-width:560px}
@@ -1225,7 +1238,7 @@
      Informational only — no hover/cursor (not selectable). Mila: this card
      design is LOCKED — the v4 band experiment (iter 137) was rejected;
      only the hero banner above them changed. */
-  .cu-cards{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:var(--space-14);flex:1;min-height:240px}
+  .cu-cards{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:var(--space-14);flex:1;min-height:160px}
   .cu-card{
     background:var(--bg);border:1px solid var(--line);
     padding:var(--space-26) var(--space-22);display:flex;flex-direction:column;
@@ -1273,6 +1286,8 @@
   /* Risk-reversal made EXPLICIT next to the price (v4 ③) */
   .cu-guarantee{display:flex;align-items:center;gap:var(--space-8);font-size:var(--text-sm);color:var(--ink);margin-top:8px}
   .cu-guarantee::before{content:"✓";color:var(--acc);font-weight:700}
+  /* Lead time lives HERE with the price+guarantee (Mila: not under the CTA) */
+  .cu-leadtime{font-size:var(--text-sm);color:var(--muted);margin-top:4px}
 
   /* CTA — its own full-width row below both columns */
   .cu-cta{
@@ -1281,9 +1296,6 @@
     transition:.15s var(--ease);
   }
   .cu-cta:hover{background:#3aa8aa}
-  /* Lead time stated ONCE, under the CTA (v4 ④ — single voice; the source
-     of truth in production = admin settings) */
-  .cu-cta-sub{text-align:center;color:var(--muted);font-size:var(--text-xs);margin:8px 0 0}
   @media (max-width:900px){
     .cu-cards{grid-template-columns:1fr 1fr}
   }
@@ -1643,6 +1655,7 @@
                   <div class="cu-banner-eyebrow">Custom Concept · Commission</div>
                   <div class="cu-banner-price"><strong>$1,490</strong> <span>+ base watch</span></div>
                   <div class="cu-guarantee">Nothing is painted until you approve the sketch</div>
+                  <div class="cu-leadtime">Hand-painted to order · ships in ~4 weeks</div>
                 </div>
               </div>
               <div class="cu-extras-banner">
@@ -1668,7 +1681,6 @@
               </div>
             </div>
             <button class="cu-cta" id="cuOrder">Start your commission →</button>
-            <p class="cu-cta-sub">Hand-painted to order · ships in ~4 weeks</p>
           </div>
         </div>
 
