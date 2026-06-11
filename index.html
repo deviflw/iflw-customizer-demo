@@ -1009,19 +1009,17 @@
   /* Gutter cell beside the pictures — a DESIGNED surface, not a hole:
      dial-circle motif + the diff-bar legend live here. Spans both rows
      (head row + picture row). */
+  /* DARK RAIL (Mila experiment 2026-06-12; light version = tag
+     cmp-rail-light): the whole label rail inverts to brand ink — gutterhead,
+     section cells, labels, foot cell. Value columns stay light. */
   .cmp-gutterhead{
-    grid-row:1/3;position:relative;overflow:hidden;background:var(--bg);
+    grid-row:1/3;position:relative;overflow:hidden;background:var(--ink);
     display:flex;flex-direction:column;justify-content:flex-end;gap:var(--space-8);
     padding:var(--space-18);
   }
-  .cmp-gutterhead::before, .cmp-gutterhead::after{
-    content:"";position:absolute;border-radius:50%;border:1px solid var(--line);
-  }
-  .cmp-gutterhead::before{width:220px;height:220px;right:-90px;top:-70px}
-  .cmp-gutterhead::after{width:140px;height:140px;right:-30px;top:120px;border-color:#eceef0}
   .cmp-gutterhead .eyebrow{
     font-size:var(--text-2xs);letter-spacing:var(--track-caps);text-transform:uppercase;
-    color:var(--muted);font-weight:700;position:relative;
+    color:var(--acc);font-weight:700;position:relative;
   }
   /* Build heads: own grid ROW (the row sizes to the tallest head, so a
      two-line name never pushes its picture out of line with the others). */
@@ -1043,13 +1041,13 @@
      grid items (label rail + 3 value cells per row) ── */
   .cmx-sect-row, .cmx-row{display:contents}
   .cmx-sect{
-    background:var(--bg);color:var(--ink);font-size:var(--text-2xs);
+    background:var(--ink);color:#fff;font-size:var(--text-2xs);
     letter-spacing:var(--track-caps);text-transform:uppercase;font-weight:700;
     padding:var(--space-14) var(--space-18) var(--space-6);
   }
   .cmx-sect-fill{background:var(--bg)}
   .cmx-label{
-    background:var(--bg);color:var(--muted);font-size:var(--text-sm);font-weight:500;
+    background:var(--ink);color:rgba(255,255,255,.72);font-size:var(--text-sm);font-weight:500;
     padding:var(--space-7) var(--space-18);
   }
   .cmx-val{
@@ -1090,7 +1088,7 @@
   }
   .ccol-prices .pl.tot span:last-child{font-size:var(--text-xl)}
   /* ── footer grid: prices + actions per column, gutter rail empty ── */
-  .cmx-foot-gut{background:var(--bg)}
+  .cmx-foot-gut{background:var(--ink)}
   .cmx-foot{background:#fff;display:flex;flex-direction:column}
   .cmx-foot .ccol-prices{margin-top:auto}
   .cmx-foot-empty{align-items:center;justify-content:center;padding:var(--space-24)}
@@ -1512,9 +1510,6 @@
     }
     /* Count/toggle line starts at the same edge as the rail text below it */
     .cmp-strip{position:sticky;left:0;padding-left:var(--space-10);padding-right:var(--space-12)}
-    /* The dial-circle motif read as stray HAIRS on a phone — off. (The
-       gutterhead surface itself stays; its design TBD with Mila.) */
-    .cmp-gutterhead::before,.cmp-gutterhead::after{display:none}
     .cmp-gutterhead,.cmx-sect,.cmx-label{
       position:sticky;left:0;z-index:2;box-shadow:2px 0 5px rgba(8,24,32,.07);
     }
