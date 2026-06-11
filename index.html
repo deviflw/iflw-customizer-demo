@@ -1870,13 +1870,11 @@
     document.querySelectorAll('.r-btn').forEach(b => {
       b.classList.toggle('on', b.dataset.mode === mode);
     });
-    // Entering the Custom Concept tab puts the build into Custom Concept
-    // state so the preview panel + summary reflect the $1,490 commission.
-    if(mode === 'browse-custom' && typeof isCustomConcept !== 'undefined'){
-      isCustomConcept = true;
-      if(typeof updateBuildHeader === 'function') updateBuildHeader();
-      if(typeof recalc === 'function') recalc();
-    }
+    // NOTE: viewing the Custom Concept tab must NOT mutate the build (audit
+    // blocker: a curious click re-priced the build to $1,490 and dropped the
+    // chosen design, with no way back). Only the "Choose Custom Concept →"
+    // button (cuOrder) commits the CC state. The Custom page's action bar
+    // shows a HYPOTHETICAL CC total computed in updateSummary instead.
   }
   document.addEventListener('click', e => {
     const trg = e.target.closest('[data-mode]');
@@ -2174,8 +2172,8 @@
     const total = selWatch.price + d.price + addons;
     const totalStr = `$${total.toLocaleString()}`;
     document.getElementById('piTotal').textContent = totalStr;
-    const cuAT = document.getElementById('cuActionTotal');
-    if(cuAT) cuAT.textContent = totalStr;   // Custom-page action bar mirrors live total
+    // Custom page: pricing there is the static "$1,490 + base watch" banner —
+    // viewing the page doesn't mutate the build, so nothing to mirror here.
     refreshDesignPick();
   }
 
@@ -2331,12 +2329,26 @@
     renderCompareView();
   }
 
+  // Reflect the current sel*Idx values in the hotbar DOM. updateSelectedWatch()
+  // rebuilds the hotbar with index 0 highlighted — after restoring a snapshot the
+  // highlighted swatch would contradict the restored build's meta line without this.
+  function syncHotbarSelection(){
+    const apply = (el, idx) => {
+      if(!el) return;
+      [...el.children].forEach((c, i) => c.classList.toggle('sel', i === idx));
+    };
+    apply(document.getElementById('hotbarDial'), selDialIdx);
+    apply(document.querySelector('[data-swatch-group="case"]'), selCaseIdx);
+    apply(document.getElementById('hotbarSize'), selSizeIdx);
+  }
+
   function loadBuildIntoConfigure(idx){
     const snap = compareBuilds[idx];
     if(!snap) return;
     const b = hydrate(snap);
     updateSelectedWatch(b.watch);              // resets sel*Idx to 0 internally
     selDialIdx = snap.dialIdx; selCaseIdx = snap.caseIdx; selSizeIdx = snap.sizeIdx;
+    syncHotbarSelection();                     // hotbar highlight = restored indices
     isCustomConcept = !!snap.isCustom;
     if(!isCustomConcept && b.design) selDesign = b.design;
     st.mono = !!snap.addons.mono; st.strap = !!snap.addons.strap;
@@ -2530,7 +2542,7 @@
   // doesn't open with an empty Compare on first visit.
   if(compareBuilds.length === 0){
     compareBuilds = [
-      {watchName:'Seiko SNK807',    designName:'Northern Lights', isCustom:false,
+      {watchName:'SNK807',    designName:'Northern Lights', isCustom:false,
        dialIdx:1, caseIdx:0, sizeIdx:0, addons:{mono:false,strap:false,timelapse:false,photos:false}, savedAt:Date.now()},
       {watchName:'Khaki Field', designName:'Alpine Map', isCustom:false,
        dialIdx:0, caseIdx:0, sizeIdx:0, addons:{mono:false,strap:false,timelapse:false,photos:false}, savedAt:Date.now()},
