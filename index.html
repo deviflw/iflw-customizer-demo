@@ -996,7 +996,13 @@
      the three values stay exactly under their pictures; section headers in
      the rail; differing values get a quiet teal bar. Our visual language
      (white columns, SLOT chips, prices/foot) kept — only duplication gone. */
-  .compare-view{--cmp-gutter:180px}
+  .compare-view{
+    --cmp-gutter:180px;
+    /* Dark rail experiment: slate, NOT the nav rail's ink — same color
+       clashed with the page's edge panel on desktop (Mila). */
+    --rail:#243640;
+    --rail-line:#33464f;   /* grey rungs between rail cells */
+  }
   .cmp-tops, .cmp-matrix, .cmp-footgrid{
     display:grid;grid-template-columns:var(--cmp-gutter) repeat(3,minmax(0,1fr));
     /* gap+bg technique for the column divider: the 1px grid gap shows the
@@ -1013,7 +1019,7 @@
      cmp-rail-light): the whole label rail inverts to brand ink — gutterhead,
      section cells, labels, foot cell. Value columns stay light. */
   .cmp-gutterhead{
-    grid-row:1/3;position:relative;overflow:hidden;background:var(--ink);
+    grid-row:1/3;position:relative;overflow:hidden;background:var(--rail);
     display:flex;flex-direction:column;justify-content:flex-end;gap:var(--space-8);
     padding:var(--space-18);
   }
@@ -1041,14 +1047,19 @@
      grid items (label rail + 3 value cells per row) ── */
   .cmx-sect-row, .cmx-row{display:contents}
   .cmx-sect{
-    background:var(--ink);color:#fff;font-size:var(--text-2xs);
+    background:var(--rail);color:#fff;font-size:var(--text-2xs);
     letter-spacing:var(--track-caps);text-transform:uppercase;font-weight:700;
     padding:var(--space-14) var(--space-18) var(--space-6);
   }
   .cmx-sect-fill{background:var(--bg)}
   .cmx-label{
-    background:var(--ink);color:rgba(255,255,255,.72);font-size:var(--text-sm);font-weight:500;
+    background:var(--rail);color:rgba(255,255,255,.72);font-size:var(--text-sm);font-weight:500;
     padding:var(--space-7) var(--space-18);
+  }
+  /* Grey rungs: each rail cell covers the 1px grid gap BELOW itself, so the
+     light table line never shows through inside the dark rail. */
+  .cmp-gutterhead,.cmx-sect,.cmx-label,.cmx-foot-gut{
+    box-shadow:0 1px 0 0 var(--rail-line);
   }
   .cmx-val{
     background:#fff;color:var(--ink);font-size:var(--text-sm);font-weight:500;
@@ -1088,7 +1099,7 @@
   }
   .ccol-prices .pl.tot span:last-child{font-size:var(--text-xl)}
   /* ── footer grid: prices + actions per column, gutter rail empty ── */
-  .cmx-foot-gut{background:var(--ink)}
+  .cmx-foot-gut{background:var(--rail)}
   .cmx-foot{background:#fff;display:flex;flex-direction:column}
   .cmx-foot .ccol-prices{margin-top:auto}
   .cmx-foot-empty{align-items:center;justify-content:center;padding:var(--space-24)}
@@ -1511,7 +1522,8 @@
     /* Count/toggle line starts at the same edge as the rail text below it */
     .cmp-strip{position:sticky;left:0;padding-left:var(--space-10);padding-right:var(--space-12)}
     .cmp-gutterhead,.cmx-sect,.cmx-label{
-      position:sticky;left:0;z-index:2;box-shadow:2px 0 5px rgba(8,24,32,.07);
+      position:sticky;left:0;z-index:2;
+      box-shadow:0 1px 0 0 var(--rail-line), 2px 0 5px rgba(8,24,32,.15);
     }
     .cmp-gutterhead{padding:var(--space-12) var(--space-10)}
     .cmx-sect{padding:var(--space-14) var(--space-10) var(--space-6)}
