@@ -1316,6 +1316,9 @@
      SEPARATE stacked layout, not a patched grid: bottom tab bar (the rail
      restyled — same buttons, same handlers), one column per mode, page
      scroll. Touch-first: nothing depends on hover. */
+  /* Mobile-only live strip (variant A) — desktop never shows it */
+  .mini-preview{display:none}
+
   @media (max-width:799px){
     /* — frame: stacked column + room for the fixed tab bar — */
     .customizer{
@@ -1359,14 +1362,19 @@
     .preview-canvas{
       --canvas-sz:min(calc(100vw - 32px), calc(100dvh - 320px));
     }
-    /* touch targets ≥44px-ish; the vertical separator reads as noise when
-       the hotbar wraps — drop it */
-    .sw{width:38px;height:38px}
-    .sizes span{padding:var(--space-10) var(--space-14);min-width:44px}
+    /* Swatches keep the DESKTOP visual size (30px — the blown-up 38px circles
+       read gigantic on a phone). The finger still gets ≥42px: an invisible
+       ::after halo extends the tap area past the visible circle, and the row
+       gap is widened so neighbouring halos barely overlap. */
+    .sw{width:30px;height:30px}
+    .sw::after{content:"";position:absolute;inset:-6px;border-radius:50%}
+    .hg-row{gap:var(--space-10)}
+    .sizes{gap:var(--space-6)}
+    .sizes span{padding:var(--space-8) var(--space-12);min-width:42px;font-size:var(--text-sm)}
     .vsep{display:none}
     [data-mode="configure"] .hotbar{
-      padding-top:var(--space-16);padding-bottom:var(--space-16);
-      gap:var(--space-18);
+      padding-top:var(--space-14);padding-bottom:var(--space-14);
+      gap:var(--space-16);
     }
     .config{overflow:visible}
     /* The desktop sticky foot (status + cart + badges) is too tall to pin on a
@@ -1445,12 +1453,65 @@
     /* Theme footer: spacer below so its content scrolls fully clear of the
        fixed tab bar (prod question recorded — same trick is portable). */
     .site-footer{margin-bottom:calc(72px + env(safe-area-inset-bottom))}
+
+    /* — LIVE STRIP (Mila variant A, iter 137): the configurator's whole point
+       is seeing changes as you tap. When the big canvas scrolls out of view in
+       Configure, this fixed strip slides in from the top: design thumb + build
+       + live Total (fed by updateSummary). Tap anywhere = back to the canvas.
+       Slide via transform (no [hidden] — the local display-beats-hidden trap),
+       ~60px tall so it reads as a status bar, not a second preview. */
+    .mini-preview{
+      position:fixed;top:0;left:0;right:0;z-index:35;
+      display:flex;align-items:center;gap:var(--space-12);
+      background:rgba(255,255,255,.96);
+      -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+      border-bottom:1px solid var(--line);
+      padding:var(--space-8) var(--space-14);
+      transform:translateY(-110%);transition:transform .22s var(--ease);
+      cursor:pointer;
+    }
+    .mini-preview.show{transform:none}
+    .mp-thumb{
+      width:44px;height:44px;border-radius:6px;flex:none;
+      border:1px solid var(--line);
+      transition:transform .16s;
+    }
+    .mp-text{flex:1;min-width:0}
+    .mp-text strong{
+      display:block;font-size:var(--text-sm);font-weight:600;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .mp-text small{
+      display:block;font-size:var(--text-xs);color:var(--muted);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .mp-end{text-align:right;flex:none}
+    .mp-price{display:block;font-weight:700;font-size:var(--text-sm)}
+    .mp-hint{
+      font-size:var(--text-2xs);color:var(--muted);
+      letter-spacing:var(--track-wide);text-transform:uppercase;
+    }
   }
 </style>
 </head>
 <body>
 
 <header class="site-header">SITE HEADER · iflwatches.com</header>
+
+<!-- MOBILE ONLY — live strip (variant A): fixed at the top, slides in when the
+     big Configure canvas scrolls out of view. Mirrors the build live so every
+     swatch tap stays visible. Tap = smooth-scroll back to the canvas. -->
+<div class="mini-preview" id="miniPreview" role="button" aria-label="Back to the live preview">
+  <div class="mp-thumb" id="mpThumb"></div>
+  <div class="mp-text">
+    <strong id="mpName">Seiko SNK807</strong>
+    <small id="mpSub">Northern Lights</small>
+  </div>
+  <div class="mp-end">
+    <span class="mp-price" id="mpPrice">$1,520</span>
+    <small class="mp-hint">preview ↑</small>
+  </div>
+</div>
 
 <div class="customizer" data-mode="configure" id="cz">
 
@@ -2168,6 +2229,10 @@
     document.querySelectorAll('.r-btn').forEach(b => {
       b.classList.toggle('on', b.dataset.mode === mode);
     });
+    // Mobile live strip: mode gates it, and the observer won't re-fire when
+    // the canvas stays equally off-screen across a mode switch — sync here.
+    // (Function declaration is hoisted; runs only on user clicks, post-parse.)
+    syncMiniPreview();
     // NOTE: viewing the Custom Concept tab must NOT mutate the build (audit
     // blocker: a curious click re-priced the build to $1,490 and dropped the
     // chosen design, with no way back). Only the "Choose Custom Concept →"
@@ -2515,10 +2580,15 @@
       if(!sw || !grp.contains(sw) || sw === grp) return;
       grp.querySelectorAll('.sel').forEach(s => s.classList.remove('sel'));
       sw.classList.add('sel');
-      // pulse the preview to demonstrate "live update"
+      // pulse the preview to demonstrate "live update" — and the mobile
+      // strip's thumb with it, so a tap visibly lands even with the big
+      // canvas scrolled away
       const canvas = document.getElementById('previewCanvas');
       canvas.style.transform = 'scale(.97)';
       setTimeout(()=>canvas.style.transform='', 160);
+      const mpT = document.getElementById('mpThumb');
+      mpT.style.transform = 'scale(.82)';
+      setTimeout(()=>mpT.style.transform='', 160);
     });
   });
 
@@ -2597,9 +2667,40 @@
     const total = (inStock ? m.price : selWatch.price + d.price) + addons;
     const totalStr = `$${total.toLocaleString()}`;
     document.getElementById('piTotal').textContent = totalStr;
+    renderMiniPreview(totalStr);
     // Custom page: pricing there is the static "$1,490 + base watch" banner —
     // viewing the page doesn't mutate the build, so nothing to mirror here.
     refreshDesignPick();
+  }
+
+  // ────── MOBILE LIVE STRIP (variant A) ──────
+  // Shown only when ALL THREE hold: phone width + Configure mode + the big
+  // canvas scrolled out of view. The observer tracks the canvas; setMode and
+  // resize re-evaluate (mode flips the canvas display, which also retriggers
+  // the observer — the explicit sync covers the first paint and edge cases).
+  const miniPreview = document.getElementById('miniPreview');
+  let mpCanvasOut = false;
+  function syncMiniPreview(){
+    const on = mpCanvasOut
+            && cz.dataset.mode === 'configure'
+            && window.matchMedia('(max-width:799px)').matches;
+    miniPreview.classList.toggle('show', on);
+  }
+  new IntersectionObserver(entries => {
+    mpCanvasOut = !entries[0].isIntersecting;
+    syncMiniPreview();
+  }, {threshold:.12}).observe(document.getElementById('previewCanvas'));
+  window.addEventListener('resize', syncMiniPreview);
+  miniPreview.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+  // Mirror the build into the strip — called from updateSummary so the strip
+  // can never disagree with the Price Summary (one source of truth).
+  function renderMiniPreview(totalStr){
+    document.getElementById('mpName').textContent  = `${selWatch.brand} ${selWatch.name}`;
+    document.getElementById('mpSub').textContent   = currentDesign().name;
+    document.getElementById('mpPrice').textContent = totalStr;
+    document.getElementById('mpThumb').style.background = isCustomConcept
+      ? 'linear-gradient(135deg,#16313e,#1e4a6d 60%,#40bec1)'
+      : selDesign.grad;
   }
 
   // Shared case color palette (steel/gold/PVD/bronze) — used in hotbar render
