@@ -1193,7 +1193,7 @@
      a dial, macro; one frame, two crops — see docs/BANNER-BRIEF-CUSTOM-TAB.md).
      The hero (not the process cards) now absorbs the tall-screen height. */
   .cu-hero{
-    position:relative;flex:1;min-height:320px;
+    position:relative;min-height:280px;
     display:flex;flex-direction:column;justify-content:flex-end;
     padding:var(--space-28) var(--space-30) var(--space-26);overflow:hidden;
     background:
@@ -1221,22 +1221,24 @@
   .cu-title{font-size:var(--text-3xl);letter-spacing:var(--track-tight);margin:0 0 var(--space-8);font-weight:600;line-height:1.2;color:#fff;max-width:560px}
   .cu-lead{font-size:var(--text-md);line-height:1.6;color:rgba(255,255,255,.82);margin:0;max-width:560px}
 
-  /* Process — horizontal 4-step band (v4 ②): same info, half the vertical
-     emptiness; the hero owns the height now. Hairline separators via grid
-     gap over the line color. Informational only — no hover/cursor. */
-  .cu-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+  /* 4 process cards — uniform, elongated (portrait), stretch to fill.
+     Informational only — no hover/cursor (not selectable). Mila: this card
+     design is LOCKED — the v4 band experiment (iter 137) was rejected;
+     only the hero banner above them changed. */
+  .cu-cards{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:var(--space-14);flex:1;min-height:240px}
   .cu-card{
-    background:var(--bg);
-    padding:var(--space-16) var(--space-18);display:flex;flex-direction:column;
+    background:var(--bg);border:1px solid var(--line);
+    padding:var(--space-26) var(--space-22);display:flex;flex-direction:column;
+    justify-content:center;
   }
   .cu-num{
-    width:26px;height:26px;border-radius:50%;
+    width:32px;height:32px;border-radius:50%;
     background:var(--acc-soft);color:var(--acc);
     display:flex;align-items:center;justify-content:center;
-    font-size:var(--text-sm);font-weight:700;margin-bottom:10px;
+    font-size:var(--text-md);font-weight:700;margin-bottom:20px;
   }
-  .cu-card h4{margin:0 0 var(--space-6);font-size:var(--text-md);font-weight:600;letter-spacing:var(--track-tight);color:var(--ink)}
-  .cu-card p{margin:0;font-size:var(--text-sm);line-height:1.5;color:var(--muted)}
+  .cu-card h4{margin:0 0 var(--space-8);font-size:var(--text-lg);font-weight:600;letter-spacing:var(--track-tight);color:var(--ink)}
+  .cu-card p{margin:0;font-size:var(--text-md);line-height:1.55;color:var(--muted)}
 
   /* TWO separate banners at the bottom, stacked. cu-bottom anchors the pair
      to the bottom so the cards above keep their full height. */
@@ -1441,9 +1443,9 @@
     /* Custom: the four process cards go 2×2, not a long single column. */
     .cu-cards{grid-template-columns:1fr 1fr}
     .cu-card{padding:var(--space-16) var(--space-14)}
-    /* Custom hero (v4): tall-crop territory on a phone — tighter padding,
-       smaller title; the production asset's mobile crop is ~4:5. */
-    .cu-hero{min-height:300px;padding:var(--space-18) var(--space-16)}
+    /* Custom hero (v4): TALLER on the phone (Mila) — the mobile asset crop
+       is ~4:5, portrait territory; tighter padding, smaller title. */
+    .cu-hero{min-height:380px;padding:var(--space-18) var(--space-16)}
     .cu-hero .cu-title{font-size:var(--text-2xl)}
     /* Browse head: title gets its OWN line (count stretches to fill it, so the
        filters can't squeeze beside it and wrap to their own row), search last
