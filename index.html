@@ -882,7 +882,9 @@
   /* Phase 2.1 switch link (status line = the one place variant language lives).
      has-alt reserves the link's line for BOTH states of a design that has a
      ready piece, so flipping in-stock ↔ MTO via swatches never jumps the cart. */
-  .match-status.has-alt{min-height:4.6em}
+  /* exactly 3 lines (3 × 1.45em line-height) + the column's two 2px gaps —
+     em-only reserve was 1px off the real content, causing a 1px flip-jump. */
+  .match-status.has-alt{min-height:calc(4.35em + 4px)}
   .ms-switch{
     /* No margins: the full status line is a column with its own gap; in the
        compact mini-summary the link sits INLINE after the MTO text — a top
@@ -2127,12 +2129,15 @@
     return {r, w, label:`${r.watch} · ${w.sizes[r.size]}mm · ${(w.dialNames||[])[r.dial] || ''}`};
   }
   function renderMatchStatus(m){
-    // Two lines: status / shipping, plus a third "ready alternatives" line that
-    // MIRRORS the lightbox capability (Mila: equal functionality in both places):
+    // Two lines: status / shipping, plus a third "ready alternatives" row in MTO
+    // ONLY (review verdict 2026-06-11): a status-row link must SERVE the purchase
+    // in progress — in MTO it's a faster path to the same buy; in in-stock it
+    // would restart deliberation sideways next to ATC (and silently change the
+    // price). In-stock third row = EMPTY, space stays reserved (has-alt) — no
+    // jump. "Which models?" remains the eye's job (equal capability ≠ equal
+    // placement).
     // - MTO, one ready model  → detailed "Ready now: {model · size · dial} — switch →"
     // - MTO, several models   → "Ready now on: {model} → · {model} →" (like the eye)
-    // - IN-STOCK with OTHER ready models → "Also ready on: {model} →"
-    // .has-alt reserves that line for every state of such a design — no jumps.
     const mono = st.mono ? ' · + ~3 days for monogram' : '';
     const alt = readyAlt();
     const models = (typeof isCustomConcept !== 'undefined' && isCustomConcept) ? []
@@ -2140,11 +2145,7 @@
     const linkTo = name => `<button type="button" class="ms-switch" data-ready-switch data-watch="${name}">${name} →</button>`;
     let altLine = '', miniAlt = '';
     if(m.state === 'in_stock'){
-      const others = models.filter(x => x !== selWatch.name);
-      if(others.length){
-        altLine = `<span class="ms-l3">Also ready on: ${others.map(linkTo).join(' · ')}</span>`;
-        miniAlt = ` · ${linkTo(others[0])}`;
-      }
+      // no alt-hop next to the cart — the panel's job is to close the sale
     } else if(models.length > 1){
       altLine = `<span class="ms-l3">Ready now on: ${models.map(linkTo).join(' · ')}</span>`;
       miniAlt = ' · <button type="button" class="ms-switch" data-ready-switch>switch to ready →</button>';
