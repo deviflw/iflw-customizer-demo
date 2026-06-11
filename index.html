@@ -869,6 +869,16 @@
   .ms-l1{display:flex;align-items:center;gap:var(--space-6);font-weight:600}
   .ms-l2{color:var(--muted)}
   .ms-dot{width:8px;height:8px;border-radius:50%;background:#2e9e6b;flex:none;margin-right:2px}
+  /* Phase 2.1 switch link (status line = the one place variant language lives).
+     has-alt reserves the link's line for BOTH states of a design that has a
+     ready piece, so flipping in-stock ↔ MTO via swatches never jumps the cart. */
+  .match-status.has-alt{min-height:4.6em}
+  .ms-switch{
+    border:0;background:none;padding:0;margin-top:2px;
+    font-family:inherit;font-size:var(--text-sm);font-weight:600;
+    color:var(--acc);cursor:pointer;text-align:left;
+  }
+  .ms-switch:hover{text-decoration:underline}
   .pi-match{
     display:flex;align-items:center;gap:var(--space-6);
     min-height:18px;margin-top:2px;
@@ -1936,17 +1946,15 @@
       // Incompatible with the current watch (demo compatible_collection): fade,
       // don't hide. Ready-now nudge (NOTE §5b) only on compatible cards.
       const incompat = !!(d.fits && curWatch && !d.fits.includes(curWatch.name));
-      // Nudge carries model + the exact size(s) the finished piece exists in —
-      // matching is per VARIANT, so a model-only nudge would overpromise when
-      // the piece is ready in 37mm but the customer wants 42mm. The status line
-      // above ATC stays the per-variant source of truth after selection.
+      // Nudge = a FACT, model-level only (spec "Phase 2 — card markers"): a card
+      // may state a fact, only the status line makes a PROMISE. Never name
+      // sizes/dials here — that's variant language, reserved for the status
+      // line. Several models → a count. (Production: filter ready_made by
+      // inventory > 0 — the demo models neither inventory nor multi-model.)
       let readyOn = null;
       if(!incompat && d.ready && d.ready.length){
-        const r0 = d.ready[0];
-        const w = watches.find(x => x.name === r0.watch);
-        const sizes = [...new Set(d.ready.filter(r => r.watch === r0.watch)
-          .map(r => w ? w.sizes[r.size] : null).filter(Boolean))];
-        readyOn = r0.watch + (sizes.length ? ` · ${sizes.join('/')}mm` : '');
+        const models = [...new Set(d.ready.map(r => r.watch))];
+        readyOn = models.length === 1 ? models[0] : `${models.length} models`;
       }
       return `
       <div class="pcard design ${d.sel?'sel':''} ${incompat?'incompat':''}" data-design="${d.name}">
@@ -2085,19 +2093,54 @@
     el.style.opacity = 0;
     setTimeout(() => { el.innerHTML = html; el.style.opacity = 1; }, 150);
   }
+  // Phase 2.1: the donor piece for the chosen design (spec: matcher would pick
+  // the most-stocked one; demo takes the first). Variant-exact language is
+  // ALLOWED here — the status line is where promises live.
+  function readyAlt(){
+    if(typeof isCustomConcept !== 'undefined' && isCustomConcept) return null;
+    const r = (selDesign.ready || [])[0];
+    if(!r) return null;
+    const w = watches.find(x => x.name === r.watch);
+    if(!w) return null;
+    return {r, w, label:`${r.watch} · ${w.sizes[r.size]}mm · ${(w.dialNames||[])[r.dial] || ''}`};
+  }
   function renderMatchStatus(m){
-    // Always TWO lines: status / shipping. Constant height in both states (no
-    // reserved emptiness, no jump); monogram suffix lives on the shipping line.
+    // Two lines: status / shipping (constant height between states for the same
+    // design). MTO with a ready piece elsewhere adds ONE contextual switch link
+    // (Phase 2.1) — .has-alt reserves that third line for BOTH states of such a
+    // design, so dial/size clicks never shift the cart block.
     const mono = st.mono ? ' · + ~3 days for monogram' : '';
-    setMatchEl(document.getElementById('matchStatus'), m.state === 'in_stock'
+    const alt = readyAlt();
+    const altLink = (m.state !== 'in_stock' && alt)
+      ? `<button type="button" class="ms-switch" data-ready-switch>Ready now: ${alt.label} — switch →</button>` : '';
+    const full = document.getElementById('matchStatus');
+    full.classList.toggle('has-alt', !!alt);
+    setMatchEl(full, m.state === 'in_stock'
       ? '<span class="ms-l1"><span class="ms-dot"></span>Available now — this exact piece is ready</span>'
         + '<span class="ms-l2">Ships in 2–3 days' + mono + '</span>'
       : '<span class="ms-l1">⏱ Hand-painted to order for you</span>'
-        + '<span class="ms-l2">Ships in ~4 weeks' + mono + '</span>');
+        + '<span class="ms-l2">Ships in ~4 weeks' + mono + '</span>' + altLink);
     setMatchEl(document.getElementById('piMatch'), m.state === 'in_stock'
       ? '<span class="ms-dot"></span>Ready now'
-      : '⏱ Made to order');
+      : '⏱ Made to order' + (altLink ? ' · <button type="button" class="ms-switch" data-ready-switch>switch to ready →</button>' : ''));
   }
+  // Adopt the donor variant of the chosen design's ready piece: that exact
+  // watch + dial + case + size → the match flips to in-stock. One click, no
+  // mode change — feedback lands in the status line + summary immediately.
+  function selectReadyVariant(){
+    const alt = readyAlt();
+    if(!alt) return;
+    watches.forEach(x => x.sel = x.name === alt.w.name);
+    renderWatches();
+    updateSelectedWatch(alt.w);        // resets indices, re-renders designs, recalcs
+    selDialIdx = alt.r.dial; selCaseIdx = alt.r.caseIdx; selSizeIdx = alt.r.size;
+    syncHotbarSelection();
+    refreshCfgPickMeta();
+    recalc();                          // now matches → "Available now"
+  }
+  document.addEventListener('click', e => {
+    if(e.target.closest('[data-ready-switch]')){ e.stopPropagation(); selectReadyVariant(); }
+  });
 
   function recalc(){
     refreshCCAddons();
