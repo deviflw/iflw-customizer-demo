@@ -1185,26 +1185,58 @@
   [data-mode="browse-custom"] .browse-inner{flex:1}
   [data-mode="browse-custom"] .browse-content-custom{flex:1}
   .cu-body{display:flex;flex-direction:column;gap:var(--space-16);flex:1;padding-bottom:14px}
-  .cu-intro{max-width:600px}
-  .cu-title{font-size:var(--text-3xl);letter-spacing:var(--track-tight);margin:0 0 var(--space-8);font-weight:600;line-height:1.15;color:var(--ink)}
-  .cu-lead{font-size:var(--text-md);line-height:1.55;color:var(--muted);margin:0}
 
-  /* 4 process cards — uniform, elongated (portrait), stretch to fill.
-     Informational only — no hover/cursor (not selectable). */
-  .cu-cards{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:var(--space-14);flex:1;min-height:240px}
+  /* HERO BANNER (custom v4 proposal, Mila-approved 2026-06-11) — title + lead
+     live ON the image: the page's MVP problem was zero imagery on an
+     all-visual product. The painterly gradient + dial-circle motif is a
+     PLACEHOLDER — Mila is producing the real banner (artist's hand painting
+     a dial, macro; one frame, two crops — see docs/BANNER-BRIEF-CUSTOM-TAB.md).
+     The hero (not the process cards) now absorbs the tall-screen height. */
+  .cu-hero{
+    position:relative;flex:1;min-height:320px;
+    display:flex;flex-direction:column;justify-content:flex-end;
+    padding:var(--space-28) var(--space-30) var(--space-26);overflow:hidden;
+    background:
+      radial-gradient(ellipse 90% 130% at 85% -20%, rgba(64,190,193,.5), transparent 55%),
+      radial-gradient(ellipse 60% 90% at 70% 110%, rgba(122,18,32,.45), transparent 60%),
+      radial-gradient(ellipse 50% 70% at 15% 90%, rgba(30,74,109,.6), transparent 65%),
+      linear-gradient(160deg,#081820 30%,#16313e 70%,#1e4a6d);
+  }
+  .cu-hero::before{
+    content:"";position:absolute;right:-70px;top:-90px;width:380px;height:380px;
+    border:1px solid rgba(255,255,255,.18);border-radius:50%;
+  }
+  .cu-hero::after{
+    content:"";position:absolute;right:-20px;top:-40px;width:280px;height:280px;
+    border:1px solid rgba(255,255,255,.10);border-radius:50%;
+  }
+  .cu-hero-tag{
+    position:absolute;top:14px;left:14px;
+    background:rgba(255,255,255,.14);border:1px dashed rgba(255,255,255,.4);border-radius:4px;
+    color:rgba(255,255,255,.75);font-size:var(--text-2xs);letter-spacing:var(--track-eyebrow);
+    text-transform:uppercase;font-weight:600;padding:4px 9px;
+  }
+  .cu-hero-eyebrow{font-size:var(--text-xs);letter-spacing:var(--track-caps);text-transform:uppercase;
+                   font-weight:700;color:var(--acc);margin:0 0 10px}
+  .cu-title{font-size:var(--text-3xl);letter-spacing:var(--track-tight);margin:0 0 var(--space-8);font-weight:600;line-height:1.2;color:#fff;max-width:560px}
+  .cu-lead{font-size:var(--text-md);line-height:1.6;color:rgba(255,255,255,.82);margin:0;max-width:560px}
+
+  /* Process — horizontal 4-step band (v4 ②): same info, half the vertical
+     emptiness; the hero owns the height now. Hairline separators via grid
+     gap over the line color. Informational only — no hover/cursor. */
+  .cu-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
   .cu-card{
-    background:var(--bg);border:1px solid var(--line);
-    padding:var(--space-26) var(--space-22);display:flex;flex-direction:column;
-    justify-content:center;
+    background:var(--bg);
+    padding:var(--space-16) var(--space-18);display:flex;flex-direction:column;
   }
   .cu-num{
-    width:32px;height:32px;border-radius:50%;
+    width:26px;height:26px;border-radius:50%;
     background:var(--acc-soft);color:var(--acc);
     display:flex;align-items:center;justify-content:center;
-    font-size:var(--text-md);font-weight:700;margin-bottom:20px;
+    font-size:var(--text-sm);font-weight:700;margin-bottom:10px;
   }
-  .cu-card h4{margin:0 0 var(--space-8);font-size:var(--text-lg);font-weight:600;letter-spacing:var(--track-tight);color:var(--ink)}
-  .cu-card p{margin:0;font-size:var(--text-md);line-height:1.55;color:var(--muted)}
+  .cu-card h4{margin:0 0 var(--space-6);font-size:var(--text-md);font-weight:600;letter-spacing:var(--track-tight);color:var(--ink)}
+  .cu-card p{margin:0;font-size:var(--text-sm);line-height:1.5;color:var(--muted)}
 
   /* TWO separate banners at the bottom, stacked. cu-bottom anchors the pair
      to the bottom so the cards above keep their full height. */
@@ -1236,6 +1268,9 @@
   .cu-banner-eyebrow{font-size:var(--text-xs);letter-spacing:var(--track-caps);color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:8px}
   .cu-banner-price{font-size:var(--text-lg);color:var(--muted)}
   .cu-banner-price strong{font-size:var(--text-3xl);color:var(--ink);font-weight:700;letter-spacing:var(--track-tight)}
+  /* Risk-reversal made EXPLICIT next to the price (v4 ③) */
+  .cu-guarantee{display:flex;align-items:center;gap:var(--space-8);font-size:var(--text-sm);color:var(--ink);margin-top:8px}
+  .cu-guarantee::before{content:"✓";color:var(--acc);font-weight:700}
 
   /* CTA — its own full-width row below both columns */
   .cu-cta{
@@ -1244,6 +1279,9 @@
     transition:.15s var(--ease);
   }
   .cu-cta:hover{background:#3aa8aa}
+  /* Lead time stated ONCE, under the CTA (v4 ④ — single voice; the source
+     of truth in production = admin settings) */
+  .cu-cta-sub{text-align:center;color:var(--muted);font-size:var(--text-xs);margin:8px 0 0}
   @media (max-width:900px){
     .cu-cards{grid-template-columns:1fr 1fr}
   }
@@ -1403,6 +1441,10 @@
     /* Custom: the four process cards go 2×2, not a long single column. */
     .cu-cards{grid-template-columns:1fr 1fr}
     .cu-card{padding:var(--space-16) var(--space-14)}
+    /* Custom hero (v4): tall-crop territory on a phone — tighter padding,
+       smaller title; the production asset's mobile crop is ~4:5. */
+    .cu-hero{min-height:300px;padding:var(--space-18) var(--space-16)}
+    .cu-hero .cu-title{font-size:var(--text-2xl)}
     /* Browse head: title gets its OWN line (count stretches to fill it, so the
        filters can't squeeze beside it and wrap to their own row), search last
        at full width. Controls sized down — desktop sizes read huge on a phone. */
@@ -1562,30 +1604,34 @@
             </div>
           </div>
           <div class="browse-grid cu-body">
-            <div class="cu-intro">
+            <div class="cu-hero">
+              <span class="cu-hero-tag">Placeholder · production photo: artist's hand painting a dial</span>
+              <p class="cu-hero-eyebrow">Hand-Painted Commission</p>
               <h2 class="cu-title">Have your own vision?</h2>
-              <p class="cu-lead">A one-of-a-kind concept from IFL, created for the watch model of your choice — drawn entirely from your idea.</p>
+              <p class="cu-lead">A one-of-a-kind concept, drawn entirely from your idea and hand-painted
+                 on the watch model of your choice. Your dog, your city, the night you proposed —
+                 if you can describe it, our artists can paint it.</p>
             </div>
             <div class="cu-cards">
               <div class="cu-card">
                 <span class="cu-num">1</span>
                 <h4>Vision</h4>
-                <p>After checkout, our art director reaches out. Write your idea and send your reference images.</p>
+                <p>After checkout, our art director reaches out. Tell your idea in your own words, attach any references.</p>
               </div>
               <div class="cu-card">
                 <span class="cu-num">2</span>
                 <h4>Sketch</h4>
-                <p>We create an original concept based on your idea. First preview in 5–10 days.</p>
+                <p>We draw an original concept from your idea. First preview within days, not weeks.</p>
               </div>
               <div class="cu-card">
                 <span class="cu-num">3</span>
-                <h4>Revision</h4>
-                <p>Two free revisions. We refine until the design feels right.</p>
+                <h4>Approval</h4>
+                <p>Two free revisions. Nothing is painted until the sketch feels exactly right to you.</p>
               </div>
               <div class="cu-card">
                 <span class="cu-num">4</span>
                 <h4>Production</h4>
-                <p>Hand-painted on your chosen watch. Ships in 4–6 weeks.</p>
+                <p>Hand-painted on your chosen watch in our atelier, then shipped insured to your door.</p>
               </div>
             </div>
 
@@ -1594,6 +1640,7 @@
                 <div class="cu-banner-text">
                   <div class="cu-banner-eyebrow">Custom Concept · Commission</div>
                   <div class="cu-banner-price"><strong>$1,490</strong> <span>+ base watch</span></div>
+                  <div class="cu-guarantee">Nothing is painted until you approve the sketch</div>
                 </div>
               </div>
               <div class="cu-extras-banner">
@@ -1618,7 +1665,8 @@
                 </div>
               </div>
             </div>
-            <button class="cu-cta" id="cuOrder">Choose Custom Concept →</button>
+            <button class="cu-cta" id="cuOrder">Start your commission →</button>
+            <p class="cu-cta-sub">Hand-painted to order · ships in ~4 weeks</p>
           </div>
         </div>
 
@@ -1834,8 +1882,7 @@
             <details class="acc-item">
               <summary>Production</summary>
               <div class="acc-content">
-                <strong>3–4 weeks</strong> for ready-made designs.<br>
-                <strong>3–6 weeks</strong> for Custom Concepts, depending on design complexity.<br>
+                <strong>~4 weeks</strong>, hand-painted to order — gallery designs and Custom Concepts alike.<br>
                 Add ~3 days if a Hand-Painted Monogram is included.
               </div>
             </details>
