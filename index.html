@@ -473,6 +473,38 @@
   }
   .pcard .sel-badge::before{content:"✓";font-size:var(--text-sm);line-height:1}
 
+  /* ── Matching Phase 2 (docs/MATCHING-UX-DECISION.md) ──
+     ready-pill: on a WATCH card when the chosen design has a finished piece on
+     that model. fit-pill + .incompat: a design that doesn't suit the current
+     watch is FADED (white veil), never hidden — still viewable; the lightbox
+     routes it to Custom Concept. Pills share the thumb's bottom-left slot
+     (mutually exclusive) and sit ABOVE the veil. */
+  .pcard .ready-pill,.pcard .fit-pill{
+    position:absolute;left:10px;bottom:10px;z-index:2;
+    display:flex;align-items:center;gap:var(--space-5);
+    background:#fff;border:1px solid var(--line);border-radius:20px;
+    padding:var(--space-4) var(--space-10);
+    font-size:var(--text-2xs);letter-spacing:var(--track-eyebrow);
+    font-weight:700;text-transform:uppercase;color:var(--ink);
+  }
+  .pcard .ready-pill::before{content:"";width:7px;height:7px;border-radius:50%;background:#2e9e6b;flex:none}
+  .pcard .fit-pill{color:var(--muted)}
+  .pcard.incompat::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.62);pointer-events:none;z-index:1;transition:background .18s var(--ease)}
+  .pcard.incompat:hover::after{background:rgba(255,255,255,.42)}
+  /* Design-card nudge: gentle inline "Ready now on {model}" line (NOTE §5b). */
+  .pcard .ready-note{
+    display:flex;align-items:center;gap:var(--space-5);margin-top:6px;
+    font-size:var(--text-xs);font-weight:600;color:#2e9e6b;
+  }
+  .pcard .ready-note::before{content:"";width:7px;height:7px;border-radius:50%;background:#2e9e6b;flex:none}
+  /* Lightbox notice for an incompatible design → Custom Concept bridge. */
+  .lb-fit-note{
+    margin:0 0 var(--space-12);padding:var(--space-10) var(--space-14);
+    background:var(--acc-soft);border-left:3px solid var(--acc);
+    font-size:var(--text-sm);line-height:1.5;color:var(--ink);
+  }
+  .lb-fit-note[hidden]{display:none}
+
   /* Lightbox modal */
   .lightbox{
     position:fixed;inset:0;background:rgba(8,24,32,.78);
@@ -1679,6 +1711,7 @@
       <h2 class="lb-title" id="lbTitle">SNK807</h2>
       <div class="lb-sub" id="lbSub">Automatic · 37mm · Field watch</div>
       <div class="lb-chips" id="lbChips"></div>
+      <div class="lb-fit-note" id="lbFitNote" hidden></div>
       <div class="lb-specs" id="lbSpecs"></div>
       <div class="lb-price-row">
         <div class="lb-price"><small>Base price</small><span id="lbPrice">$320</span></div>
@@ -1826,15 +1859,21 @@
      description:'Sumi-e ink dropped onto still water — bloom, settle, dissipate. A study in negative space and the discipline of restraint.'},
     {name:'Solstice',        theme:'Space',  style:'Abstract',     price:1200, grad:'linear-gradient(180deg,#1a0a2e,#7a3a5a 50%,#f4d4a8)',
      description:'The sky at the longest day of the year — deep violet at the zenith, flame-orange at the horizon. A moment of stillness before the year turns.'},
-    {name:'Velvet Opera',    theme:'Urban',  style:'Fine Art',     price:1200, grad:'linear-gradient(135deg,#2e0a1a,#7a1a3a)',
+    /* `fits` = demo stand-in for compatible_collection (dial-shape constraint):
+       the design only suits these models. Absent = fits every watch. Incompatible
+       cards are FADED, not hidden — still viewable, routed to Custom Concept. */
+    {name:'Velvet Opera',    theme:'Urban',  style:'Fine Art',     price:1200, fits:['PRX','Bambino'], grad:'linear-gradient(135deg,#2e0a1a,#7a1a3a)',
      description:'Crimson curtains, gilded boxes, the held breath before the overture. A tribute to old-world theatre, painted in oil-rich burgundies.'},
-    {name:'Desert Line',     theme:'Nature', style:'Abstract',     price:1200, grad:'linear-gradient(180deg,#f4d4a8,#c89a6a 60%,#5a3a2a)',
+    {name:'Desert Line',     theme:'Nature', style:'Abstract',     price:1200, fits:['Khaki Field','NY0040 Diver'], grad:'linear-gradient(180deg,#f4d4a8,#c89a6a 60%,#5a3a2a)',
      description:'Wind-carved dunes at dusk, abstracted to their essential gradient — pale sand, warm rust, deep umber. For the long-haul traveler.'},
     {name:'Mossland',        theme:'Nature', style:'Illustration', price:1200, grad:'linear-gradient(135deg,#1a3a2a,#5a7a4a)',
      description:'Forest floor in deep summer — moss, fern, fallen leaves. The damp green hush of an old wood, illustrated in muted botanical detail.'},
   ];
 
   // ────── RENDER GRIDS ──────
+  // Read late-initialized (`let`, TDZ at first paint) selection state safely.
+  function safeSel(fn){ try { return fn(); } catch(e){ return null; } }
+
   function renderWatches(){
     const grid = document.getElementById('watchGrid');
     // Bottom banner — same visual pattern as the Designs "Don't see your idea?"
@@ -1849,6 +1888,13 @@
         <button class="pill" data-bespoke="open">GET IN TOUCH →</button>
       </div>
     `;
+    // "Ready now" marker: the CHOSEN design has a finished piece on this model
+    // (derived from the same ready[] read as the match — Phase 2). Not shown
+    // while Custom Concept is the active build (no design record → no matching).
+    // safeSel: selection state is `let`-declared LATER in this script — the very
+    // first paint runs inside its TDZ where even typeof throws. Markers are
+    // re-painted right after init, so first-paint null is fine.
+    const dsgn = safeSel(() => isCustomConcept ? null : selDesign);
     grid.innerHTML = watches.map(w => `
       <div class="pcard ${w.sel?'sel':''}" data-watch="${w.name}">
         ${w.sel?'<span class="sel-badge">Selected</span>':''}
@@ -1857,6 +1903,7 @@
         </button>
         <div class="thumb">
           <span class="thumb-label">WATCH IMAGE</span>
+          ${dsgn && (dsgn.ready||[]).some(r => r.watch === w.name) ? '<span class="ready-pill">Ready now</span>' : ''}
         </div>
         <div class="info">
           <div class="brand">${w.brand}</div>
@@ -1886,13 +1933,21 @@
         <button class="pill" data-mode="browse-custom">START CUSTOM →</button>
       </div>
     `;
-    grid.innerHTML = designs.map(d => `
-      <div class="pcard design ${d.sel?'sel':''}" data-design="${d.name}">
+    const curWatch = safeSel(() => selWatch);
+    grid.innerHTML = designs.map(d => {
+      // Incompatible with the current watch (demo compatible_collection): fade,
+      // don't hide. Ready-now nudge (NOTE §5b) only on compatible cards.
+      const incompat = !!(d.fits && curWatch && !d.fits.includes(curWatch.name));
+      const readyOn = !incompat && d.ready && d.ready.length ? d.ready[0].watch : null;
+      return `
+      <div class="pcard design ${d.sel?'sel':''} ${incompat?'incompat':''}" data-design="${d.name}">
         ${d.sel?'<span class="sel-badge">Selected</span>':''}
         <button class="quickview" title="Quick view" data-qv-design="${d.name}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
-        <div class="thumb" style="background:${d.grad}"></div>
+        <div class="thumb" style="background:${d.grad}">
+          ${incompat?'<span class="fit-pill">Fits other models</span>':''}
+        </div>
         <div class="info">
           <div class="brand">${d.theme} · ${d.style}</div>
           <h4 class="name">${d.name}</h4>
@@ -1900,9 +1955,10 @@
             <span class="meta">Bespoke Edition</span>
             <span class="price-tag">$${d.price.toLocaleString()}</span>
           </div>
+          ${readyOn?`<div class="ready-note">Ready now on ${readyOn}</div>`:''}
         </div>
       </div>
-    `).join('') + customCard;
+    `;}).join('') + customCard;
   }
 
   renderWatches();
@@ -1942,6 +1998,7 @@
       isCustomConcept = true;
       setMode('configure');
       if(typeof updateBuildHeader === 'function') updateBuildHeader();
+      if(typeof renderWatches === 'function') renderWatches();   // CC build → no ready markers
       if(typeof recalc === 'function') recalc();
     });
   }
@@ -2327,6 +2384,7 @@
     refreshCfgPickMeta();
 
     updateBuildHeader();
+    renderDesigns();   // compatibility fade depends on the current watch
     recalc();   // recompute totals + refresh the band slot for this watch
   }
 
@@ -2351,6 +2409,7 @@
     selDesign = d;
     isCustomConcept = false;   // picking a ready design exits Custom Concept
     updateBuildHeader();
+    renderWatches();   // "Ready now" markers in the watch picker follow the design
     if(typeof recalc === 'function') recalc(); else updateSummary();
   }
 
@@ -2365,6 +2424,7 @@
 
   // initialize preview-info with selected watch + design
   updateSelectedWatch(selWatch);
+  renderWatches();   // first render ran before selDesign existed — paint ready markers
 
   // ══════════════════════════════════════════════════════════════════════
   //  COMPARE — dock + side-by-side view, persisted to localStorage so
@@ -2669,6 +2729,8 @@
   const lb = document.getElementById('lightbox');
   function openWatchLightbox(w){
     document.getElementById('lbSelect').textContent = 'SELECT THIS WATCH →';
+    document.getElementById('lbFitNote').hidden = true;   // design-only notice
+    lb.dataset.ccRoute = '';
     document.getElementById('lbImage').style.background = '';
     document.getElementById('lbBrand').textContent = w.brand.toUpperCase();
     document.getElementById('lbTitle').textContent = w.name;
@@ -2701,8 +2763,18 @@
     lb.classList.add('open');
     document.body.style.overflow = 'hidden';
   }
-  function openDesignLightbox(d){
-    document.getElementById('lbSelect').textContent = 'SELECT THIS DESIGN →';
+  function openDesignLightbox(d, incompat){
+    // Incompatible design × current watch: explain, keep it desirable, and
+    // bridge to Custom Concept (spec NOTE §3) instead of a dead "Select".
+    const note = document.getElementById('lbFitNote');
+    note.hidden = !incompat;
+    if(incompat){
+      note.innerHTML = `Not a standard fit for <strong>${selWatch.brand} ${selWatch.name}</strong>. `
+        + `Available on: <strong>${(d.fits||[]).join(', ')}</strong> — or have it adapted `
+        + `to any watch as a <strong>Custom Concept</strong>.`;
+    }
+    lb.dataset.ccRoute = incompat ? '1' : '';
+    document.getElementById('lbSelect').textContent = incompat ? 'ORDER AS CUSTOM CONCEPT →' : 'SELECT THIS DESIGN →';
     document.getElementById('lbBrand').textContent = 'BESPOKE EDITION';
     document.getElementById('lbTitle').textContent = d.name;
     document.getElementById('lbSub').innerHTML = `Hand-Painted`;
@@ -2725,7 +2797,11 @@
   document.getElementById('lbClose').addEventListener('click', closeLightbox);
   lb.addEventListener('click', e => { if(e.target === lb) closeLightbox(); });
   document.addEventListener('keydown', e => { if(e.key === 'Escape' && lb.classList.contains('open')) closeLightbox(); });
-  document.getElementById('lbSelect').addEventListener('click', closeLightbox);
+  document.getElementById('lbSelect').addEventListener('click', () => {
+    const toCC = lb.dataset.ccRoute === '1';
+    closeLightbox();
+    if(toCC) setMode('browse-custom');   // incompatible design → Custom Concept path
+  });
 
   // ────── BESPOKE REQUEST MODAL ──────
   const bespokeModal = document.getElementById('bespokeModal');
@@ -2756,7 +2832,7 @@
     const qvW = e.target.closest('[data-qv-watch]');
     if(qvW){ e.stopPropagation(); const w = watches.find(x => x.name === qvW.dataset.qvWatch); if(w) openWatchLightbox(w); return; }
     const qvD = e.target.closest('[data-qv-design]');
-    if(qvD){ e.stopPropagation(); const d = designs.find(x => x.name === qvD.dataset.qvDesign); if(d) openDesignLightbox(d); return; }
+    if(qvD){ e.stopPropagation(); const d = designs.find(x => x.name === qvD.dataset.qvDesign); if(d) openDesignLightbox(d, !!(d.fits && !d.fits.includes(selWatch.name))); return; }
   });
 
   document.addEventListener('click', e => {
@@ -2770,10 +2846,14 @@
       const w = watches.find(x => x.name === watchName);
       if(w) updateSelectedWatch(w);
     } else if(designName){
+      const d = designs.find(x => x.name === designName);
+      if(!d) return;
+      // Incompatible with the current watch: don't select into the build —
+      // open the lightbox with the fit notice + Custom Concept bridge instead.
+      if(d.fits && !d.fits.includes(selWatch.name)){ openDesignLightbox(d, true); return; }
       designs.forEach(x => x.sel = x.name === designName);
       renderDesigns();
-      const d = designs.find(x => x.name === designName);
-      if(d) updateSelectedDesign(d);
+      updateSelectedDesign(d);
     }
   });
 </script>
