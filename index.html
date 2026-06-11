@@ -882,9 +882,12 @@
   /* Phase 2.1 switch link (status line = the one place variant language lives).
      has-alt reserves the link's line for BOTH states of a design that has a
      ready piece, so flipping in-stock ↔ MTO via swatches never jumps the cart. */
-  /* exactly 3 lines (3 × 1.45em line-height) + the column's two 2px gaps —
-     em-only reserve was 1px off the real content, causing a 1px flip-jump. */
+  /* exact row reserves (1.45em line-height + 2px column gaps) — em-only reserve
+     was 1px off the real content, causing a 1px flip-jump. has-alt = one ready
+     model (3 rows); has-alt-2 = several (4 rows: the priced multi link wraps on
+     narrow panels — reserve covers it so swatch flips never move the cart). */
   .match-status.has-alt{min-height:calc(4.35em + 4px)}
+  .match-status.has-alt-2{min-height:calc(5.8em + 6px)}
   .ms-switch{
     /* No margins: the full status line is a column with its own gap; in the
        compact mini-summary the link sits INLINE after the MTO text — a top
@@ -2117,44 +2120,42 @@
     el.style.opacity = 0;
     setTimeout(() => { el.innerHTML = html; el.style.opacity = 1; }, 150);
   }
-  // Phase 2.1: the donor piece for the chosen design (spec: matcher would pick
-  // the most-stocked one; demo takes the first). Variant-exact language is
-  // ALLOWED here — the status line is where promises live.
-  function readyAlt(){
-    if(typeof isCustomConcept !== 'undefined' && isCustomConcept) return null;
-    const r = (selDesign.ready || [])[0];
-    if(!r) return null;
-    const w = watches.find(x => x.name === r.watch);
-    if(!w) return null;
-    return {r, w, label:`${r.watch} · ${w.sizes[r.size]}mm · ${(w.dialNames||[])[r.dial] || ''}`};
-  }
   function renderMatchStatus(m){
-    // Two lines: status / shipping, plus a third "ready alternatives" row in MTO
-    // ONLY (review verdict 2026-06-11): a status-row link must SERVE the purchase
-    // in progress — in MTO it's a faster path to the same buy; in in-stock it
-    // would restart deliberation sideways next to ATC (and silently change the
-    // price). In-stock third row = EMPTY, space stays reserved (has-alt) — no
-    // jump. "Which models?" remains the eye's job (equal capability ≠ equal
-    // placement).
-    // - MTO, one ready model  → detailed "Ready now: {model · size · dial} — switch →"
-    // - MTO, several models   → "Ready now on: {model} → · {model} →" (like the eye)
+    // Two lines: status / shipping, plus the "ready alternatives" row in ALL
+    // states (REVIEW VERDICTS v2): every hop NAMES its destination and its
+    // price — signposts aren't removed, they're labeled. Nothing changes
+    // silently: model + price sit on the link itself, before the tap. Copy
+    // rule: words and spaces separate, the only glyph is the arrow (no colons,
+    // no middots inside links; "or" between alternatives). A nameless
+    // "switch to ready" does not exist in any state.
     const mono = st.mono ? ' · + ~3 days for monogram' : '';
-    const alt = readyAlt();
     const models = (typeof isCustomConcept !== 'undefined' && isCustomConcept) ? []
                  : [...new Set((selDesign.ready || []).map(r => r.watch))];
-    const linkTo = name => `<button type="button" class="ms-switch" data-ready-switch data-watch="${name}">${name} →</button>`;
+    const entryFor = name => (selDesign.ready || []).find(r => r.watch === name);
+    const priceOf = name => { const e = entryFor(name); return e ? '$' + e.price.toLocaleString() : ''; };
+    const linkTo = name => `<button type="button" class="ms-switch" data-ready-switch data-watch="${name}">${name} ${priceOf(name)} →</button>`;
     let altLine = '', miniAlt = '';
     if(m.state === 'in_stock'){
-      // no alt-hop next to the cart — the panel's job is to close the sale
+      const others = models.filter(x => x !== selWatch.name);
+      if(others.length){
+        altLine = `<span class="ms-l3">Also ready on ${others.map(linkTo).join(' or ')}</span>`;
+        miniAlt = `<button type="button" class="ms-switch" data-ready-switch data-watch="${others[0]}">also ${others[0]} ${priceOf(others[0])} →</button>`;
+      }
     } else if(models.length > 1){
-      altLine = `<span class="ms-l3">Ready now on: ${models.map(linkTo).join(' · ')}</span>`;
-      miniAlt = ' · <button type="button" class="ms-switch" data-ready-switch>switch to ready →</button>';
-    } else if(alt){
-      altLine = `<button type="button" class="ms-switch" data-ready-switch>Ready now: ${alt.label} — switch →</button>`;
-      miniAlt = ' · <button type="button" class="ms-switch" data-ready-switch>switch to ready →</button>';
+      altLine = `<span class="ms-l3">Ready now on ${models.map(linkTo).join(' or ')}</span>`;
+      miniAlt = `<button type="button" class="ms-switch" data-ready-switch data-watch="${models[0]}">Ready on ${models[0]} ${priceOf(models[0])} →</button>`;
+    } else if(models.length === 1){
+      const r = entryFor(models[0]);
+      const w = watches.find(x => x.name === r.watch);
+      // One ready piece → the whole line is the link; the arrow says it acts.
+      altLine = `<button type="button" class="ms-switch" data-ready-switch data-watch="${r.watch}">Ready now on ${r.watch} in ${w.sizes[r.size]}mm ${(w.dialNames||[])[r.dial] || ''} — $${r.price.toLocaleString()} →</button>`;
+      miniAlt = `<button type="button" class="ms-switch" data-ready-switch data-watch="${r.watch}">Ready on ${r.watch} $${r.price.toLocaleString()} →</button>`;
     }
     const full = document.getElementById('matchStatus');
-    full.classList.toggle('has-alt', models.length > 0);
+    // Reserve by ready-model count: 1 model → 3 rows; 2+ → 4 rows (the priced
+    // multi link wraps on narrow panels). Constant per design → no state jumps.
+    full.classList.toggle('has-alt', models.length === 1);
+    full.classList.toggle('has-alt-2', models.length > 1);
     setMatchEl(full, (m.state === 'in_stock'
       ? '<span class="ms-l1"><span class="ms-dot"></span>Available now — this exact piece is ready</span>'
         + '<span class="ms-l2">Ships in 2–3 days' + mono + '</span>'
@@ -2877,13 +2878,14 @@
         + `Available on: <strong>${(d.fits||[]).join(', ')}</strong> — or have it adapted `
         + `to any watch as a <strong>Custom Concept</strong>.`;
     } else if(readyModels.length){
-      // The detail view is where "on 2 models" gets answered: list the models,
-      // each a one-tap adopt of that ready piece (models = fact language; the
-      // exact size/dial surfaces in the status line after adoption).
-      note.innerHTML = '<span class="ms-dot"></span>Ready now on: '
-        + readyModels.map(m =>
-            `<button type="button" class="ms-switch" data-ready-switch data-design="${d.name}" data-watch="${m}">${m} →</button>`
-          ).join(' · ');
+      // The detail view is where "on 2 models" gets answered: each model is a
+      // one-tap adopt. Every hop names its destination AND price (verdicts v2);
+      // copy rule: words + spaces, the arrow is the only glyph.
+      note.innerHTML = '<span class="ms-dot"></span>Ready now on '
+        + readyModels.map(m => {
+            const e = d.ready.find(r => r.watch === m);
+            return `<button type="button" class="ms-switch" data-ready-switch data-design="${d.name}" data-watch="${m}">${m} $${e.price.toLocaleString()} →</button>`;
+          }).join(' or ');
     }
     lb.dataset.ccRoute = incompat ? '1' : '';
     document.getElementById('lbSelect').textContent = incompat ? 'ORDER AS CUSTOM CONCEPT →' : 'SELECT THIS DESIGN →';
