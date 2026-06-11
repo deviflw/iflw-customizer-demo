@@ -38,7 +38,6 @@
     --dock-h:96px;
     --header-h:clamp(56px,4vw,80px);
     --footer-h:clamp(56px,4vw,80px);
-    --cap:2400px;
 
     /* ─── TYPOGRAPHY SCALE (rem-based, fluid via clamp) ───
        Single source of truth for every font-size in the mockup.
@@ -102,7 +101,11 @@
       var(--col-preview,1fr)
       var(--col-config,0);
     grid-template-areas: "rail browse preview config";
-    min-height:calc(100vh - var(--header-h) - var(--footer-h));
+    /* dvh: same as vh on desktop; on mobile the dynamic viewport accounts for
+       browser chrome. Desktop grid officially owns >=800px width — below ~800
+       the future MOBILE layout takes over (decision 2026-06-11, audit-backed:
+       720-780 half-screen snap is mobile-layout territory, not desktop's). */
+    min-height:calc(100dvh - var(--header-h) - var(--footer-h));
     /* No max-width cap — customizer fills the entire viewport so big
        monitors don't show empty side margins. The column clamps + media
        queries below keep proportions sane at any width. */
@@ -301,7 +304,7 @@
      pattern from theme-blocks/slide_panel_button.liquid); submissions land in
      the Shopify Forms admin log. This mockup shows the customer-facing flow. */
   .bespoke-card{
-    background:#fff;width:clamp(360px,42vw,560px);max-height:calc(100vh - 60px);
+    background:#fff;width:clamp(360px,42vw,560px);max-height:calc(100dvh - 60px);
     overflow-y:auto;position:relative;
     padding:var(--space-32) var(--space-32) var(--space-30);
     box-shadow:0 40px 100px -20px rgba(0,0,0,.4);
@@ -353,7 +356,7 @@
 
   /* ── Band picker modal (reuses .lightbox overlay) ── */
   .band-card-modal{
-    background:#fff;width:clamp(360px,42vw,540px);max-height:calc(100vh - 60px);
+    background:#fff;width:clamp(360px,42vw,540px);max-height:calc(100dvh - 60px);
     overflow-y:auto;position:relative;
     padding:var(--space-30) var(--space-30) var(--space-26);
     box-shadow:0 40px 100px -20px rgba(0,0,0,.4);animation:zoomIn .3s var(--ease);
@@ -515,7 +518,7 @@
   .lightbox.open{display:flex;animation:fadeIn .25s ease}
   @keyframes fadeIn{from{opacity:0}to{opacity:1}}
   .lb-card{
-    background:#fff;width:clamp(900px,75vw,1700px);max-height:calc(100vh - 60px);
+    background:#fff;width:clamp(900px,75vw,1700px);max-height:calc(100dvh - 60px);
     display:grid;grid-template-columns:1fr 1fr;overflow:hidden;
     box-shadow:0 40px 100px -20px rgba(0,0,0,.4);
     animation:zoomIn .3s var(--ease);
@@ -615,13 +618,15 @@
      * full with no letterbox. Sized by the smaller of 70vh / 50vw so it always
      * fits the centered preview-area on any screen. width & height are both
      * explicit (equal) → also sidesteps the Safari aspect-ratio+flex width bug. */
-    /* Grow with viewport HEIGHT: (100vh − fixed chrome) instead of a flat 70vh
+    /* Grow with viewport HEIGHT: (100dvh − fixed chrome) instead of a flat 70vh
        fraction. So on a short MacBook screen it stays ~the same, but on a tall
-       external monitor it grows to fill the space below the preview. */
+       external monitor it grows to fill the space below the preview. dvh (not
+       vh): identical on desktop, but mobile browser chrome shrinks the dynamic
+       viewport — vh would oversize the canvas there. */
     /* Also cap by the ACTUAL preview-column width (100vw − rail − side panel −
        padding) so the canvas never spills past its column / clips on narrow
-       windows. Big screens are still limited by height (100vh−240) / 52vw. */
-    --canvas-sz:clamp(300px, min(calc(100vh - 240px), calc(100vw - var(--rail-w) - var(--config-w) - 56px), 52vw), 1300px);
+       windows. Big screens are still limited by height (100dvh−240) / 52vw. */
+    --canvas-sz:clamp(300px, min(calc(100dvh - 240px), calc(100vw - var(--rail-w) - var(--config-w) - 56px), 52vw), 1300px);
     width:var(--canvas-sz);
     height:var(--canvas-sz);
     aspect-ratio:1/1;
