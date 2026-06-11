@@ -1455,9 +1455,18 @@
     /* Custom: the four process cards go 2×2, not a long single column. */
     .cu-cards{grid-template-columns:1fr 1fr}
     .cu-card{padding:var(--space-16) var(--space-14)}
-    /* Custom hero (v4): TALLER on the phone (Mila) — the mobile asset crop
-       is ~4:5, portrait territory; tighter padding, smaller title. */
-    .cu-hero{min-height:380px;padding:var(--space-18) var(--space-16)}
+    /* Custom hero: Mila's MOBILE crop (portrait 1696×2528). Same recipe as
+       desktop — cover + bottom scrim under the white text. In production
+       both banners come from the customizer admin settings (selectable
+       images), not hardcoded files. */
+    .cu-hero{
+      min-height:380px;padding:var(--space-18) var(--space-16);
+      background:
+        linear-gradient(180deg, rgba(8,24,32,0) 38%, rgba(8,24,32,.55) 90%),
+        url('assets/custom-hero-mobile.png') 50% 22%/cover no-repeat #fff;
+    }
+    .cu-hero::before,.cu-hero::after{display:none}
+    .cu-hero-tag{display:none}
     .cu-hero .cu-title{font-size:var(--text-2xl)}
     /* Browse head: title gets its OWN line (count stretches to fill it, so the
        filters can't squeeze beside it and wrap to their own row), search last
