@@ -1825,7 +1825,7 @@
      features:['Unidirectional bezel','Luminous hands','Screw-down crown','Day/Date'],
      ref:'SKX007K', dials:['#081820','#1a2a3a','#2b2b2b'],
      dialNames:['Black','Navy','Graphite']},
-    {brand:'Orient',   name:'Bambino',       price:280,  sizes:[38,40],       style:'Dress watch · Vintage',
+    {brand:'Orient',   name:'Bambino',       price:280,  sizes:[38,40],       style:'Dress watch · Vintage', dialShape:'square',
      mvmt:'Automatic', cal:'F6724',         jewels:22, freq:'21,600 vph (3 Hz)',  power:'40 hours',
      thickness:11.5,l2l:45, lugW:21, crystal:'Mineral Crystal',  wr:'3 bar (30m)',
      wrist:'14–20cm (5.5–7.9in)', material:'Stainless steel', display:'Analog', weight:'78 g',
@@ -1839,7 +1839,7 @@
      features:['Anti-reflective','Luminous hands','Date','Screw-down crown'],
      ref:'H68419931', dials:['#2b3a2f','#1a1a1a','#7a6a4a'],
      dialNames:['Olive','Black','Sand']},
-    {brand:'Tissot',   name:'PRX',           price:675,  sizes:[35,40],       style:'Integrated bracelet · 70s revival',
+    {brand:'Tissot',   name:'PRX',           price:675,  sizes:[35,40],       style:'Integrated bracelet · 70s revival', dialShape:'square',
      mvmt:'Quartz',    cal:'ETA F06',       jewels:7,  freq:'32,768 Hz',           power:'~3 years (battery)',
      thickness:10.4,l2l:42, lugW:0,  crystal:'Sapphire Crystal', wr:'10 bar (100m)',
      wrist:'14–19.5cm (5.5–7.7in)', material:'Stainless steel', display:'Analog', weight:'125 g',
@@ -1899,12 +1899,14 @@
      description:'Sumi-e ink dropped onto still water — bloom, settle, dissipate. A study in negative space and the discipline of restraint.'},
     {name:'Solstice',        theme:'Space',  style:'Abstract',     price:1200, grad:'linear-gradient(180deg,#1a0a2e,#7a3a5a 50%,#f4d4a8)',
      description:'The sky at the longest day of the year — deep violet at the zenith, flame-orange at the horizon. A moment of stillness before the year turns.'},
-    /* `fits` = demo stand-in for compatible_collection (dial-shape constraint):
-       the design only suits these models. Absent = fits every watch. Incompatible
-       cards are FADED, not hidden — still viewable, routed to Custom Concept. */
-    {name:'Velvet Opera',    theme:'Urban',  style:'Fine Art',     price:1200, fits:['PRX','Bambino'], grad:'linear-gradient(135deg,#2e0a1a,#7a1a3a)',
+    /* `dialShape` = demo stand-in for the compatible_collection constraint. The
+       constraint is a SHAPE CATEGORY (a square-dial artwork fits ANY square-dial
+       watch), never a list of models — copy must speak shape, not enumerate
+       models (Mila 2026-06-11). Absent = 'round'. Incompatible cards are FADED,
+       not hidden — still viewable, routed to Custom Concept. */
+    {name:'Velvet Opera',    theme:'Urban',  style:'Fine Art',     price:1200, dialShape:'square', grad:'linear-gradient(135deg,#2e0a1a,#7a1a3a)',
      description:'Crimson curtains, gilded boxes, the held breath before the overture. A tribute to old-world theatre, painted in oil-rich burgundies.'},
-    {name:'Desert Line',     theme:'Nature', style:'Abstract',     price:1200, fits:['Khaki Field','NY0040 Diver'], grad:'linear-gradient(180deg,#f4d4a8,#c89a6a 60%,#5a3a2a)',
+    {name:'Desert Line',     theme:'Nature', style:'Abstract',     price:1200, dialShape:'square', grad:'linear-gradient(180deg,#f4d4a8,#c89a6a 60%,#5a3a2a)',
      description:'Wind-carved dunes at dusk, abstracted to their essential gradient — pale sand, warm rust, deep umber. For the long-haul traveler.'},
     {name:'Mossland',        theme:'Nature', style:'Illustration', price:1200, grad:'linear-gradient(135deg,#1a3a2a,#5a7a4a)',
      description:'Forest floor in deep summer — moss, fern, fallen leaves. The damp green hush of an old wood, illustrated in muted botanical detail.'},
@@ -1913,6 +1915,13 @@
   // ────── RENDER GRIDS ──────
   // Read late-initialized (`let`, TDZ at first paint) selection state safely.
   function safeSel(fn){ try { return fn(); } catch(e){ return null; } }
+
+  // Compatibility = dial-shape CATEGORY match (a square artwork fits any
+  // square-dial watch). Production encodes the set via compatible_collection,
+  // but the customer-facing reason — and therefore the copy — is the shape.
+  function designIncompat(d, w){
+    return !!(d && w && (d.dialShape || 'round') !== (w.dialShape || 'round'));
+  }
 
   function renderWatches(){
     const grid = document.getElementById('watchGrid');
@@ -1972,7 +1981,7 @@
     grid.innerHTML = designs.map(d => {
       // Incompatible with the current watch (demo compatible_collection): fade,
       // don't hide. Ready-now nudge (NOTE §5b) only on compatible cards.
-      const incompat = !!(d.fits && curWatch && !d.fits.includes(curWatch.name));
+      const incompat = designIncompat(d, curWatch);
       // Nudge = a FACT, model-level only (spec "Phase 2 — card markers"): a card
       // may state a fact, only the status line makes a PROMISE. Never name
       // sizes/dials here — that's variant language, reserved for the status
@@ -1990,7 +1999,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
         <div class="thumb" style="background:${d.grad}">
-          ${incompat?'<span class="fit-pill">Fits other models</span>':''}
+          ${incompat?`<span class="fit-pill">For ${d.dialShape||'round'} dials</span>`:''}
         </div>
         <div class="info">
           <div class="brand">${d.theme} · ${d.style}</div>
@@ -2874,9 +2883,13 @@
     note.hidden = !incompat && !readyModels.length;
     note.classList.toggle('ready', !incompat && readyModels.length > 0);
     if(incompat){
-      note.innerHTML = `Not a standard fit for <strong>${selWatch.brand} ${selWatch.name}</strong>. `
-        + `Available on: <strong>${(d.fits||[]).join(', ')}</strong> — or have it adapted `
-        + `to any watch as a <strong>Custom Concept</strong>.`;
+      // The constraint is a shape CATEGORY — never enumerate models here (the
+      // artwork fits any watch of its dial shape, the list is open-ended).
+      const dShape = d.dialShape || 'round';
+      const wShape = selWatch.dialShape || 'round';
+      note.innerHTML = `This artwork is painted for <strong>${dShape}-dial</strong> watches — `
+        + `the <strong>${selWatch.brand} ${selWatch.name}</strong> has a ${wShape} dial. `
+        + `Pick any ${dShape}-dial watch, or have it adapted to yours as a <strong>Custom Concept</strong>.`;
     } else if(readyModels.length){
       // The detail view is where "on 2 models" gets answered: each model is a
       // one-tap adopt. Every hop names its destination AND price (verdicts v2);
@@ -2946,7 +2959,7 @@
     const qvW = e.target.closest('[data-qv-watch]');
     if(qvW){ e.stopPropagation(); const w = watches.find(x => x.name === qvW.dataset.qvWatch); if(w) openWatchLightbox(w); return; }
     const qvD = e.target.closest('[data-qv-design]');
-    if(qvD){ e.stopPropagation(); const d = designs.find(x => x.name === qvD.dataset.qvDesign); if(d) openDesignLightbox(d, !!(d.fits && !d.fits.includes(selWatch.name))); return; }
+    if(qvD){ e.stopPropagation(); const d = designs.find(x => x.name === qvD.dataset.qvDesign); if(d) openDesignLightbox(d, designIncompat(d, selWatch)); return; }
   });
 
   document.addEventListener('click', e => {
@@ -2964,7 +2977,7 @@
       if(!d) return;
       // Incompatible with the current watch: don't select into the build —
       // open the lightbox with the fit notice + Custom Concept bridge instead.
-      if(d.fits && !d.fits.includes(selWatch.name)){ openDesignLightbox(d, true); return; }
+      if(designIncompat(d, selWatch)){ openDesignLightbox(d, true); return; }
       designs.forEach(x => x.sel = x.name === designName);
       renderDesigns();
       updateSelectedDesign(d);
