@@ -355,6 +355,10 @@
     cursor:pointer;
   }
   .cfg-band-change:hover{text-decoration:underline}
+  /* display:inline-block above beats the UA [hidden] rule — without this the
+     "Change ›" button stayed visible on watches with only ONE compatible band
+     (tapping it opened a one-item picker — counterintuitive, Mila's catch). */
+  .cfg-band-change[hidden]{display:none}
 
   /* ── Band picker modal (reuses .lightbox overlay) ── */
   .band-card-modal{
@@ -1919,6 +1923,10 @@
   // Compatibility = dial-shape CATEGORY match (a square artwork fits any
   // square-dial watch). Production encodes the set via compatible_collection,
   // but the customer-facing reason — and therefore the copy — is the shape.
+  // NOTE: round/square is a DEMO simplification — the real taxonomy is richer
+  // (TV-shape like Bulova, tonneau, …; the list gets settled when the demo is
+  // shown to the team). Don't hardcode a binary enum in the port; the category
+  // mechanism itself is what's decided.
   function designIncompat(d, w){
     return !!(d && w && (d.dialShape || 'round') !== (w.dialShape || 'round'));
   }
