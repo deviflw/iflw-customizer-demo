@@ -818,13 +818,15 @@
      content cross-fades. In-stock = green dot; MTO = neutral ink (never warning
      colours, the word "stock" never appears in the MTO state). ── */
   .match-status{
-    display:flex;align-items:center;gap:var(--space-6);
-    /* Reserve TWO lines (the in-stock copy wraps on narrow panels, MTO doesn't)
-       so swapping states never shifts the cart block. em → scales with font. */
-    min-height:2.9em;margin:var(--space-4) 0 var(--space-6);
+    /* Always two lines (status / shipping) — constant height in both states, so
+       no reserved emptiness and no jump on swap. Tight to the block above. */
+    display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+    margin:0 0 var(--space-8);
     font-size:var(--text-sm);color:var(--ink);
     transition:opacity .2s var(--ease);
   }
+  .ms-l1{display:flex;align-items:center;gap:var(--space-6);font-weight:600}
+  .ms-l2{color:var(--muted)}
   .ms-dot{width:8px;height:8px;border-radius:50%;background:#2e9e6b;flex:none;margin-right:2px}
   .pi-match{
     display:flex;align-items:center;gap:var(--space-6);
@@ -2010,10 +2012,14 @@
     setTimeout(() => { el.innerHTML = html; el.style.opacity = 1; }, 150);
   }
   function renderMatchStatus(m){
+    // Always TWO lines: status / shipping. Constant height in both states (no
+    // reserved emptiness, no jump); monogram suffix lives on the shipping line.
     const mono = st.mono ? ' · + ~3 days for monogram' : '';
     setMatchEl(document.getElementById('matchStatus'), m.state === 'in_stock'
-      ? '<span class="ms-dot"></span>Available now — this exact piece is ready · ships in 2–3 days' + mono
-      : '⏱ Hand-painted to order for you · ships in ~4 weeks' + mono);
+      ? '<span class="ms-l1"><span class="ms-dot"></span>Available now — this exact piece is ready</span>'
+        + '<span class="ms-l2">Ships in 2–3 days' + mono + '</span>'
+      : '<span class="ms-l1">⏱ Hand-painted to order for you</span>'
+        + '<span class="ms-l2">Ships in ~4 weeks' + mono + '</span>');
     setMatchEl(document.getElementById('piMatch'), m.state === 'in_stock'
       ? '<span class="ms-dot"></span>Ready now'
       : '⏱ Made to order');
