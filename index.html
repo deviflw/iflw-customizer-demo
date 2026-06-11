@@ -874,11 +874,23 @@
      ready piece, so flipping in-stock ↔ MTO via swatches never jumps the cart. */
   .match-status.has-alt{min-height:4.6em}
   .ms-switch{
-    border:0;background:none;padding:0;margin-top:2px;
-    font-family:inherit;font-size:var(--text-sm);font-weight:600;
+    /* No margins: the full status line is a column with its own gap; in the
+       compact mini-summary the link sits INLINE after the MTO text — a top
+       margin there pushed it off the text baseline (Mila's misalignment). */
+    border:0;background:none;padding:0;margin:0;
+    font-family:inherit;font-size:var(--text-sm);font-weight:600;line-height:inherit;
     color:var(--acc);cursor:pointer;text-align:left;
   }
   .ms-switch:hover{text-decoration:underline}
+  /* Finalize button under the mini-summary total (browse modes): the path back
+     to Configure, where the panel being manipulated actually is. */
+  .pi-finalize{
+    width:100%;margin-top:var(--space-12);padding:var(--space-13) var(--space-18);
+    background:var(--ink);color:#fff;border:0;cursor:pointer;
+    font-family:inherit;font-size:var(--text-sm);letter-spacing:var(--track-caps);font-weight:700;
+    transition:.15s var(--ease);
+  }
+  .pi-finalize:hover{background:#000}
   .pi-match{
     display:flex;align-items:center;gap:var(--space-6);
     min-height:18px;margin-top:2px;
@@ -1342,9 +1354,6 @@
         <!-- WATCHES content -->
         <div class="browse-content-watches">
           <div class="browse-head">
-            <div class="row-1">
-              <button class="close-btn" data-mode="configure">← Back to Configuration</button>
-            </div>
             <div class="row-2">
               <h2>Watches</h2>
               <span class="count">· 8 in catalog</span>
@@ -1369,9 +1378,6 @@
         <!-- DESIGNS content -->
         <div class="browse-content-designs">
           <div class="browse-head">
-            <div class="row-1">
-              <button class="close-btn" data-mode="configure">← Back to Configuration</button>
-            </div>
             <div class="row-2">
               <h2>Designs</h2>
               <span class="count">· 9 in gallery</span>
@@ -1394,9 +1400,6 @@
         <!-- CUSTOM CONCEPT info page -->
         <div class="browse-content-custom">
           <div class="browse-head">
-            <div class="row-1">
-              <button class="close-btn" data-mode="configure">← Back to Configuration</button>
-            </div>
             <div class="row-2">
               <h2>Custom Concept</h2>
               <span class="count">· Commission an original artwork</span>
@@ -1523,6 +1526,10 @@
         <div class="pi-match" id="piMatch"></div>
         <div class="pi-divider"></div>
         <div class="pi-total"><span class="pi-total-l">Total</span><span class="pi-total-v" id="piTotal">$1,520</span></div>
+        <!-- Way back to Configure lives HERE, under the total — the user's hands
+             are on this panel (swatches/switch link), not on the far top-left
+             where the old "← Back to Configuration" button sat. -->
+        <button class="pi-finalize" data-mode="configure">FINALIZE BUILD →</button>
       </div>
 
     </section>
