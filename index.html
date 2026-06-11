@@ -1286,8 +1286,7 @@
   /* Risk-reversal made EXPLICIT next to the price (v4 ③) */
   .cu-guarantee{display:flex;align-items:center;gap:var(--space-8);font-size:var(--text-sm);color:var(--ink);margin-top:8px}
   .cu-guarantee::before{content:"✓";color:var(--acc);font-weight:700}
-  /* Lead time lives HERE with the price+guarantee (Mila: not under the CTA) */
-  .cu-leadtime{font-size:var(--text-sm);color:var(--muted);margin-top:4px}
+  /* Lead time lives HERE with the price+guarantee, same ✓ design (Mila) */
 
   /* CTA — its own full-width row below both columns */
   .cu-cta{
@@ -1459,8 +1458,12 @@
        desktop — cover + bottom scrim under the white text. In production
        both banners come from the customizer admin settings (selectable
        images), not hardcoded files. */
+    /* Pull the hero up to the page head (the browse-grid's 24px top padding
+       read as a weird floating gap) and give it more height — the bottom-
+       anchored text drops onto the darker paint and reads better. */
+    .cu-body{padding-top:var(--space-8)}
     .cu-hero{
-      min-height:380px;padding:var(--space-18) var(--space-16);
+      min-height:430px;padding:var(--space-18) var(--space-16);
       background:
         linear-gradient(180deg, rgba(8,24,32,0) 38%, rgba(8,24,32,.55) 90%),
         url('assets/custom-hero-mobile.png') 50% 22%/cover no-repeat #fff;
@@ -1492,6 +1495,10 @@
     /* Tab bar: let the labels breathe at the bottom edge. */
     .r-btn{padding-bottom:var(--space-14)}
     .customizer{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+    /* The tab-bar clearance zone showed the customizer's grey #fafafa as a
+       dead band under the last content (Mila: "что-то серое после кнопки").
+       White blends it with the page; the footer below stays distinct. */
+    .customizer{background:#fff}
     /* Bottom banners (Watches bespoke + Designs custom) stack: text above,
        full-width button below — the side-by-side button looked thrown in. */
     .custom-card{flex-direction:column;align-items:stretch;gap:var(--space-14);padding:var(--space-18)}
@@ -1664,7 +1671,7 @@
                   <div class="cu-banner-eyebrow">Custom Concept · Commission</div>
                   <div class="cu-banner-price"><strong>$1,490</strong> <span>+ base watch</span></div>
                   <div class="cu-guarantee">Nothing is painted until you approve the sketch</div>
-                  <div class="cu-leadtime">Hand-painted to order · ships in ~4 weeks</div>
+                  <div class="cu-guarantee">Hand-painted to order · ships in ~4 weeks</div>
                 </div>
               </div>
               <div class="cu-extras-banner">
