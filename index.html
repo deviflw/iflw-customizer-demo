@@ -567,7 +567,9 @@
   .lb-specs .row:last-child{border-bottom:0}
   .lb-specs .row span:last-child{color:var(--ink);font-weight:500}
   .lb-specs .row.full{grid-column:1/-1}
-  .lb-description{grid-column:1/-1;font-size:var(--text-md);line-height:1.55;color:var(--ink)}
+  /* Same air below the description as above it — the text used to sit
+     right on the divider before the price row. */
+  .lb-description{grid-column:1/-1;font-size:var(--text-md);line-height:1.55;color:var(--ink);padding-bottom:var(--space-16)}
   .lb-description p{margin:0 0 var(--space-12)}
   .lb-description p:last-child{margin-bottom:0}
   .lb-swatches{margin-top:18px}
@@ -1027,6 +1029,9 @@
   .cmx-head h3{margin:0;font-size:var(--text-lg)}
   .cmx-head small{color:var(--muted);font-size:var(--text-2xs);letter-spacing:var(--track-caps);text-transform:uppercase;white-space:nowrap}
   .cmx-prevcell{background:#fff}
+  /* No divider line BETWEEN pictures: cells 2-3 pull 1px left over the grid
+     gap so the image itself covers the line. Heads above keep theirs. */
+  .cmx-prevcell + .cmx-prevcell{margin-left:-1px}
   .cmp-strip{
     display:flex;align-items:center;justify-content:space-between;
     padding:var(--space-12) var(--space-22);background:#fafafa;border-bottom:1px solid var(--line);
@@ -1614,8 +1619,9 @@
     .save-btn{width:100%;height:46px;flex-direction:row;gap:var(--space-8);white-space:nowrap}
     .save-btn br{display:none}
     /* In the row layout the oversized ＋ glyph's line box pushed it below the
-       text baseline — pin its line height so it centers with the label. */
-    .save-btn .plus{font-size:var(--text-xl);line-height:1}
+       text baseline; the full-width ＋ ink also sits LOW in its em box —
+       collapse the line box and nudge up to center it optically. */
+    .save-btn .plus{font-size:var(--text-xl);line-height:0;position:relative;top:-2px}
     /* Theme footer: spacer below so its content scrolls fully clear of the
        fixed tab bar (prod question recorded — same trick is portable). */
     .site-footer{margin-bottom:calc(72px + env(safe-area-inset-bottom))}
