@@ -646,7 +646,6 @@
     position:relative;
     overflow:hidden;
     background:linear-gradient(180deg,#ececec,#d6d6d6);
-    border:1px solid #b8b8b8;
     box-shadow:0 30px 80px -30px rgba(0,0,0,.18);
     transition:transform .25s var(--ease);
   }
@@ -1068,13 +1067,8 @@
   .compare-view.cmp-diff .cmx-row[data-same="1"]{display:none}
   .compare-view.cmp-diff .cmx-sect-row[data-same="1"]{display:none}
   .ccol-prev{
-    margin:var(--space-18);border:1px solid #b8b8b8;flex-shrink:0;
+    flex-shrink:0;
     aspect-ratio:3/4;
-    /* Safari/WebKit in a flex-column with aspect-ratio + margin computes
-     * width = parent width and overflows past the right margin (left
-     * margin honored, right margin ignored). Explicit max-width caps it
-     * so 18px margins land on both sides as intended. */
-    max-width:calc(100% - var(--space-18) * 2);
     background:linear-gradient(180deg,#ebebeb,#d6d6d6);
     display:flex;align-items:center;justify-content:center;
     color:#888;font-size:var(--text-sm);letter-spacing:var(--track-caps);
@@ -1525,7 +1519,6 @@
     .cmx-head{padding:var(--space-10) var(--space-12)}
     .cmx-head-text{flex-direction:column-reverse;align-items:flex-start;gap:2px}
     .cmx-head h3{font-size:var(--text-md)}
-    .ccol-prev{margin:var(--space-10) var(--space-12) var(--space-12);max-width:calc(100% - var(--space-12) * 2)}
     .ccol-prices{margin:var(--space-12) var(--space-12) var(--space-6)}
     .ccol-foot{padding:var(--space-10) var(--space-12);justify-content:space-between}
     .ccol-rm-btn,.ccol-edit-btn{
@@ -1598,6 +1591,9 @@
        doesn't need to double it (Mila: too much white under the CTA).
        White bg: the grey #fafafa here read as a dead band under content. */
     .customizer{padding-bottom:var(--space-16);background:#fff}
+    /* Compare: the white container pad read as a stray field under the
+       horizontal scroller — the matrix meets the footer directly there. */
+    .customizer[data-mode="compare"]{padding-bottom:0}
     /* Bottom banners (Watches bespoke + Designs custom) stack: text above,
        full-width button below — the side-by-side button looked thrown in. */
     .custom-card{flex-direction:column;align-items:stretch;gap:var(--space-14);padding:var(--space-18)}
