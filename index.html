@@ -2533,11 +2533,36 @@
 
   // Custom Concept "OPEN MY COMMISSION" → carry Custom Concept state into Configure
   // Quote mode chrome follows the mode — refresh the panel on every switch.
+  // PER-TAB SCROLL MEMORY (Mila): each tab keeps its own scroll position —
+  // leave Designs scrolled deep, visit Watches (its own position), come back:
+  // everything is where you left it. Compare also remembers its horizontal
+  // matrix scroll. First visit of a tab starts at the top. Accordion states
+  // persist by themselves (nothing closes them on a switch).
+  const tabScroll = {};
+  let goCfgTop = false;   // build-bar tap → land at the TOP of Configure
   const _setModeBase = setMode;
   setMode = function(mode){
+    const prev = cz.dataset.mode;
+    if(prev && prev !== mode){
+      const cv = document.querySelector('.compare-view');
+      tabScroll[prev] = {y: scrollY, x: (prev === 'compare' && cv) ? cv.scrollLeft : 0};
+    }
     _setModeBase(mode);
     if(typeof recalc === 'function') recalc();
     if(typeof placeDock === 'function') placeDock();
+    const saved = tabScroll[mode];
+    const y = (mode === 'configure' && goCfgTop) ? 0 : (saved ? saved.y : 0);
+    goCfgTop = false;
+    requestAnimationFrame(() => {
+      scrollTo(0, y);
+      if(mode === 'compare' && saved && saved.x){
+        // second frame: the matrix re-render lands first, then the restore
+        requestAnimationFrame(() => {
+          const cv = document.querySelector('.compare-view');
+          if(cv) cv.scrollLeft = saved.x;
+        });
+      }
+    });
   };
 
   // ── VARIANT C mobile chrome ──
@@ -2575,6 +2600,7 @@
   });
   // build bar sits exactly on top of the fixed tab bar
   const mBar = document.getElementById('mBuildBar');
+  if(mBar) mBar.addEventListener('click', () => { goCfgTop = true; });
   function dockBuildBar(){
     if(!mBar) return;
     const rail = document.querySelector('.rail-col');
