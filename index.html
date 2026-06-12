@@ -1143,6 +1143,15 @@
   .ccol-prev-empty .big{font-size:var(--text-5xl);color:#cfd2d4;line-height:1;margin-bottom:10px}
   .ccol-prev-empty small{font-size:var(--text-xs);line-height:1.5;letter-spacing:var(--track-loose)}
 
+  /* ── variant C mobile chrome — INERT on desktop ──
+     .m-acc uses display:contents so the selects stay ordinary row items in
+     the desktop browse-head flex; buttons/build bar/open-compare hide. */
+  .m-tb{display:none}
+  .m-acc{display:contents}
+  .dock-actions{display:contents}
+  .dock-open{display:none}
+  .m-buildbar{display:none}
+
   /* ═══════════ COMPARE DOCK ═══════════
      Lives inside browse-inner, after pagination. Only renders inside browse modes
      (because the browse column itself is collapsed to 0 width in other modes). */
@@ -1623,9 +1632,8 @@
     .custom-card .cc-text{max-width:none}
     .custom-card h3{font-size:var(--text-xl)}
     .custom-card .pill{width:100%;text-align:center}
-    /* Compare dock (Mila iter 143): "COMPARE DOCK" left + "up to 3 builds"
-       right on ONE line; the three slots stack as full-width ROWS keeping
-       the desktop anatomy (thumb + name/meta + price); button below. */
+    /* Compare dock (Mila iter 143 + variant C): label line, slots as
+       full-width rows, and the two ACTIONS on one line (save / open). */
     .dock{flex-wrap:wrap;gap:var(--space-10)}
     .dock-label{
       width:100%;display:flex;align-items:baseline;justify-content:space-between;
@@ -1634,12 +1642,76 @@
     .slots{flex:1 1 100%;flex-direction:column;gap:var(--space-8)}
     .slot{width:100%;height:auto;min-height:56px;padding:var(--space-7) var(--space-10)}
     .slot .thumb{width:44px;height:44px}
-    .save-btn{width:100%;height:46px;flex-direction:row;gap:var(--space-8);white-space:nowrap}
+    .dock-actions{display:flex;gap:var(--space-8);flex:1 1 100%}
+    .save-btn{flex:1;min-width:0;width:auto;height:46px;flex-direction:row;gap:var(--space-8);white-space:nowrap}
     .save-btn br{display:none}
+    .dock-open{
+      display:flex;align-items:center;justify-content:center;flex:1;min-width:0;height:46px;
+      background:#fff;color:var(--ink);border:1px solid var(--ink);font:inherit;
+      font-size:var(--text-xs);letter-spacing:var(--track-caps);font-weight:600;cursor:pointer;
+      white-space:nowrap;
+    }
     /* In the row layout the oversized ＋ glyph's line box pushed it below the
        text baseline; the full-width ＋ ink also sits LOW in its em box —
        collapse the line box and nudge up to center it optically. */
     .save-btn .plus{font-size:var(--text-xl);line-height:0;position:relative;top:-2px}
+
+    /* ── VARIANT C (Mila 2026-06-12, ported from the polygon): catalogs lose
+       the title row; the head is a sticky toolbar (search · Filters · ⇄)
+       whose accordions unfold INSIDE the same head — one continuous panel,
+       the head's own bottom divider closes it. Accordions are exclusive
+       (tab-like): opening one closes the other. ── */
+    .browse-content-watches .browse-head,
+    .browse-content-designs .browse-head{
+      position:sticky;top:0;z-index:25;
+      padding-top:var(--space-10);padding-bottom:var(--space-10);
+    }
+    .browse-content-watches .browse-head h2,
+    .browse-content-designs .browse-head h2,
+    .browse-content-watches .browse-head .count,
+    .browse-content-designs .browse-head .count{display:none}
+    .browse-content-watches .browse-head input[type=search],
+    .browse-content-designs .browse-head input[type=search]{order:0;flex:1 1 auto}
+    .m-tb{
+      display:flex;align-items:center;gap:6px;flex:none;
+      padding:var(--space-8) var(--space-10);border:1px solid var(--line);background:#fff;
+      font:inherit;font-size:var(--text-2xs);letter-spacing:var(--track-eyebrow);
+      text-transform:uppercase;font-weight:600;cursor:pointer;
+    }
+    .m-tb .ch{color:var(--muted);transition:transform .25s}
+    .m-tb[aria-expanded="true"] .ch{transform:rotate(180deg)}
+    .m-acc{
+      display:flex;gap:var(--space-8);flex:1 1 100%;order:10;
+      overflow:hidden;max-height:0;transition:max-height .3s ease;
+    }
+    .m-acc.open{max-height:380px}
+    .m-acc-filters select{flex:1;min-width:0;margin-top:var(--space-10)}
+    .m-acc-cmp{flex-direction:column}
+    .m-acc-cmp .dock{padding:var(--space-10) 0 var(--space-2)}
+    .m-acc-cmp .dock::before{display:none}
+
+    /* ── build bar above the tab bar: thumb + selection + TOTAL; tap →
+       Configure. Catalog tabs only. NO arrow, NO pulse (Mila). ── */
+    [data-mode="browse-watches"] .m-buildbar,
+    [data-mode="browse-designs"] .m-buildbar{display:flex}
+    .m-buildbar{
+      position:fixed;left:0;right:0;z-index:39;height:56px;
+      align-items:center;gap:var(--space-10);padding:0 var(--space-12);
+      background:#fff;border-top:1px solid var(--line);cursor:pointer;
+      box-shadow:0 -10px 24px -18px rgba(8,24,32,.35);
+    }
+    .mbb-thumb{width:38px;height:38px;flex:none;background:linear-gradient(180deg,#ececec,#d6d6d6)}
+    .mbb-text{flex:1;min-width:0}
+    .mbb-text strong{display:block;font-size:var(--text-sm);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mbb-text small{display:block;color:var(--muted);font-size:var(--text-2xs);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mbb-total{flex:none;text-align:right}
+    .mbb-total small{display:block;font-size:var(--text-3xs, .56rem);letter-spacing:var(--track-caps);text-transform:uppercase;color:var(--muted);font-weight:700}
+    .mbb-total strong{font-size:var(--text-md);font-weight:700}
+    /* footer clears the bar on the catalog tabs */
+    .customizer[data-mode="browse-watches"] ~ .site-footer,
+    .customizer[data-mode="browse-designs"] ~ .site-footer{
+      margin-bottom:calc(128px + env(safe-area-inset-bottom));
+    }
     /* Theme footer: spacer below so its content scrolls fully clear of the
        fixed tab bar (prod question recorded — same trick is portable). */
     .site-footer{margin-bottom:calc(72px + env(safe-area-inset-bottom))}
@@ -1713,9 +1785,14 @@
               <span class="count">· 9 in catalog</span>
               <span class="sp"></span>
               <input type="search" placeholder="Search watches…" />
-              <select><option>All Brands</option><option>Seiko</option><option>Hamilton</option><option>Tissot</option></select>
-              <select><option>All Sizes</option><option>36mm</option><option>38mm</option><option>40mm</option><option>42mm</option></select>
-              <select><option>All Movements</option><option>Automatic</option><option>Quartz</option></select>
+              <button class="m-tb" data-macc="filters" aria-expanded="false">Filters <span class="ch">▾</span></button>
+              <button class="m-tb" data-macc="cmp" aria-expanded="false">⇄</button>
+              <div class="m-acc m-acc-filters">
+                <select><option>All Brands</option><option>Seiko</option><option>Hamilton</option><option>Tissot</option></select>
+                <select><option>All Sizes</option><option>36mm</option><option>38mm</option><option>40mm</option><option>42mm</option></select>
+                <select><option>All Movements</option><option>Automatic</option><option>Quartz</option></select>
+              </div>
+              <div class="m-acc m-acc-cmp"></div>
             </div>
           </div>
           <div class="browse-grid" id="watchGrid"></div>
@@ -1737,8 +1814,13 @@
               <span class="count">· 9 in gallery</span>
               <span class="sp"></span>
               <input type="search" placeholder="Search designs…" />
-              <select><option>All Themes</option><option>Space</option><option>Nature</option><option>Ocean</option><option>Urban</option></select>
-              <select><option>All Styles</option><option>Fine Art</option><option>Abstract</option><option>Illustration</option></select>
+              <button class="m-tb" data-macc="filters" aria-expanded="false">Filters <span class="ch">▾</span></button>
+              <button class="m-tb" data-macc="cmp" aria-expanded="false">⇄</button>
+              <div class="m-acc m-acc-filters">
+                <select><option>All Themes</option><option>Space</option><option>Nature</option><option>Ocean</option><option>Urban</option></select>
+                <select><option>All Styles</option><option>Fine Art</option><option>Abstract</option><option>Illustration</option></select>
+              </div>
+              <div class="m-acc m-acc-cmp"></div>
             </div>
           </div>
           <div class="browse-grid" id="designGrid"></div>
@@ -1830,7 +1912,10 @@
         <div class="dock" id="dock">
           <div class="dock-label">COMPARE DOCK<small>up to 3 builds</small></div>
           <div class="slots" id="dockSlots"></div>
-          <button class="save-btn" id="saveBtn"><span class="plus">＋</span>SAVE <br>CURRENT</button>
+          <div class="dock-actions">
+            <button class="save-btn" id="saveBtn"><span class="plus">＋</span>SAVE <br>CURRENT</button>
+            <button class="dock-open" data-mode="compare">OPEN COMPARE →</button>
+          </div>
         </div>
 
       </div>
@@ -2068,6 +2153,18 @@
 
     <!-- ─── CONFIG HANDLE (shown only in browse modes) ─── -->
     <button class="config-handle" id="cfgHandle" title="Show details" data-mode="configure">‹</button>
+
+    <!-- ─── MOBILE BUILD BAR (variant C): mini live preview + selection +
+         TOTAL, glued above the tab bar on the catalog tabs. Tap = the
+         Configure tab (the real preview lives there). Desktop: hidden. -->
+    <div class="m-buildbar" id="mBuildBar" data-mode="configure">
+      <div class="mbb-thumb" id="mbbThumb"></div>
+      <div class="mbb-text">
+        <strong id="mbbWatch">Seiko SNK807</strong>
+        <small id="mbbMeta">Northern Lights · Black · 37mm</small>
+      </div>
+      <div class="mbb-total"><small>Total</small><strong id="mbbTotal">$1,520</strong></div>
+    </div>
 
     <!-- ─── COMPARE VIEW — label-gutter matrix (label once, values under
          their pictures; sections + diff bars in the gutter rail) ─── -->
@@ -2413,7 +2510,49 @@
   setMode = function(mode){
     _setModeBase(mode);
     if(typeof recalc === 'function') recalc();
+    if(typeof placeDock === 'function') placeDock();
   };
+
+  // ── VARIANT C mobile chrome ──
+  // Head accordions are EXCLUSIVE (tab-like): opening filters closes the
+  // compare dock and vice versa. The dock NODE itself relocates into the
+  // active tab's compare accordion on mobile (one dock, one state) and
+  // returns to its page-bottom home on desktop.
+  const dockEl = document.querySelector('.dock');
+  const dockHome = document.createElement('div');
+  if(dockEl) dockEl.before(dockHome);
+  function placeDock(){
+    if(!dockEl) return;
+    const tab = cz.dataset.mode === 'browse-watches' ? 'watches'
+              : cz.dataset.mode === 'browse-designs' ? 'designs' : null;
+    const host = (innerWidth < 800 && tab)
+      ? document.querySelector(`.browse-content-${tab} .m-acc-cmp`) : null;
+    if(host){ if(dockEl.parentElement !== host) host.appendChild(dockEl); }
+    else if(dockEl.previousElementSibling !== dockHome) dockHome.after(dockEl);
+  }
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.m-tb');
+    if(!btn) return;
+    const head = btn.closest('.browse-head');
+    const target = head.querySelector('.m-acc-' + btn.dataset.macc);
+    const willOpen = target && !target.classList.contains('open');
+    head.querySelectorAll('.m-acc').forEach(a => a.classList.remove('open'));
+    head.querySelectorAll('.m-tb').forEach(b => b.setAttribute('aria-expanded', 'false'));
+    if(willOpen){
+      if(btn.dataset.macc === 'cmp') placeDock();
+      target.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  });
+  // build bar sits exactly on top of the fixed tab bar
+  const mBar = document.getElementById('mBuildBar');
+  function dockBuildBar(){
+    if(!mBar) return;
+    const rail = document.querySelector('.rail-col');
+    mBar.style.bottom = (innerWidth < 800 && rail) ? rail.offsetHeight + 'px' : '';
+  }
+  addEventListener('resize', () => { dockBuildBar(); placeDock(); });
+  dockBuildBar(); placeDock();
 
   // In quote mode the mini-panel button commits the commission it shows (I3
   // amendment 1) — same action as the page CTA; its data-mode attribute then
@@ -2858,6 +2997,17 @@
     const total = (inStock ? m.price : selWatch.price + d.price) + addons;
     const totalStr = `$${total.toLocaleString()}`;
     document.getElementById('piTotal').textContent = totalStr;
+    // mobile build bar (variant C) mirrors selection + total
+    const mbT = document.getElementById('mbbTotal');
+    if(mbT){
+      mbT.textContent = totalStr;
+      document.getElementById('mbbWatch').textContent = `${selWatch.brand} ${selWatch.name}`;
+      const dn = (selWatch.dialNames && selWatch.dialNames[selDialIdx]) || '—';
+      const sz = selWatch.sizes[selSizeIdx] != null ? selWatch.sizes[selSizeIdx] : selWatch.sizes[0];
+      document.getElementById('mbbMeta').textContent = `${d.name} · ${dn} · ${sz}mm`;
+      document.getElementById('mbbThumb').style.background =
+        (isCustomConcept || !selDesign || !selDesign.grad) ? '' : selDesign.grad;
+    }
     // Quote chrome: explicit label + the panel button commits what the panel
     // shows (I3) — "Start your commission", not "Finalize build".
     const ql = document.getElementById('piQuoteLabel');
