@@ -162,7 +162,7 @@
     display:flex;flex-direction:column;align-items:center;gap:var(--space-6);
     padding:var(--space-14) var(--space-8);font-size:var(--text-xs);letter-spacing:var(--track-button);text-transform:uppercase;
     color:#a8b5b9;cursor:pointer;border:0;background:transparent;
-    border-left:3px solid transparent;
+    border-left:4px solid transparent;
     transition:.15s var(--ease);
     text-align:center;line-height:1.2;
   }
@@ -1471,7 +1471,7 @@
     .r-btn{
       flex:1;min-width:0;gap:var(--space-4);
       padding:var(--space-8) var(--space-2) var(--space-9);
-      border-left:0;border-top:3px solid transparent;
+      border-left:0;border-top:4px solid transparent;
       font-size:var(--text-2xs);
     }
     .r-btn.on{border-left-color:transparent;border-top-color:var(--acc)}
@@ -1717,7 +1717,8 @@
     /* ── build bar above the tab bar: thumb + selection + TOTAL; tap →
        Configure. Catalog tabs only. NO arrow, NO pulse (Mila). ── */
     [data-mode="browse-watches"] .m-buildbar,
-    [data-mode="browse-designs"] .m-buildbar{display:flex}
+    [data-mode="browse-designs"] .m-buildbar,
+    [data-mode="browse-custom"] .m-buildbar{display:flex}
     .m-buildbar{
       position:fixed;left:0;right:0;z-index:39;height:56px;
       align-items:center;gap:var(--space-10);padding:0 var(--space-12);
@@ -1733,7 +1734,8 @@
     .mbb-total strong{font-size:var(--text-md);font-weight:700}
     /* footer clears the bar on the catalog tabs */
     .customizer[data-mode="browse-watches"] ~ .site-footer,
-    .customizer[data-mode="browse-designs"] ~ .site-footer{
+    .customizer[data-mode="browse-designs"] ~ .site-footer,
+    .customizer[data-mode="browse-custom"] ~ .site-footer{
       margin-bottom:calc(128px + env(safe-area-inset-bottom));
     }
     /* Theme footer: spacer below so its content scrolls fully clear of the
@@ -2574,7 +2576,11 @@
   function dockBuildBar(){
     if(!mBar) return;
     const rail = document.querySelector('.rail-col');
-    mBar.style.bottom = (innerWidth < 800 && rail) ? rail.offsetHeight + 'px' : '';
+    if(innerWidth < 800 && rail){
+      // exact float (offsetHeight rounds → a subpixel slit at some zooms);
+      // 1px overlap hides under the tab bar (its z-index is higher)
+      mBar.style.bottom = (innerHeight - rail.getBoundingClientRect().top - 1) + 'px';
+    } else mBar.style.bottom = '';
   }
   addEventListener('resize', () => { dockBuildBar(); placeDock(); });
   dockBuildBar(); placeDock();
@@ -3031,7 +3037,7 @@
       const sz = selWatch.sizes[selSizeIdx] != null ? selWatch.sizes[selSizeIdx] : selWatch.sizes[0];
       document.getElementById('mbbMeta').textContent = `${d.name} · ${dn} · ${sz}mm`;
       document.getElementById('mbbThumb').style.background =
-        (isCustomConcept || !selDesign || !selDesign.grad) ? '' : selDesign.grad;
+        (isCustomConcept || quote || !selDesign || !selDesign.grad) ? '' : selDesign.grad;
     }
     // Quote chrome: explicit label + the panel button commits what the panel
     // shows (I3) — "Start your commission", not "Finalize build".
