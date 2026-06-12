@@ -1167,8 +1167,6 @@
   @media (max-width:1199px){
     .m-acc-cmp.open{max-height:420px}
     .m-acc-cmp .dock{flex-wrap:wrap;gap:var(--space-10)}
-    .m-acc-cmp .dock-label{width:100%;display:flex;align-items:baseline;justify-content:space-between}
-    .m-acc-cmp .dock-label small{margin-top:0}
     .m-acc-cmp .slots{flex:1 1 100%;flex-direction:column;gap:var(--space-8)}
     .m-acc-cmp .slot{width:100%;height:auto;min-height:56px;padding:var(--space-7) var(--space-10)}
     .m-acc-cmp .slot .thumb{width:44px;height:44px}
@@ -1203,11 +1201,6 @@
    * the catalog was and then fade — that's the visible flicker. display:none
    * removes it instantly, no chance to reflow into a wrong position. */
   [data-mode="configure"] .dock, [data-mode="compare"] .dock{display:none}
-  .dock-label{
-    font-size:var(--text-2xs);letter-spacing:var(--track-caps);color:var(--muted);
-    text-transform:uppercase;width:100px;line-height:1.4;font-weight:600;flex-shrink:0;
-  }
-  .dock-label small{color:#aaa;display:block;font-size:var(--text-2xs);margin-top:2px;font-weight:500;letter-spacing:var(--track-caps)}
   .slots{display:flex;gap:var(--space-10);flex:1;min-width:0}
   .slot{
     flex:1;min-width:0;height:72px;border:1px dashed var(--line-d);background:var(--bg);
@@ -1226,14 +1219,17 @@
   .slot .price{margin-left:auto;font-weight:700;font-size:var(--text-md);flex:none;align-self:flex-end;margin-bottom:var(--space-8)}
   .slot .x{position:absolute;top:4px;right:6px;color:#bbb;font-size:var(--text-lg);line-height:1;cursor:pointer;width:16px;height:16px;display:flex;align-items:center;justify-content:center}
   .slot .x:hover{color:var(--ink)}
+  /* One line ("＋ SAVE CURRENT") — the stacked three-line version suffered
+     once the label column left and the row got room (Mila). */
   .save-btn{
     padding:0 var(--space-18);height:72px;background:var(--ink);color:#fff;border:0;
     font-size:var(--text-xs);letter-spacing:var(--track-caps);cursor:pointer;font-weight:600;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-4);
-    flex-shrink:0;
+    display:flex;flex-direction:row;align-items:center;justify-content:center;gap:var(--space-8);
+    flex-shrink:0;white-space:nowrap;
   }
+  .save-btn br{display:none}
   .save-btn:hover{background:#000}
-  .save-btn .plus{font-size:var(--text-2xl);color:var(--acc);font-weight:700}
+  .save-btn .plus{font-size:var(--text-xl);color:var(--acc);font-weight:700;line-height:0;position:relative;top:-1px}
 
   /* ═══════════ MODE STATE — handle/visibility only.
      Column widths are driven by the 3 vars at the top of the file.    */
@@ -1672,26 +1668,17 @@
     /* Compare dock (Mila iter 143 + variant C): label line, slots as
        full-width rows, and the two ACTIONS on one line (save / open). */
     .dock{flex-wrap:wrap;gap:var(--space-10)}
-    .dock-label{
-      width:100%;display:flex;align-items:baseline;justify-content:space-between;
-    }
-    .dock-label small{margin-top:0}
     .slots{flex:1 1 100%;flex-direction:column;gap:var(--space-8)}
     .slot{width:100%;height:auto;min-height:56px;padding:var(--space-7) var(--space-10)}
     .slot .thumb{width:44px;height:44px}
     .dock-actions{display:flex;gap:var(--space-8);flex:1 1 100%}
-    .save-btn{flex:1;min-width:0;width:auto;height:46px;flex-direction:row;gap:var(--space-8);white-space:nowrap}
-    .save-btn br{display:none}
+    .save-btn{flex:1;min-width:0;width:auto;height:46px}
     .dock-open{
       display:flex;align-items:center;justify-content:center;flex:1;min-width:0;height:46px;
       background:#fff;color:var(--ink);border:1px solid var(--ink);font:inherit;
       font-size:var(--text-xs);letter-spacing:var(--track-caps);font-weight:600;cursor:pointer;
       white-space:nowrap;
     }
-    /* In the row layout the oversized ＋ glyph's line box pushed it below the
-       text baseline; the full-width ＋ ink also sits LOW in its em box —
-       collapse the line box and nudge up to center it optically. */
-    .save-btn .plus{font-size:var(--text-xl);line-height:0;position:relative;top:-2px}
 
     /* ── VARIANT C (Mila 2026-06-12, ported from the polygon): catalogs lose
        the title row; the head is a sticky toolbar (search · Filters · ⇄)
@@ -1947,7 +1934,6 @@
 
         <!-- ═══════════ COMPARE DOCK (inside browse column, after pagination) ═══════════ -->
         <div class="dock" id="dock">
-          <div class="dock-label">COMPARE DOCK<small>up to 3 builds</small></div>
           <div class="slots" id="dockSlots"></div>
           <div class="dock-actions">
             <button class="save-btn" id="saveBtn"><span class="plus">＋</span>SAVE <br>CURRENT</button>
