@@ -759,7 +759,10 @@
     position:absolute;inset:0;display:none;align-items:center;justify-content:center;
     background:linear-gradient(180deg,#ececec,#d6d6d6);
   }
-  [data-mode="browse-custom"] .quote-overlay{display:flex}
+  /* Shown on the Custom tab (quote) AND while Custom Concept IS the build —
+     the placeholder sticks after commit until another design is picked. */
+  [data-mode="browse-custom"] .quote-overlay,
+  [data-cc="1"] .quote-overlay{display:flex}
   .qo-dial{
     width:46%;aspect-ratio:1/1;border:2px dashed #9aa6ad;border-radius:50%;
     display:flex;align-items:center;justify-content:center;text-align:center;
@@ -2803,6 +2806,13 @@
   }
 
   function updateSummary(){
+    // Live canvas: show the selected design's art (same gradient the cards
+    // and Compare use) — placeholder until real PNG compositing lands. With
+    // Custom Concept as the build the grey "Your design here" overlay covers
+    // the canvas instead.
+    const pImg = document.getElementById('previewImg');
+    if(pImg) pImg.style.background =
+      (isCustomConcept || !selDesign || !selDesign.grad) ? '' : selDesign.grad;
     // QUOTE MODE (Custom tab — docs/CUSTOM-TAB-QUOTE-DECISION.md): the panel
     // answers "what would I get if I commission?" — base watch + Custom
     // Concept + extras — while the BUILD changes by nothing (I7). With CC
