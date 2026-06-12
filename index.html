@@ -1143,13 +1143,50 @@
   .ccol-prev-empty .big{font-size:var(--text-5xl);color:#cfd2d4;line-height:1;margin-bottom:10px}
   .ccol-prev-empty small{font-size:var(--text-xs);line-height:1.5;letter-spacing:var(--track-loose)}
 
-  /* ── variant C mobile chrome — INERT on desktop ──
-     .m-acc uses display:contents so the selects stay ordinary row items in
-     the desktop browse-head flex; buttons/build bar/open-compare hide. */
+  /* ── variant C chrome ──
+     Mobile invented it; the COMPARE side now lives on desktop too (Mila):
+     the ⇄ button sits in the catalog head, the dock unfolds as an accordion
+     inside the same panel. Filters stay inline on desktop (.m-acc-filters =
+     display:contents keeps the selects ordinary row items). */
   .m-tb{display:none}
-  .m-acc{display:contents}
+  .m-tb[data-macc="cmp"]{
+    display:flex;align-items:center;gap:6px;order:2;flex:none;
+    padding:var(--space-9) var(--space-12);border:1px solid var(--line);background:#fff;
+    font:inherit;font-size:var(--text-sm);font-weight:600;cursor:pointer;
+  }
+  .m-tb[data-macc="cmp"]:hover{border-color:var(--ink)}
+  .m-cnt{color:var(--acc);font-weight:700}
+  .m-acc-filters{display:contents}
+  .m-acc-cmp{
+    flex:1 1 100%;order:10;display:flex;flex-direction:column;
+    overflow:hidden;max-height:0;transition:max-height .3s ease;
+  }
+  .m-acc-cmp.open{max-height:260px}
+  /* Narrow desktops (catalog column ~330-580px): the horizontal dock row
+     can't fit inside the accordion — stack it the mobile way. */
+  @media (max-width:1199px){
+    .m-acc-cmp.open{max-height:420px}
+    .m-acc-cmp .dock{flex-wrap:wrap;gap:var(--space-10)}
+    .m-acc-cmp .dock-label{width:100%;display:flex;align-items:baseline;justify-content:space-between}
+    .m-acc-cmp .dock-label small{margin-top:0}
+    .m-acc-cmp .slots{flex:1 1 100%;flex-direction:column;gap:var(--space-8)}
+    .m-acc-cmp .slot{width:100%;height:auto;min-height:56px;padding:var(--space-7) var(--space-10)}
+    .m-acc-cmp .slot .thumb{width:44px;height:44px}
+    .m-acc-cmp .dock-actions{display:flex;flex:1 1 100%;gap:var(--space-8)}
+    .m-acc-cmp .save-btn{flex:1;min-width:0;width:auto;height:46px;flex-direction:row;gap:var(--space-8);white-space:nowrap}
+    .m-acc-cmp .save-btn br{display:none}
+    .m-acc-cmp .dock-open{flex:1;min-width:0;height:46px}
+  }
+  .m-acc-cmp .dock::before{display:none}
+  .m-acc-cmp .dock{padding-left:0;padding-right:0;padding-bottom:var(--space-6)}
   .dock-actions{display:contents}
-  .dock-open{display:none}
+  .dock-open{
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    height:72px;padding:0 var(--space-14);background:#fff;color:var(--ink);
+    border:1px solid var(--ink);font:inherit;font-size:var(--text-xs);
+    letter-spacing:var(--track-caps);font-weight:600;cursor:pointer;white-space:nowrap;
+  }
+  .dock-open:hover{background:var(--ink);color:#fff}
   .m-buildbar{display:none}
 
   /* ═══════════ COMPARE DOCK ═══════════
@@ -1786,7 +1823,7 @@
               <span class="sp"></span>
               <input type="search" placeholder="Search watches…" />
               <button class="m-tb" data-macc="filters" aria-expanded="false">Filters <span class="ch">▾</span></button>
-              <button class="m-tb" data-macc="cmp" aria-expanded="false">⇄</button>
+              <button class="m-tb" data-macc="cmp" aria-expanded="false">⇄ <span class="m-cnt" hidden>0</span></button>
               <div class="m-acc m-acc-filters">
                 <select><option>All Brands</option><option>Seiko</option><option>Hamilton</option><option>Tissot</option></select>
                 <select><option>All Sizes</option><option>36mm</option><option>38mm</option><option>40mm</option><option>42mm</option></select>
@@ -1815,7 +1852,7 @@
               <span class="sp"></span>
               <input type="search" placeholder="Search designs…" />
               <button class="m-tb" data-macc="filters" aria-expanded="false">Filters <span class="ch">▾</span></button>
-              <button class="m-tb" data-macc="cmp" aria-expanded="false">⇄</button>
+              <button class="m-tb" data-macc="cmp" aria-expanded="false">⇄ <span class="m-cnt" hidden>0</span></button>
               <div class="m-acc m-acc-filters">
                 <select><option>All Themes</option><option>Space</option><option>Nature</option><option>Ocean</option><option>Urban</option></select>
                 <select><option>All Styles</option><option>Fine Art</option><option>Abstract</option><option>Illustration</option></select>
@@ -2525,8 +2562,10 @@
     if(!dockEl) return;
     const tab = cz.dataset.mode === 'browse-watches' ? 'watches'
               : cz.dataset.mode === 'browse-designs' ? 'designs' : null;
-    const host = (innerWidth < 800 && tab)
-      ? document.querySelector(`.browse-content-${tab} .m-acc-cmp`) : null;
+    // The dock lives in the catalog head's compare accordion on EVERY width
+    // (desktop joined the mobile model — Mila 2026-06-12). Its page-bottom
+    // home remains for the Custom tab.
+    const host = tab ? document.querySelector(`.browse-content-${tab} .m-acc-cmp`) : null;
     if(host){ if(dockEl.parentElement !== host) host.appendChild(dockEl); }
     else if(dockEl.previousElementSibling !== dockHome) dockHome.after(dockEl);
   }
@@ -3245,6 +3284,11 @@
       }
     }
     slots.innerHTML = html;
+    // ⇄ counter badges in the catalog heads (saved-builds state, always visible)
+    document.querySelectorAll('.m-tb[data-macc="cmp"] .m-cnt').forEach(el => {
+      el.hidden = compareBuilds.length === 0;
+      el.textContent = compareBuilds.length;
+    });
   }
 
   // ─────── Compare-view spec rows (label, value-fn) ───────
