@@ -751,6 +751,21 @@
   .pi-line .pi-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
   .pi-line .pi-price{font-weight:600;font-size:var(--text-md);flex:none}
   .pi-divider{height:1px;background:var(--line);margin:var(--space-4) 0 var(--space-2)}
+  .pi-quote-label{
+    font-size:var(--text-2xs);letter-spacing:var(--track-caps);text-transform:uppercase;
+    color:var(--acc);font-weight:700;margin-bottom:var(--space-8);
+  }
+  .quote-overlay{
+    position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,#ececec,#d6d6d6);
+  }
+  [data-mode="browse-custom"] .quote-overlay{display:flex}
+  .qo-dial{
+    width:46%;aspect-ratio:1/1;border:2px dashed #9aa6ad;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    color:#6b7280;font-size:var(--text-sm);letter-spacing:var(--track-caps);
+    text-transform:uppercase;font-weight:600;line-height:1.7;
+  }
   .pi-total{
     display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-10);
     font-size:var(--text-md);color:var(--ink);
@@ -1777,7 +1792,7 @@
               <div class="cu-commit-banner">
                 <div class="cu-banner-text">
                   <div class="cu-banner-eyebrow">Custom Concept · Commission</div>
-                  <div class="cu-banner-price"><strong>$1,490</strong> <span>+ base watch</span></div>
+                  <div class="cu-banner-price"><strong>$1,490</strong> <span id="cuBannerMath">+ base watch</span></div>
                   <div class="cu-guarantee">Nothing is painted until you approve the sketch</div>
                   <div class="cu-guarantee">Hand-painted to order · ships in ~4 weeks</div>
                 </div>
@@ -1824,6 +1839,9 @@
       <div class="preview-area">
         <div class="preview-canvas" id="previewCanvas">
           <div class="preview-img" id="previewImg">LIVE PREVIEW</div>
+          <!-- Custom tab: the canvas shows ITS OWN picture — your watch with
+               the future artwork's place marked; the selection is untouched. -->
+          <div class="quote-overlay"><span class="qo-dial">Your design<br>here</span></div>
         </div>
       </div>
 
@@ -1859,6 +1877,9 @@
       </div>
 
       <div class="preview-info" id="previewInfo">
+        <!-- Quote mode (Custom tab): the panel shows the commission what-if,
+             explicitly labeled — docs/CUSTOM-TAB-QUOTE-DECISION.md -->
+        <div class="pi-quote-label" id="piQuoteLabel" hidden>Your commission · preview</div>
         <div class="pi-line" id="piWatchLine"><span class="pi-name" id="piWatchName">Seiko SNK807</span><span class="pi-price" id="piWatchPrice">$320</span></div>
         <div class="pi-line" id="piDesignLine"><span class="pi-name" id="piDesignName">Northern Lights</span><span class="pi-price" id="piDesignPrice">$1,200</span></div>
         <div class="pi-line" id="piFinishedLine" hidden><span class="pi-name" id="piFinishedName">Finished piece</span><span class="pi-price" id="piFinishedPrice">$0</span></div>
@@ -1871,7 +1892,7 @@
         <!-- Way back to Configure lives HERE, under the total — the user's hands
              are on this panel (swatches/switch link), not on the far top-left
              where the old "← Back to Configuration" button sat. -->
-        <button class="pi-finalize" data-mode="configure">FINALIZE BUILD →</button>
+        <button class="pi-finalize" id="piFinalize" data-mode="configure">FINALIZE BUILD →</button>
       </div>
 
     </section>
@@ -2384,6 +2405,26 @@
   });
 
   // Custom Concept "OPEN MY COMMISSION" → carry Custom Concept state into Configure
+  // Quote mode chrome follows the mode — refresh the panel on every switch.
+  const _setModeBase = setMode;
+  setMode = function(mode){
+    _setModeBase(mode);
+    if(typeof recalc === 'function') recalc();
+  };
+
+  // In quote mode the mini-panel button commits the commission it shows (I3
+  // amendment 1) — same action as the page CTA; its data-mode attribute then
+  // switches to Configure via the global handler.
+  const piFinBtn = document.getElementById('piFinalize');
+  if(piFinBtn){
+    piFinBtn.addEventListener('click', () => {
+      if(cz.dataset.mode === 'browse-custom'){
+        isCustomConcept = true;
+        if(typeof updateBuildHeader === 'function') updateBuildHeader();
+      }
+    });
+  }
+
   const cuOrderBtn = document.getElementById('cuOrder');
   if(cuOrderBtn){
     cuOrderBtn.addEventListener('click', e => {
@@ -2397,6 +2438,8 @@
 
   // ────── ADDONS / PRICE ──────
   const prices = {design:1200, watch:320, mono:150, strap:95, timelapse:120, photos:90};
+  // ONE lead-time voice for every JS-rendered surface (status line, quote).
+  const LEAD_TIME = 'Ships in ~4 weeks';
   let st = {mono:false, strap:false, timelapse:false, photos:false};
   // Which Price-Summary line (data-line) each add-on key drives
   const ADDON_LINE = {mono:'monogram', strap:'strap', timelapse:'timelapse', photos:'photos'};
@@ -2509,10 +2552,15 @@
       ? '<span class="ms-l1"><span class="ms-dot"></span>Available now — this exact piece is ready</span>'
         + '<span class="ms-l2">Ships in 2–3 days' + mono + '</span>'
       : '<span class="ms-l1">⏱ Hand-painted to order for you</span>'
-        + '<span class="ms-l2">Ships in ~4 weeks' + mono + '</span>') + altLine);
-    setMatchEl(document.getElementById('piMatch'), m.state === 'in_stock'
-      ? '<span class="ms-dot"></span>Ready now' + miniAlt
-      : '⏱ Made to order' + miniAlt);
+        + '<span class="ms-l2">' + LEAD_TIME + mono + '</span>') + altLine);
+    // Quote mode (Custom tab): commissions are always made to order — the
+    // mini line speaks the ONE lead-time voice, no ready-hop links.
+    const quote = cz.dataset.mode === 'browse-custom';
+    setMatchEl(document.getElementById('piMatch'), quote
+      ? '⏱ Hand-painted to order — ' + LEAD_TIME
+      : (m.state === 'in_stock'
+        ? '<span class="ms-dot"></span>Ready now' + miniAlt
+        : '⏱ Made to order' + miniAlt));
   }
   // Adopt a ready piece: select its design + the exact donor variant
   // (watch + dial + case + size) → the match flips to in-stock. One click, no
@@ -2755,7 +2803,13 @@
   }
 
   function updateSummary(){
-    const d = currentDesign();
+    // QUOTE MODE (Custom tab — docs/CUSTOM-TAB-QUOTE-DECISION.md): the panel
+    // answers "what would I get if I commission?" — base watch + Custom
+    // Concept + extras — while the BUILD changes by nothing (I7). With CC
+    // already committed the normal path renders the same numbers.
+    const quote = cz.dataset.mode === 'browse-custom';
+    const ccQuote = quote && !isCustomConcept;
+    const d = ccQuote ? {name:'Custom Concept', price:CUSTOM_CONCEPT_PRICE} : currentDesign();
     document.getElementById('piWatchName').textContent   = `${selWatch.brand} ${selWatch.name}`;
     document.getElementById('piWatchPrice').textContent  = `$${selWatch.price.toLocaleString()}`;
     document.getElementById('piDesignName').textContent  = d.name;
@@ -2763,7 +2817,7 @@
     // Sum every active add-on (monogram / strap / time-lapse / photos) into
     // one "Add-ons" summary line so the preview Total reacts to any toggle.
     // Time-Lapse / Photos only count in price when Custom Concept is active.
-    const cc = !!isCustomConcept;
+    const cc = !!isCustomConcept || quote;
     let addons = 0, count = 0;
     ['mono','strap','timelapse','photos'].forEach(k => {
       const ccOnly = (k === 'timelapse' || k === 'photos');
@@ -2782,7 +2836,7 @@
     // truth): in-stock collapses watch+design into one finished-piece line at
     // the matched variant's real price.
     const m = currentMatch();
-    const inStock = m.state === 'in_stock';
+    const inStock = !ccQuote && m.state === 'in_stock';
     document.getElementById('piWatchLine').hidden = inStock;
     document.getElementById('piDesignLine').hidden = inStock;
     const fLine = document.getElementById('piFinishedLine');
@@ -2794,8 +2848,25 @@
     const total = (inStock ? m.price : selWatch.price + d.price) + addons;
     const totalStr = `$${total.toLocaleString()}`;
     document.getElementById('piTotal').textContent = totalStr;
-    // Custom page: pricing there is the static "$1,490 + base watch" banner —
-    // viewing the page doesn't mutate the build, so nothing to mirror here.
+    // Quote chrome: explicit label + the panel button commits what the panel
+    // shows (I3) — "Start your commission", not "Finalize build".
+    const ql = document.getElementById('piQuoteLabel');
+    if(ql) ql.hidden = !quote;
+    const fin = document.getElementById('piFinalize');
+    if(fin) fin.textContent = quote ? 'START YOUR COMMISSION →' : 'FINALIZE BUILD →';
+    // Live banner math on the Custom page (the mobile panel-less surface):
+    // $1,490 + watch (+ extras) = total, reacting to the toggles.
+    const bm = document.getElementById('cuBannerMath');
+    if(bm){
+      let extras = 0;
+      ['mono','strap','timelapse','photos'].forEach(k => {
+        if(st[k]) extras += (k === 'strap' ? (chosenBand() ? chosenBand().price : 0) : prices[k]);
+      });
+      const qTotal = selWatch.price + CUSTOM_CONCEPT_PRICE + extras;
+      bm.innerHTML = `+ ${selWatch.brand} ${selWatch.name} $${selWatch.price.toLocaleString()}`
+        + (extras ? ` + extras $${extras.toLocaleString()}` : '')
+        + ` = <strong>$${qTotal.toLocaleString()}</strong>`;
+    }
     refreshDesignPick();
   }
 
