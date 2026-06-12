@@ -1795,7 +1795,7 @@
               <div class="cu-commit-banner">
                 <div class="cu-banner-text">
                   <div class="cu-banner-eyebrow">Custom Concept · Commission</div>
-                  <div class="cu-banner-price"><strong>$1,490</strong> <span id="cuBannerMath">+ base watch</span></div>
+                  <div class="cu-banner-price"><strong>$1,490</strong> <span>+ base watch</span></div>
                   <div class="cu-guarantee">Nothing is painted until you approve the sketch</div>
                   <div class="cu-guarantee">Hand-painted to order · ships in ~4 weeks</div>
                 </div>
@@ -2864,19 +2864,6 @@
     if(ql) ql.hidden = !quote;
     const fin = document.getElementById('piFinalize');
     if(fin) fin.textContent = quote ? 'START YOUR COMMISSION →' : 'FINALIZE BUILD →';
-    // Live banner math on the Custom page (the mobile panel-less surface):
-    // $1,490 + watch (+ extras) = total, reacting to the toggles.
-    const bm = document.getElementById('cuBannerMath');
-    if(bm){
-      let extras = 0;
-      ['mono','strap','timelapse','photos'].forEach(k => {
-        if(st[k]) extras += (k === 'strap' ? (chosenBand() ? chosenBand().price : 0) : prices[k]);
-      });
-      const qTotal = selWatch.price + CUSTOM_CONCEPT_PRICE + extras;
-      bm.innerHTML = `+ ${selWatch.brand} ${selWatch.name} $${selWatch.price.toLocaleString()}`
-        + (extras ? ` + extras $${extras.toLocaleString()}` : '')
-        + ` = <strong>$${qTotal.toLocaleString()}</strong>`;
-    }
     refreshDesignPick();
   }
 
