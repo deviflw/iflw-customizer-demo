@@ -1004,6 +1004,9 @@
      * between cells in both Chrome and Safari. */
     background:var(--line);gap:1px;
   }
+  /* No line between a build's name and its picture — the head and picture
+     cells touch (columns keep their divider). */
+  .cmp-tops{row-gap:0}
   .cmp-tops{border-bottom:1px solid var(--line)}
   .cmp-footgrid{border-top:1px solid var(--line)}
   /* Gutter cell beside the pictures — a DESIGNED surface, not a hole:
@@ -1042,7 +1045,9 @@
     letter-spacing:var(--track-caps);text-transform:uppercase;font-weight:700;
     padding:var(--space-14) var(--space-18) var(--space-6);
   }
-  .cmx-sect-fill{background:var(--bg)}
+  /* The fill cells cover the 1px gap to their left with the band color, so
+     the section header reads as ONE continuous band (no rungs through it). */
+  .cmx-sect-fill{background:var(--bg);box-shadow:-1px 0 0 0 var(--bg)}
   .cmx-label{
     background:var(--bg);color:var(--muted);font-size:var(--text-sm);font-weight:500;
     padding:var(--space-7) var(--space-18);
@@ -1075,7 +1080,7 @@
     color:#888;font-size:var(--text-sm);letter-spacing:var(--track-caps);
   }
   .ccol-prices{
-    margin:var(--space-14) var(--space-18) var(--space-8);padding:var(--space-10) 0;border-top:1px solid var(--line);
+    margin:var(--space-14) var(--space-18) var(--space-8);padding:var(--space-10) 0;
   }
   .ccol-prices .pl{display:flex;justify-content:space-between;font-size:var(--text-sm);padding:var(--space-3) 0;color:var(--muted)}
   .ccol-prices .pl strong{color:var(--ink);font-weight:600}
