@@ -3194,7 +3194,9 @@
       </div>`).join('');
     const prevs = builds.map((b, i) => b
       ? `<div class="cmx-prevcell" data-cmp-slot="${i}">
-           <div class="ccol-prev"${b.design && b.design.grad ? ` style="background:${b.design.grad}"` : ''}>PREVIEW ${String.fromCharCode(65+i)}</div>
+           ${b.isCustom
+             ? `<div class="ccol-prev"><span class="qo-dial">Your design<br>here</span></div>`
+             : `<div class="ccol-prev"${b.design && b.design.grad ? ` style="background:${b.design.grad}"` : ''}>PREVIEW ${String.fromCharCode(65+i)}</div>`}
          </div>`
       : `<div class="cmx-prevcell" data-cmp-slot="${i}">
            <div class="ccol-prev ccol-prev-empty">
