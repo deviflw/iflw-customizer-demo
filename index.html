@@ -3035,9 +3035,10 @@
     if(mbT){
       mbT.textContent = totalStr;
       document.getElementById('mbbWatch').textContent = `${selWatch.brand} ${selWatch.name}`;
-      // design name ONLY — dial/size on the same line read as the design's
-      // attributes and risked overflow; the variant detail lives in Configure
-      document.getElementById('mbbMeta').textContent = d.name;
+      // design name + an add-ons marker when any are active (the Total moves —
+      // the line says why). Count form stays ONE line: "+ 2 add-ons".
+      document.getElementById('mbbMeta').textContent =
+        d.name + (count ? ` + ${count} add-on${count > 1 ? 's' : ''}` : '');
       document.getElementById('mbbThumb').style.background =
         (isCustomConcept || quote || !selDesign || !selDesign.grad) ? '' : selDesign.grad;
     }
