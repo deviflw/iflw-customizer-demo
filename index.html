@@ -1044,7 +1044,10 @@
      two-line name never pushes its picture out of line with the others). */
   .cmx-head{background:#fff;padding:var(--space-12) var(--space-18);display:flex;align-items:flex-end}
   .cmx-head-text{flex:1;display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-10);min-width:0}
-  .cmx-head h3{margin:0;font-size:var(--text-lg)}
+  .cmx-head-text > div{min-width:0;flex:1}
+  /* ONE line per name, ellipsized — a long model name must never stack the
+     head into five rows (Mila). Same rule for the design subtitle. */
+  .cmx-head h3{margin:0;font-size:var(--text-lg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cmx-head small{color:var(--muted);font-size:var(--text-2xs);letter-spacing:var(--track-caps);text-transform:uppercase;white-space:nowrap}
   .cmx-prevcell{background:#fff}
   /* No divider line BETWEEN pictures: cells 2-3 pull 1px left over the grid
@@ -1058,7 +1061,7 @@
   .cmp-diff-toggle{display:flex;align-items:center;gap:var(--space-8);cursor:pointer;font-size:var(--text-md);color:var(--ink);user-select:none}
   .cmp-diff-toggle input{margin:0;cursor:pointer;accent-color:var(--acc)}
   /* Design subtitle under watch name in the head */
-  .ccol-head-design{font-size:var(--text-sm);color:var(--muted);margin-top:2px;letter-spacing:0}
+  .ccol-head-design{font-size:var(--text-sm);color:var(--muted);margin-top:2px;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* ── matrix body: rows are display:contents wrappers — the CELLS are the
      grid items (label rail + 3 value cells per row) ── */
   .cmx-sect-row, .cmx-row{display:contents}
