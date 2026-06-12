@@ -88,6 +88,14 @@
 
   /* ═══════════ SITE STUBS ═══════════ */
   .site-header,.site-footer{height:var(--header-h);display:flex;align-items:center;justify-content:center;background:#f3f4f6;color:#9ca3af;font-size:var(--text-sm);letter-spacing:var(--track-caps)}
+  /* header stub carries the expected theme chrome (Mila: чтобы не спрашивали
+     "а где корзина?"): desktop = search/account/cart right; mobile = burger +
+     search left, account + cart right. Decorative — no behavior. */
+  .site-header{justify-content:space-between;padding:0 var(--space-24);gap:var(--space-16)}
+  .sh-grp{flex:1;display:flex;align-items:center;gap:var(--space-16);color:#9ca3af}
+  .sh-grp-r{justify-content:flex-end}
+  .sh-name{flex:none}
+  .sh-m{display:none}
 
   /* ═══════════ CUSTOMIZER SHELL ═══════════
      Normal page flow — grows with content. Rail and preview-unit are
@@ -1458,6 +1466,13 @@
      restyled — same buttons, same handlers), one column per mode, page
      scroll. Touch-first: nothing depends on hover. */
   @media (max-width:799px){
+    /* theme header: burger + search left, account + cart right */
+    .site-header{padding:0 var(--space-14)}
+    .sh-m{display:block}
+    .sh-d{display:none}
+    .sh-name{font-size:var(--text-2xs);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sh-grp{gap:var(--space-12)}
+
     /* — frame: stacked column + room for the fixed tab bar — */
     .customizer{
       display:flex;flex-direction:column;
@@ -1748,7 +1763,18 @@
 </head>
 <body>
 
-<header class="site-header">SITE HEADER · iflwatches.com</header>
+<header class="site-header">
+  <div class="sh-grp sh-grp-l">
+    <svg class="sh-m" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    <svg class="sh-m" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+  </div>
+  <span class="sh-name">SITE HEADER · iflwatches.com</span>
+  <div class="sh-grp sh-grp-r">
+    <svg class="sh-d" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-3.6 4.5-5.5 8-5.5s6.5 1.9 8 5.5"/></svg>
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 8h12l-1 13H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+  </div>
+</header>
 
 <div class="customizer" data-mode="configure" id="cz">
 
